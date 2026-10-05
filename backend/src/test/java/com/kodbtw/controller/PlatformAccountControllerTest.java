@@ -244,4 +244,91 @@ class PlatformAccountControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Validation Failed"));
     }
+
+    @Test
+    void testGetStatsUnauthenticatedReturns401() throws Exception {
+        mockMvc.perform(get("/api/platform-accounts/1/stats"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void testGetStatsSuccessReturnsMockStats() throws Exception {
+        // Create LeetCode account
+        PlatformAccountRequest request = makeRequest(Platform.LEETCODE, "sajal", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        // Fetch stats
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.platform").value("LEETCODE"))
+                .andExpect(jsonPath("$.username").value("sajal"))
+                .andExpect(jsonPath("$.profileUrl").value("https://leetcode.com/u/sajal/"))
+                .andExpect(jsonPath("$.totalProblemsSolved").value(350))
+                .andExpect(jsonPath("$.easySolved").value(180))
+                .andExpect(jsonPath("$.mediumSolved").value(130))
+                .andExpect(jsonPath("$.hardSolved").value(40))
+                .andExpect(jsonPath("$.contestsParticipated").value(12))
+                .andExpect(jsonPath("$.currentStreak").value(7))
+                .andExpect(jsonPath("$.longestStreak").value(21))
+                .andExpect(jsonPath("$.source").value("MOCK"));
+    }
+
+    @Test
+    void testGetStatsCodeforcesReturnsMockStats() throws Exception {
+        PlatformAccountRequest request = makeRequest(Platform.CODEFORCES, "tourist", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.platform").value("CODEFORCES"))
+                .andExpect(jsonPath("$.username").value("tourist"))
+                .andExpect(jsonPath("$.rating").value(1450))
+                .andExpect(jsonPath("$.rank").value(25000))
+                .andExpect(jsonPath("$.source").value("MOCK"));
+    }
+
+    @Test
+    void testGetStatsOtherUsersAccountReturns404() throws Exception {
+        // User 1 creates an account
+        PlatformAccountRequest request = makeRequest(Platform.LEETCODE, "user1_lc", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        // User 2 tries to fetch user 1's stats -> 404
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherUserToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testGetStatsNonExistentAccountReturns404() throws Exception {
+        mockMvc.perform(get("/api/platform-accounts/99999/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNotFound());
+    }
 }

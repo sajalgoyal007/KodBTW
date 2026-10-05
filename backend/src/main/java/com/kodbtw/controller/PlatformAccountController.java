@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kodbtw.dto.PlatformStats;
+import com.kodbtw.service.PlatformStatsService;
+
 import java.util.List;
 
 @RestController
@@ -24,9 +27,12 @@ import java.util.List;
 public class PlatformAccountController {
 
     private final PlatformAccountService platformAccountService;
+    private final PlatformStatsService platformStatsService;
 
-    public PlatformAccountController(PlatformAccountService platformAccountService) {
+    public PlatformAccountController(PlatformAccountService platformAccountService,
+                                     PlatformStatsService platformStatsService) {
         this.platformAccountService = platformAccountService;
+        this.platformStatsService = platformStatsService;
     }
 
     @PostMapping
@@ -47,6 +53,13 @@ public class PlatformAccountController {
             @AuthenticationPrincipal User user,
             @PathVariable Long id) {
         return ResponseEntity.ok(platformAccountService.getOne(user.getId(), id));
+    }
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<PlatformStats> getStats(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(platformStatsService.getStats(user.getId(), id));
     }
 
     @PutMapping("/{id}")

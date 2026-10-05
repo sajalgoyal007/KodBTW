@@ -45,6 +45,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(UnsupportedPlatformException.class)
+    public ResponseEntity<Map<String, String>> handleUnsupportedPlatform(UnsupportedPlatformException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Bad Request",
+                "message", ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
