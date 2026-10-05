@@ -45,6 +45,9 @@ class PlatformAccountControllerTest {
     @Autowired
     private PlatformAccountRepository platformAccountRepository;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
+
     private String userToken;
     private String otherUserToken;
 
@@ -252,7 +255,24 @@ class PlatformAccountControllerTest {
     }
 
     @Test
-    void testGetStatsSuccessReturnsMockStats() throws Exception {
+    void testGetStatsSuccessReturnsRealLeetCodeStats() throws Exception {
+        com.kodbtw.adapter.leetcode.dto.LeetCodeDto.GraphQLData mockData =
+                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.GraphQLData(
+                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.MatchedUser(
+                                "sajal",
+                                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.UserProfile(100000),
+                                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmitStatsGlobal(java.util.List.of(
+                                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmissionCount("All", 350),
+                                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmissionCount("Easy", 180),
+                                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmissionCount("Medium", 130),
+                                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmissionCount("Hard", 40)
+                                )),
+                                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.UserCalendar(7, 30)
+                        ),
+                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.UserContestRanking(1850.4, 12, 5000)
+                );
+        org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("sajal")).thenReturn(mockData);
+
         // Create LeetCode account
         PlatformAccountRequest request = makeRequest(Platform.LEETCODE, "sajal", null);
         MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
@@ -276,10 +296,56 @@ class PlatformAccountControllerTest {
                 .andExpect(jsonPath("$.easySolved").value(180))
                 .andExpect(jsonPath("$.mediumSolved").value(130))
                 .andExpect(jsonPath("$.hardSolved").value(40))
+                .andExpect(jsonPath("$.rating").value(1850))
+                .andExpect(jsonPath("$.rank").value(100000))
                 .andExpect(jsonPath("$.contestsParticipated").value(12))
                 .andExpect(jsonPath("$.currentStreak").value(7))
-                .andExpect(jsonPath("$.longestStreak").value(21))
-                .andExpect(jsonPath("$.source").value("MOCK"));
+                .andExpect(jsonPath("$.longestStreak").doesNotExist())
+                .andExpect(jsonPath("$.source").value("LEETCODE_REAL"));
+    }
+
+    @Test
+    void testGetStatsLeetCodeUserNotFoundReturns404() throws Exception {
+        org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("missing_user"))
+                .thenThrow(new com.kodbtw.exception.ResourceNotFoundException("LeetCode user not found: missing_user"));
+
+        PlatformAccountRequest request = makeRequest(Platform.LEETCODE, "missing_user", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void testGetStatsLeetCodeExternalErrorReturns502() throws Exception {
+        org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("error_user"))
+                .thenThrow(new com.kodbtw.exception.PlatformApiException("LeetCode API timeout"));
+
+        PlatformAccountRequest request = makeRequest(Platform.LEETCODE, "error_user", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("Bad Gateway"));
     }
 
     @Test

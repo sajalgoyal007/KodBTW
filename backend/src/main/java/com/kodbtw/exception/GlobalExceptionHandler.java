@@ -53,6 +53,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(PlatformApiException.class)
+    public ResponseEntity<Map<String, String>> handlePlatformApi(PlatformApiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "Bad Gateway",
+                "message", ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();

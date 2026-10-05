@@ -23,7 +23,7 @@ class PlatformAdapterRegistryTest {
     @BeforeEach
     void setUp() {
         List<PlatformAdapter> adapters = List.of(
-                new LeetCodeAdapter(),
+                new LeetCodeAdapter(username -> null),
                 new CodeChefAdapter(),
                 new CodeforcesAdapter(),
                 new GeeksForGeeksAdapter(),

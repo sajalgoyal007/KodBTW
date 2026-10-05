@@ -4,7 +4,6 @@ import com.kodbtw.adapter.impl.CodeChefAdapter;
 import com.kodbtw.adapter.impl.CodeforcesAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
-import com.kodbtw.adapter.impl.LeetCodeAdapter;
 import com.kodbtw.dto.PlatformStats;
 import com.kodbtw.entity.Platform;
 import com.kodbtw.entity.PlatformAccount;
@@ -15,33 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class MockPlatformAdaptersTest {
-
-    @Test
-    void leetCodeAdapterShouldReturnDeterministicMockStats() {
-        LeetCodeAdapter adapter = new LeetCodeAdapter();
-        assertEquals(Platform.LEETCODE, adapter.getPlatform());
-
-        PlatformAccount account = new PlatformAccount();
-        account.setUsername("testuser");
-        account.setPlatform(Platform.LEETCODE);
-
-        PlatformStats stats = adapter.fetchStats(account);
-
-        assertEquals(Platform.LEETCODE, stats.getPlatform());
-        assertEquals("testuser", stats.getUsername());
-        assertEquals("https://leetcode.com/u/testuser/", stats.getProfileUrl());
-        assertEquals(350, stats.getTotalProblemsSolved());
-        assertEquals(180, stats.getEasySolved());
-        assertEquals(130, stats.getMediumSolved());
-        assertEquals(40, stats.getHardSolved());
-        assertNull(stats.getRating());
-        assertNull(stats.getRank());
-        assertEquals(12, stats.getContestsParticipated());
-        assertEquals(7, stats.getCurrentStreak());
-        assertEquals(21, stats.getLongestStreak());
-        assertNull(stats.getLastSyncedAt());
-        assertEquals("MOCK", stats.getSource());
-    }
 
     @Test
     void codeChefAdapterShouldReturnDeterministicMockStats() {
@@ -149,11 +121,11 @@ class MockPlatformAdaptersTest {
 
     @Test
     void adaptersShouldPreserveCustomProfileUrl() {
-        LeetCodeAdapter adapter = new LeetCodeAdapter();
+        CodeChefAdapter adapter = new CodeChefAdapter();
         PlatformAccount account = new PlatformAccount();
         account.setUsername("customuser");
         account.setProfileUrl("https://custom-url.com/profile");
-        account.setPlatform(Platform.LEETCODE);
+        account.setPlatform(Platform.CODECHEF);
 
         PlatformStats stats = adapter.fetchStats(account);
         assertEquals("https://custom-url.com/profile", stats.getProfileUrl());
