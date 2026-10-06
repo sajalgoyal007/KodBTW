@@ -1,0 +1,81 @@
+import { ApiErrorResponse } from '../../types/auth';
+
+export const TOKEN_STORAGE_KEY = 'kodbtw_jwt';
+
+export class ApiError extends Error {
+  status: number;
+  data: ApiErrorResponse;
+
+  constructor(status: number, data: ApiErrorResponse) {
+    super(data.message || data.error || 'An unexpected API error occurred');
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+interface RequestOptions extends RequestInit {
+  params?: Record<string, string | number | boolean | undefined>;
+}
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
+export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { params, headers = {}, ...customConfig } = options;
+
+  let url = `${BASE_URL}${endpoint}`;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const queryString = searchParams.toString();
+    if (queryString) {
+      url += (url.includes('?') ? '&' : '?') + queryString;
+    }
+  }
+
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const requestHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(headers as Record<string, string>),
+  };
+
+  if (token) {
+    requestHeaders['Authorization'] = `Bearer ${token}`;
+  }
+
+  const config: RequestInit = {
+    ...customConfig,
+    headers: requestHeaders,
+  };
+
+  const response = await fetch(url, config);
+
+  if (response.status === 401) {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+  }
+
+  if (!response.ok) {
+    let errorData: ApiErrorResponse = {};
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = {
+        error: response.statusText,
+        message: `HTTP error ${response.status}`,
+      };
+    }
+    errorData.status = response.status;
+    throw new ApiError(response.status, errorData);
+  }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return response.json();
+}
