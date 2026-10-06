@@ -130,4 +130,73 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.platforms[0].rank", is(4500)))
                 .andExpect(jsonPath("$.platforms[0].source", is("MOCK")));
     }
+
+    @Test
+    void getAnalytics_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/dashboard/analytics"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAnalytics_authenticated_whenNoAccounts_returns200AndEmptyState() throws Exception {
+        mockMvc.perform(get("/api/dashboard/analytics")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.difficulty.totalProblemsSolved", is(0)))
+                .andExpect(jsonPath("$.difficulty.easy.count", is(0)))
+                .andExpect(jsonPath("$.difficulty.easy.percentage", is(0.0)))
+                .andExpect(jsonPath("$.difficulty.medium.count", is(0)))
+                .andExpect(jsonPath("$.difficulty.medium.percentage", is(0.0)))
+                .andExpect(jsonPath("$.difficulty.hard.count", is(0)))
+                .andExpect(jsonPath("$.difficulty.hard.percentage", is(0.0)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown", hasSize(0)))
+                .andExpect(jsonPath("$.platformComparison", hasSize(0)))
+                .andExpect(jsonPath("$.contests.totalContests", is(0)))
+                .andExpect(jsonPath("$.contests.platformBreakdown", hasSize(0)));
+    }
+
+    @Test
+    void getAnalytics_authenticated_withLinkedAccount_returns200AndAnalytics() throws Exception {
+        PlatformAccountRequest accountRequest = new PlatformAccountRequest();
+        accountRequest.setPlatform(Platform.CODECHEF);
+        accountRequest.setUsername("testchef");
+
+        mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accountRequest)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/dashboard/analytics")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.difficulty.totalProblemsSolved", is(210)))
+                .andExpect(jsonPath("$.difficulty.easy.count", is(120)))
+                .andExpect(jsonPath("$.difficulty.easy.percentage", is(57.14)))
+                .andExpect(jsonPath("$.difficulty.medium.count", is(70)))
+                .andExpect(jsonPath("$.difficulty.medium.percentage", is(33.33)))
+                .andExpect(jsonPath("$.difficulty.hard.count", is(20)))
+                .andExpect(jsonPath("$.difficulty.hard.percentage", is(9.52)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown", hasSize(1)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].easy", is(120)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].medium", is(70)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].hard", is(20)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].total", is(210)))
+                .andExpect(jsonPath("$.platformComparison", hasSize(1)))
+                .andExpect(jsonPath("$.platformComparison[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.platformComparison[0].username", is("testchef")))
+                .andExpect(jsonPath("$.platformComparison[0].totalSolved", is(210)))
+                .andExpect(jsonPath("$.platformComparison[0].sharePercentage", is(100.0)))
+                .andExpect(jsonPath("$.platformComparison[0].rating", is(1750)))
+                .andExpect(jsonPath("$.platformComparison[0].rank", is(4500)))
+                .andExpect(jsonPath("$.platformComparison[0].contestsParticipated", is(25)))
+                .andExpect(jsonPath("$.platformComparison[0].source", is("MOCK")))
+                .andExpect(jsonPath("$.contests.totalContests", is(25)))
+                .andExpect(jsonPath("$.contests.platformBreakdown", hasSize(1)))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].contests", is(25)))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", is(1750)))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", is(4500)));
+    }
 }
