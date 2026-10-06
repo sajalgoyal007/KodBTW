@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Code2, LogOut, User as UserIcon, LayoutDashboard, Terminal, UserCircle } from 'lucide-react';
+import { Code2, LogOut, User as UserIcon, LayoutDashboard, BarChart2, Terminal, UserCircle } from 'lucide-react';
 
 export const AppNavbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -9,6 +9,7 @@ export const AppNavbar: React.FC = () => {
 
   const navItems = [
     { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={16} /> },
+    { label: 'Analytics', path: '/analytics', icon: <BarChart2 size={16} /> },
     { label: 'Coding Profiles', path: '/coding-profiles', icon: <Terminal size={16} /> },
     { label: 'Developer Profile', path: '/profile', icon: <UserCircle size={16} /> },
   ];

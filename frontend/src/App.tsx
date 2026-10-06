@@ -4,6 +4,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CodingProfilesPage } from './pages/CodingProfilesPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -39,6 +40,14 @@ export const App: React.FC = () => {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <AnalyticsPage />
           </ProtectedRoute>
         }
       />
