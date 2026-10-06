@@ -1,15 +1,13 @@
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { useDashboard } from '../hooks/useDashboard';
+import { AppNavbar } from '../components/layout/AppNavbar';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { DifficultyBreakdown } from '../components/dashboard/DifficultyBreakdown';
 import { PlatformCard } from '../components/dashboard/PlatformCard';
 import { PlatformShare } from '../components/dashboard/PlatformShare';
 import { ContestSummary } from '../components/dashboard/ContestSummary';
 import {
-  Code2,
-  LogOut,
-  User as UserIcon,
   RefreshCw,
   Flame,
   Trophy,
@@ -20,7 +18,7 @@ import {
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
-  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const { stats, analytics, loading, error, refetch } = useDashboard();
 
   const overview = stats?.overview;
@@ -29,103 +27,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Header */}
-      <header
-        style={{
-          borderBottom: '1px solid var(--color-border-subtle)',
-          backgroundColor: 'var(--color-bg-card)',
-          padding: '1rem 2rem',
-          position: 'sticky',
-          top: 0,
-          zIndex: 20,
-          backdropFilter: 'blur(8px)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '1280px',
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '1rem',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div
-              style={{
-                width: '34px',
-                height: '34px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--color-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#0b0f19',
-                fontWeight: 800,
-              }}
-            >
-              <Code2 size={22} />
-            </div>
-            <div>
-              <span style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-                Kod<span style={{ color: 'var(--color-primary)' }}>BTW</span>
-              </span>
-              <span
-                style={{
-                  marginLeft: '0.625rem',
-                  fontSize: '0.6875rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  color: 'var(--color-text-muted)',
-                }}
-              >
-                Dashboard
-              </span>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button
-              onClick={() => refetch()}
-              disabled={loading}
-              className="btn btn-ghost"
-              style={{ padding: '0.5rem 0.75rem', fontSize: '0.8125rem' }}
-              title="Refresh statistics"
-            >
-              <RefreshCw size={15} className={loading ? 'spinner' : ''} />
-              <span style={{ display: 'none', md: 'inline' } as any}>Refresh</span>
-            </button>
-
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                color: 'var(--color-text-secondary)',
-                fontSize: '0.875rem',
-                padding: '0.375rem 0.75rem',
-                backgroundColor: 'var(--color-bg-base)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border-subtle)',
-              }}
-            >
-              <UserIcon size={16} />
-              <span style={{ fontWeight: 500 }}>{user?.name}</span>
-            </div>
-
-            <button
-              onClick={logout}
-              className="btn btn-secondary"
-              style={{ padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }}
-            >
-              <LogOut size={15} />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <AppNavbar />
 
       {/* Main Container */}
       <main
@@ -270,9 +172,7 @@ export const DashboardPage: React.FC = () => {
             <button
               className="btn btn-primary"
               style={{ padding: '0.75rem 1.5rem', fontSize: '0.9375rem' }}
-              onClick={() => {
-                alert('Platform connection dialog will be available in Phase 7C.');
-              }}
+              onClick={() => navigate('/coding-profiles')}
             >
               <PlusCircle size={18} /> Connect Account
             </button>
