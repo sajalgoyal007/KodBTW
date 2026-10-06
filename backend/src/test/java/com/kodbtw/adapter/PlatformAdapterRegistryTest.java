@@ -25,7 +25,7 @@ class PlatformAdapterRegistryTest {
         List<PlatformAdapter> adapters = List.of(
                 new LeetCodeAdapter(username -> null),
                 new CodeChefAdapter(),
-                new CodeforcesAdapter(),
+                new CodeforcesAdapter(handle -> null),
                 new GeeksForGeeksAdapter(),
                 new HackerRankAdapter()
         );

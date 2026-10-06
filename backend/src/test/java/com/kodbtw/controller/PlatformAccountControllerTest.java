@@ -48,6 +48,9 @@ class PlatformAccountControllerTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.kodbtw.adapter.codeforces.CodeforcesClient codeforcesClient;
+
     private String userToken;
     private String otherUserToken;
 
@@ -349,7 +352,14 @@ class PlatformAccountControllerTest {
     }
 
     @Test
-    void testGetStatsCodeforcesReturnsMockStats() throws Exception {
+    void testGetStatsCodeforcesReturnsRealStats() throws Exception {
+        com.kodbtw.adapter.codeforces.dto.CodeforcesDto.UserInfo mockInfo =
+                new com.kodbtw.adapter.codeforces.dto.CodeforcesDto.UserInfo(
+                        "tourist", 3384, 4009, "legendary grandmaster", "tourist",
+                        112, 91104, 1265987288L
+                );
+        org.mockito.Mockito.when(codeforcesClient.fetchUserInfo("tourist")).thenReturn(mockInfo);
+
         PlatformAccountRequest request = makeRequest(Platform.CODEFORCES, "tourist", null);
         MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -366,9 +376,61 @@ class PlatformAccountControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.platform").value("CODEFORCES"))
                 .andExpect(jsonPath("$.username").value("tourist"))
-                .andExpect(jsonPath("$.rating").value(1450))
-                .andExpect(jsonPath("$.rank").value(25000))
-                .andExpect(jsonPath("$.source").value("MOCK"));
+                .andExpect(jsonPath("$.profileUrl").value("https://codeforces.com/profile/tourist"))
+                .andExpect(jsonPath("$.rating").value(3384))
+                .andExpect(jsonPath("$.rank").value(4009))
+                .andExpect(jsonPath("$.totalProblemsSolved").doesNotExist())
+                .andExpect(jsonPath("$.easySolved").doesNotExist())
+                .andExpect(jsonPath("$.mediumSolved").doesNotExist())
+                .andExpect(jsonPath("$.hardSolved").doesNotExist())
+                .andExpect(jsonPath("$.contestsParticipated").doesNotExist())
+                .andExpect(jsonPath("$.currentStreak").doesNotExist())
+                .andExpect(jsonPath("$.longestStreak").doesNotExist())
+                .andExpect(jsonPath("$.source").value("CODEFORCES_REAL"));
+    }
+
+    @Test
+    void testGetStatsCodeforcesUserNotFoundReturns404() throws Exception {
+        org.mockito.Mockito.when(codeforcesClient.fetchUserInfo("cf_missing"))
+                .thenThrow(new com.kodbtw.exception.ResourceNotFoundException("Codeforces user not found: cf_missing"));
+
+        PlatformAccountRequest request = makeRequest(Platform.CODEFORCES, "cf_missing", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("Not Found"));
+    }
+
+    @Test
+    void testGetStatsCodeforcesUpstreamFailureReturns502() throws Exception {
+        org.mockito.Mockito.when(codeforcesClient.fetchUserInfo("cf_error_user"))
+                .thenThrow(new com.kodbtw.exception.PlatformApiException("Codeforces API timeout"));
+
+        PlatformAccountRequest request = makeRequest(Platform.CODEFORCES, "cf_error_user", null);
+        MvcResult createResult = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .get("id").asLong();
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error").value("Bad Gateway"));
     }
 
     @Test

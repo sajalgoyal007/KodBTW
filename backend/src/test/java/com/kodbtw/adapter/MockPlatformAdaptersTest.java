@@ -1,7 +1,6 @@
 package com.kodbtw.adapter;
 
 import com.kodbtw.adapter.impl.CodeChefAdapter;
-import com.kodbtw.adapter.impl.CodeforcesAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
 import com.kodbtw.dto.PlatformStats;
@@ -38,32 +37,6 @@ class MockPlatformAdaptersTest {
         assertEquals(25, stats.getContestsParticipated());
         assertNull(stats.getCurrentStreak());
         assertNull(stats.getLongestStreak());
-        assertEquals("MOCK", stats.getSource());
-    }
-
-    @Test
-    void codeforcesAdapterShouldReturnDeterministicMockStats() {
-        CodeforcesAdapter adapter = new CodeforcesAdapter();
-        assertEquals(Platform.CODEFORCES, adapter.getPlatform());
-
-        PlatformAccount account = new PlatformAccount();
-        account.setUsername("tourist");
-        account.setPlatform(Platform.CODEFORCES);
-
-        PlatformStats stats = adapter.fetchStats(account);
-
-        assertEquals(Platform.CODEFORCES, stats.getPlatform());
-        assertEquals("tourist", stats.getUsername());
-        assertEquals("https://codeforces.com/profile/tourist", stats.getProfileUrl());
-        assertEquals(420, stats.getTotalProblemsSolved());
-        assertNull(stats.getEasySolved());
-        assertNull(stats.getMediumSolved());
-        assertNull(stats.getHardSolved());
-        assertEquals(1450, stats.getRating());
-        assertEquals(25000, stats.getRank());
-        assertEquals(34, stats.getContestsParticipated());
-        assertEquals(4, stats.getCurrentStreak());
-        assertEquals(15, stats.getLongestStreak());
         assertEquals("MOCK", stats.getSource());
     }
 
