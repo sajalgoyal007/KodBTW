@@ -7,6 +7,7 @@ import { PlatformDifficultyTable } from '../components/analytics/PlatformDifficu
 import { PlatformShareCard } from '../components/analytics/PlatformShareCard';
 import { PlatformStandingTable } from '../components/analytics/PlatformStandingTable';
 import { StreakComparisonCard } from '../components/analytics/StreakComparisonCard';
+import { DashboardHistorySection } from '../components/analytics/DashboardHistorySection';
 import { ContestSummary } from '../components/dashboard/ContestSummary';
 import {
   RefreshCw,
@@ -252,6 +253,8 @@ export const AnalyticsPage: React.FC = () => {
             <PlatformStandingTable platformComparison={platformComparison} />
           </>
         )}
+
+        <DashboardHistorySection />
       </main>
     </div>
   );

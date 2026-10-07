@@ -221,4 +221,30 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", is(1750)))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", is(4500)));
     }
+
+    @Test
+    void getHistory_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/dashboard/history"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getHistory_authenticatedDefaultsToThirtyDaysAndReturnsEmptyHistory() throws Exception {
+        mockMvc.perform(get("/api/dashboard/history")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.range", is("30d")))
+                .andExpect(jsonPath("$.snapshotDates", hasSize(0)))
+                .andExpect(jsonPath("$.overallSolved", hasSize(0)))
+                .andExpect(jsonPath("$.platforms", hasSize(0)))
+                .andExpect(jsonPath("$.freshness.snapshotCount", is(0)));
+    }
+
+    @Test
+    void getHistory_invalidRange_returns400() throws Exception {
+        mockMvc.perform(get("/api/dashboard/history")
+                        .param("range", "all")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isBadRequest());
+    }
 }

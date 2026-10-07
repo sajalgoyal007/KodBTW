@@ -15,5 +15,8 @@ public interface PlatformStatSnapshotRepository extends JpaRepository<PlatformSt
 
     Optional<PlatformStatSnapshot> findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(Long userId, String platform);
 
+    List<PlatformStatSnapshot> findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+            Long userId, LocalDate startDate, LocalDate endDate, String sourceSuffix);
+
     Optional<PlatformStatSnapshot> findByUserIdAndPlatformAndSnapshotDate(Long userId, String platform, java.time.LocalDate snapshotDate);
 }
