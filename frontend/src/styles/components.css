@@ -49,6 +49,37 @@
   .history-chart-card { padding: 1rem; }
 }
 
+/* Activity and contest evidence states */
+.activity-contest-section { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.activity-contest-heading { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; }
+.activity-contest-heading h2 { color: var(--color-text-primary); font-size: 1.25rem; font-weight: 750; }
+.activity-contest-heading p, .activity-contest-note { margin-top: .3rem; color: var(--color-text-secondary); font-size: .83rem; line-height: 1.5; }
+.activity-contest-freshness { display: inline-flex; align-items: center; gap: .4rem; color: var(--color-text-muted); font-size: .78rem; }
+.activity-contest-state { min-height: 90px; display: flex; align-items: center; justify-content: center; gap: .75rem; color: var(--color-text-secondary); }
+.activity-contest-state.error { color: var(--color-error); }
+.activity-contest-state .btn { margin-left: auto; }
+.activity-contest-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.activity-contest-card { min-width: 0; padding: 1rem; }
+.activity-contest-card-title { display: flex; align-items: center; gap: .55rem; color: var(--color-primary); }
+.activity-contest-card-title h3 { color: var(--color-text-primary); font-size: 1rem; }
+.activity-contest-unavailable { margin-top: .8rem; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.5; }
+.activity-contest-note { margin-top: .5rem; }
+.contest-rating-list { display: flex; flex-direction: column; gap: .65rem; margin-top: .8rem; }
+.contest-rating-row { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .55rem 1rem; padding: .75rem; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-bg-base); }
+.contest-rating-row > div:first-child { min-width: 0; display: flex; flex-direction: column; gap: .2rem; }
+.contest-rating-row > div:first-child strong { color: var(--color-text-primary); font-size: .85rem; }
+.contest-rating-row > div:first-child span { color: var(--color-text-muted); font-size: .7rem; overflow-wrap: anywhere; }
+.contest-rating-values { display: flex; align-items: center; flex-wrap: wrap; gap: .35rem .8rem; }
+.contest-rating-values span { color: var(--color-text-muted); font-size: .7rem; }
+.contest-rating-values b { color: var(--color-text-primary); font-family: var(--font-mono); font-size: .75rem; }
+.contest-rating-values b.positive { color: var(--color-success); }
+.contest-rating-values b.negative { color: var(--color-error); }
+
+@media (max-width: 760px) {
+  .activity-contest-grid { grid-template-columns: minmax(0, 1fr); }
+  .contest-rating-row { flex-direction: column; }
+}
+
 /* Deterministic, persisted-data insights */
 .insights-section { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
 .insights-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem 1rem; }

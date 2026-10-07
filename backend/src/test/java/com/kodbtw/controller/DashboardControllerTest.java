@@ -110,6 +110,14 @@ class DashboardControllerTest {
     }
 
     @Test
+    void protectedEndpointsDoNotAcceptBasicAuthentication() throws Exception {
+        String basicCredentials = java.util.Base64.getEncoder().encodeToString("user:password".getBytes());
+        mockMvc.perform(get("/api/dashboard/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Basic " + basicCredentials))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void getStats_authenticated_whenNoAccounts_returns200AndEmptyState() throws Exception {
         mockMvc.perform(get("/api/dashboard/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -284,6 +292,44 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.progressInsights[0].type", is("PROGRESS_BASELINE")))
                 .andExpect(jsonPath("$.ratingInsights[0].type", is("RATING_BASELINE")))
                 .andExpect(jsonPath("$.streakInsights", hasSize(0)));
+
+        verifyNoInteractions(leetCodeClient, codeforcesClient);
+    }
+
+    @Test
+    void activityAndContestEndpointsRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/dashboard/activity")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/dashboard/contests")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void activityAndContestIntelligenceAreUserScopedRealOnlyAndProviderFree() throws Exception {
+        User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
+        registerAndLogin("otheractivity@example.com", "password123");
+        User otherUser = userRepository.findByEmail("otheractivity@example.com").orElseThrow();
+        saveSnapshot(owner, "CODEFORCES", "CODEFORCES_REAL", 0, null, null, null, 1510);
+        saveSnapshot(owner, "CODECHEF", "CODECHEF_MOCK", 30, null, null, null, 3000);
+        saveSnapshot(otherUser, "LEETCODE", "LEETCODE_REAL", 400, null, null, null, 2500);
+
+        mockMvc.perform(get("/api/dashboard/activity")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available", is(false)))
+                .andExpect(jsonPath("$.realDataOnly", is(true)))
+                .andExpect(jsonPath("$.message", is("Activity history is not available from the connected platform yet.")))
+                .andExpect(jsonPath("$.platformsWithRealSnapshots", hasSize(1)))
+                .andExpect(jsonPath("$.platformsWithRealSnapshots[0]", is("CODEFORCES")));
+
+        mockMvc.perform(get("/api/dashboard/contests")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.realDataOnly", is(true)))
+                .andExpect(jsonPath("$.contestHistoryAvailable", is(false)))
+                .andExpect(jsonPath("$.ratingObservationCount", is(1)))
+                .andExpect(jsonPath("$.platforms", hasSize(1)))
+                .andExpect(jsonPath("$.platforms[0].platform", is("CODEFORCES")))
+                .andExpect(jsonPath("$.platforms[0].currentRating", is(1510)))
+                .andExpect(jsonPath("$.platforms[0].change").doesNotExist());
 
         verifyNoInteractions(leetCodeClient, codeforcesClient);
     }

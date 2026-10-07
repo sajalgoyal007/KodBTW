@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handlePlatformApi(PlatformApiException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", "Bad Gateway",
-                "message", ex.getMessage()
+                "message", "The platform is temporarily unavailable. Please try again later."
         ));
     }
 
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "Internal Server Error",
-                "message", ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred"
+                "message", "An unexpected error occurred. Please try again later."
         ));
     }
 }

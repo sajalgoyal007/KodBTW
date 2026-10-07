@@ -4,10 +4,13 @@ import com.kodbtw.dto.DashboardStatsResponse;
 import com.kodbtw.dto.analytics.DashboardAnalyticsResponse;
 import com.kodbtw.dto.history.DashboardHistoryResponse;
 import com.kodbtw.dto.insights.DashboardInsightsResponse;
+import com.kodbtw.dto.activity.DashboardActivityResponse;
+import com.kodbtw.dto.contests.DashboardContestIntelligenceResponse;
 import com.kodbtw.entity.User;
 import com.kodbtw.service.DashboardAnalyticsService;
 import com.kodbtw.service.DashboardHistoryService;
 import com.kodbtw.service.DashboardInsightsService;
+import com.kodbtw.service.DashboardActivityContestService;
 import com.kodbtw.service.PlatformStatsService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,15 +27,18 @@ public class DashboardController {
     private final DashboardAnalyticsService dashboardAnalyticsService;
     private final DashboardHistoryService dashboardHistoryService;
     private final DashboardInsightsService dashboardInsightsService;
+    private final DashboardActivityContestService dashboardActivityContestService;
 
     public DashboardController(PlatformStatsService platformStatsService,
                                DashboardAnalyticsService dashboardAnalyticsService,
                                DashboardHistoryService dashboardHistoryService,
-                               DashboardInsightsService dashboardInsightsService) {
+                               DashboardInsightsService dashboardInsightsService,
+                               DashboardActivityContestService dashboardActivityContestService) {
         this.platformStatsService = platformStatsService;
         this.dashboardAnalyticsService = dashboardAnalyticsService;
         this.dashboardHistoryService = dashboardHistoryService;
         this.dashboardInsightsService = dashboardInsightsService;
+        this.dashboardActivityContestService = dashboardActivityContestService;
     }
 
     @GetMapping("/stats")
@@ -55,5 +61,16 @@ public class DashboardController {
     @GetMapping("/insights")
     public ResponseEntity<DashboardInsightsResponse> getInsights(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(dashboardInsightsService.getInsights(user.getId()));
+    }
+
+    @GetMapping("/activity")
+    public ResponseEntity<DashboardActivityResponse> getActivity(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(dashboardActivityContestService.getActivity(user.getId()));
+    }
+
+    @GetMapping("/contests")
+    public ResponseEntity<DashboardContestIntelligenceResponse> getContestIntelligence(
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(dashboardActivityContestService.getContestIntelligence(user.getId()));
     }
 }

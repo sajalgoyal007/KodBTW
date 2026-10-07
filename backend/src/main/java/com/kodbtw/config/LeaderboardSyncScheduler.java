@@ -42,7 +42,8 @@ public class LeaderboardSyncScheduler {
             leaderboardSyncService.rebuildAllCaches();
             log.info("LeaderboardSyncScheduler: nightly sync completed successfully");
         } catch (Exception e) {
-            log.error("LeaderboardSyncScheduler: nightly sync failed with unexpected error — {}", e.getMessage(), e);
+            log.error("LeaderboardSyncScheduler: nightly sync failed with unexpected error ({})",
+                    e.getClass().getSimpleName());
         }
     }
 }
