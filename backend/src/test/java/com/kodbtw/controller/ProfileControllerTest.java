@@ -37,10 +37,22 @@ class ProfileControllerTest {
     @Autowired
     private ProfileRepository profileRepository;
 
+    @Autowired
+    private com.kodbtw.repository.PlatformAccountRepository platformAccountRepository;
+
+    @Autowired
+    private com.kodbtw.repository.LeaderboardUserCacheRepository leaderboardUserCacheRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
+
     private String userToken;
 
     @BeforeEach
     void setUp() throws Exception {
+        platformStatSnapshotRepository.deleteAll();
+        leaderboardUserCacheRepository.deleteAll();
+        platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
         userRepository.deleteAll();
 

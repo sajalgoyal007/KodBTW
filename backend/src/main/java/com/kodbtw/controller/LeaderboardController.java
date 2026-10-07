@@ -97,8 +97,8 @@ public class LeaderboardController {
      * Runs synchronously — for small user bases only.
      */
     @PostMapping("/sync")
-    public ResponseEntity<String> triggerSync(@AuthenticationPrincipal User user) {
+    public ResponseEntity<java.util.Map<String, String>> triggerSync(@AuthenticationPrincipal User user) {
         leaderboardSyncService.syncAllUsers();
-        return ResponseEntity.ok("{\"message\":\"Leaderboard sync triggered successfully\"}");
+        return ResponseEntity.ok(java.util.Map.of("message", "Leaderboard sync triggered successfully"));
     }
 }

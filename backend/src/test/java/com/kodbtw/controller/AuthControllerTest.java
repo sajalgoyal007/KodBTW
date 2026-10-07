@@ -44,6 +44,18 @@ class AuthControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private com.kodbtw.repository.ProfileRepository profileRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformAccountRepository platformAccountRepository;
+
+    @Autowired
+    private com.kodbtw.repository.LeaderboardUserCacheRepository leaderboardUserCacheRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Value("${jwt.secret}")
@@ -51,6 +63,10 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
+        platformStatSnapshotRepository.deleteAll();
+        leaderboardUserCacheRepository.deleteAll();
+        platformAccountRepository.deleteAll();
+        profileRepository.deleteAll();
         userRepository.deleteAll();
     }
 

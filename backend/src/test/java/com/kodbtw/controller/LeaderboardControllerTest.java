@@ -7,11 +7,14 @@ import com.kodbtw.entity.LeaderboardUserCache;
 import com.kodbtw.entity.User;
 import com.kodbtw.repository.LeaderboardUserCacheRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.service.LeaderboardSyncService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,14 +50,33 @@ class LeaderboardControllerTest {
     private LeaderboardUserCacheRepository cacheRepository;
 
     @Autowired
+    private com.kodbtw.repository.ProfileRepository profileRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformAccountRepository platformAccountRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformStatSnapshotRepository snapshotRepository;
+
+    @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    /** Mocked to prevent MySQL-specific native SQL from running against H2 in tests. */
+    @MockBean
+    private LeaderboardSyncService leaderboardSyncService;
 
     private String userToken;
     private User testUser;
 
     @BeforeEach
     void setUp() throws Exception {
+        snapshotRepository.deleteAll();
         cacheRepository.deleteAll();
+        platformAccountRepository.deleteAll();
+        profileRepository.deleteAll();
+        userRepository.deleteAll();
+        // Ensure sync is a no-op (avoids MySQL-specific upsert native query)
+        Mockito.doNothing().when(leaderboardSyncService).syncAllUsers();
 
         String email = "leaderboard_test_" + System.currentTimeMillis() + "@example.com";
         RegisterRequest registerRequest = new RegisterRequest("Leaderboard User", email, "password123");

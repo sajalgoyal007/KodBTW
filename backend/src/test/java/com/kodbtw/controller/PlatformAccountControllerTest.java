@@ -45,6 +45,12 @@ class PlatformAccountControllerTest {
     @Autowired
     private PlatformAccountRepository platformAccountRepository;
 
+    @Autowired
+    private com.kodbtw.repository.LeaderboardUserCacheRepository leaderboardUserCacheRepository;
+
+    @Autowired
+    private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
+
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
 
@@ -56,6 +62,8 @@ class PlatformAccountControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        platformStatSnapshotRepository.deleteAll();
+        leaderboardUserCacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
         userRepository.deleteAll();
