@@ -16,4 +16,11 @@ public interface PlatformAccountRepository extends JpaRepository<PlatformAccount
     Optional<PlatformAccount> findByIdAndUserId(Long id, Long userId);
 
     boolean existsByUserIdAndPlatform(Long userId, Platform platform);
+
+    /**
+     * Returns all distinct user IDs that have at least one connected platform account.
+     * Used by the leaderboard sync job to iterate all users that need snapshots.
+     */
+    @org.springframework.data.jpa.repository.Query("SELECT DISTINCT pa.user.id FROM PlatformAccount pa ORDER BY pa.user.id ASC")
+    java.util.List<Long> findAllDistinctUserIds();
 }

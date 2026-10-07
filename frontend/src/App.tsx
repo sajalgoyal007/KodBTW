@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ContestsPage } from './pages/ContestsPage';
+import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CodingProfilesPage } from './pages/CodingProfilesPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -57,6 +58,14 @@ export const App: React.FC = () => {
         element={
           <ProtectedRoute>
             <ContestsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/leaderboard"
+        element={
+          <ProtectedRoute>
+            <LeaderboardPage />
           </ProtectedRoute>
         }
       />
