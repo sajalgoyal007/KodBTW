@@ -5,7 +5,10 @@ import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.PlatformAccountRequest;
 import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.Platform;
+import com.kodbtw.entity.PlatformStatSnapshot;
+import com.kodbtw.entity.User;
 import com.kodbtw.repository.PlatformAccountRepository;
+import com.kodbtw.repository.PlatformStatSnapshotRepository;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.time.LocalDate;
+
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -26,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,7 +56,7 @@ class DashboardControllerTest {
     private com.kodbtw.repository.LeaderboardUserCacheRepository leaderboardUserCacheRepository;
 
     @Autowired
-    private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
+    private PlatformStatSnapshotRepository platformStatSnapshotRepository;
 
     @MockBean
     private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
@@ -246,5 +252,54 @@ class DashboardControllerTest {
                         .param("range", "all")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getInsights_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/dashboard/insights"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getInsights_returnsOnlyAuthenticatedUsersRealSnapshotWithoutProviderCalls() throws Exception {
+        User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
+        registerAndLogin("otherinsights@example.com", "password123");
+        User otherUser = userRepository.findByEmail("otherinsights@example.com").orElseThrow();
+
+        saveSnapshot(owner, "LEETCODE", "LEETCODE_REAL", 291, 124, 129, 38, 1352);
+        saveSnapshot(owner, "CODECHEF", "CODECHEF_MOCK", 900, 400, 300, 200, 1700);
+        saveSnapshot(otherUser, "CODEFORCES", "CODEFORCES_REAL", 600, null, null, null, 1850);
+
+        mockMvc.perform(get("/api/dashboard/insights")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dataAvailability.snapshotCount", is(1)))
+                .andExpect(jsonPath("$.dataAvailability.platformCount", is(1)))
+                .andExpect(jsonPath("$.dataAvailability.realDataOnly", is(true)))
+                .andExpect(jsonPath("$.dataAvailability.hasHistoricalComparison", is(false)))
+                .andExpect(jsonPath("$.dataAvailability.latestSnapshotDate").exists())
+                .andExpect(jsonPath("$.summary").value(org.hamcrest.Matchers.containsString("Current verified baseline: 291")))
+                .andExpect(jsonPath("$.platformInsights", hasSize(1)))
+                .andExpect(jsonPath("$.platformInsights[0].platform", is("LEETCODE")))
+                .andExpect(jsonPath("$.progressInsights[0].type", is("PROGRESS_BASELINE")))
+                .andExpect(jsonPath("$.ratingInsights[0].type", is("RATING_BASELINE")))
+                .andExpect(jsonPath("$.streakInsights", hasSize(0)));
+
+        verifyNoInteractions(leetCodeClient, codeforcesClient);
+    }
+
+    private void saveSnapshot(User user, String platform, String source, int total,
+                              Integer easy, Integer medium, Integer hard, Integer rating) {
+        PlatformStatSnapshot snapshot = new PlatformStatSnapshot();
+        snapshot.setUser(user);
+        snapshot.setPlatform(platform);
+        snapshot.setSnapshotDate(LocalDate.now());
+        snapshot.setTotalSolved(total);
+        snapshot.setEasySolved(easy);
+        snapshot.setMediumSolved(medium);
+        snapshot.setHardSolved(hard);
+        snapshot.setRating(rating);
+        snapshot.setSource(source);
+        platformStatSnapshotRepository.save(snapshot);
     }
 }

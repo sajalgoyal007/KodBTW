@@ -8,6 +8,7 @@ import { PlatformShareCard } from '../components/analytics/PlatformShareCard';
 import { PlatformStandingTable } from '../components/analytics/PlatformStandingTable';
 import { StreakComparisonCard } from '../components/analytics/StreakComparisonCard';
 import { DashboardHistorySection } from '../components/analytics/DashboardHistorySection';
+import { DashboardInsightsSection } from '../components/analytics/DashboardInsightsSection';
 import { ContestSummary } from '../components/dashboard/ContestSummary';
 import {
   RefreshCw,
@@ -254,6 +255,7 @@ export const AnalyticsPage: React.FC = () => {
           </>
         )}
 
+        <DashboardInsightsSection />
         <DashboardHistorySection />
       </main>
     </div>
