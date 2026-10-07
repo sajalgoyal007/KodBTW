@@ -87,6 +87,16 @@ class DashboardControllerTest {
                 .get("token").asText();
     }
 
+    private void refreshLinkedAccounts() throws Exception {
+        MvcResult list = mockMvc.perform(get("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andReturn();
+        for (var account : objectMapper.readTree(list.getResponse().getContentAsString())) {
+            mockMvc.perform(post("/api/platform-accounts/" + account.get("id").asLong() + "/sync")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)).andExpect(status().isOk());
+        }
+    }
+
     @Test
     void getStats_unauthenticated_returns401() throws Exception {
         mockMvc.perform(get("/api/dashboard/stats"))
@@ -121,6 +131,8 @@ class DashboardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(accountRequest)))
                 .andExpect(status().isCreated());
+
+        refreshLinkedAccounts();
 
         mockMvc.perform(get("/api/dashboard/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -174,6 +186,8 @@ class DashboardControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(accountRequest)))
                 .andExpect(status().isCreated());
+
+        refreshLinkedAccounts();
 
         mockMvc.perform(get("/api/dashboard/analytics")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))

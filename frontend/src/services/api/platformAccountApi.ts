@@ -5,8 +5,27 @@ import {
 } from '../../types/platform';
 import { PlatformStats } from '../../types/dashboard';
 
+export interface PlatformSyncStatus {
+  status: 'NEVER_SYNCED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+  lastAttemptAt: string | null;
+  lastSuccessAt: string | null;
+  lastFailureAt: string | null;
+  failureCategory: string | null;
+  failureMessage: string | null;
+  fresh: boolean;
+}
+
+export interface PlatformSyncResponse {
+  syncStatus: PlatformSyncStatus;
+  currentStats: PlatformStats;
+}
+
 export function getAll(): Promise<PlatformAccountResponse[]> {
   return apiClient<PlatformAccountResponse[]>('/api/platform-accounts');
+}
+
+export function sync(id: number): Promise<PlatformSyncResponse> {
+  return apiClient<PlatformSyncResponse>(`/api/platform-accounts/${id}/sync`, { method: 'POST' });
 }
 
 export function getById(id: number): Promise<PlatformAccountResponse> {

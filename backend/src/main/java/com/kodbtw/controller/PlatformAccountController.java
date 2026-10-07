@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kodbtw.dto.PlatformStats;
 import com.kodbtw.service.PlatformStatsService;
+import com.kodbtw.dto.PlatformSyncResponse;
+import com.kodbtw.dto.PlatformSyncStatusResponse;
+import com.kodbtw.service.PlatformSyncService;
+import com.kodbtw.service.LeaderboardSyncService;
 
 import java.util.List;
 
@@ -28,11 +32,17 @@ public class PlatformAccountController {
 
     private final PlatformAccountService platformAccountService;
     private final PlatformStatsService platformStatsService;
+    private final PlatformSyncService platformSyncService;
+    private final LeaderboardSyncService leaderboardSyncService;
 
     public PlatformAccountController(PlatformAccountService platformAccountService,
-                                     PlatformStatsService platformStatsService) {
+                                     PlatformStatsService platformStatsService,
+                                     PlatformSyncService platformSyncService,
+                                     LeaderboardSyncService leaderboardSyncService) {
         this.platformAccountService = platformAccountService;
         this.platformStatsService = platformStatsService;
+        this.platformSyncService = platformSyncService;
+        this.leaderboardSyncService = leaderboardSyncService;
     }
 
     @PostMapping
@@ -60,6 +70,22 @@ public class PlatformAccountController {
             @AuthenticationPrincipal User user,
             @PathVariable Long id) {
         return ResponseEntity.ok(platformStatsService.getStats(user.getId(), id));
+    }
+
+    @PostMapping("/{id}/sync")
+    public ResponseEntity<PlatformSyncResponse> sync(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
+        PlatformSyncResponse response = platformSyncService.syncOwnedAccount(user.getId(), id);
+        leaderboardSyncService.refreshUserCache(user.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/sync-status")
+    public ResponseEntity<PlatformSyncStatusResponse> getSyncStatus(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long id) {
+        return ResponseEntity.ok(platformSyncService.getOwnedStatus(user.getId(), id));
     }
 
     @PutMapping("/{id}")

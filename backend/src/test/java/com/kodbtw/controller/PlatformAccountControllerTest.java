@@ -296,6 +296,11 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("SUCCEEDED"));
+
         // Fetch stats
         mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -331,10 +336,13 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("ACCOUNT_NOT_FOUND"))
+                .andExpect(jsonPath("$.syncStatus.failureMessage").exists())
+                .andExpect(jsonPath("$.currentStats.source").value("UNSYNCED"));
     }
 
     @Test
@@ -353,10 +361,12 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
-                .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.error").value("Bad Gateway"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("TIMEOUT"))
+                .andExpect(jsonPath("$.syncStatus.failureMessage").value(org.hamcrest.Matchers.not("LeetCode API timeout")));
     }
 
     @Test
@@ -378,6 +388,10 @@ class PlatformAccountControllerTest {
 
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
+
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
@@ -413,10 +427,11 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("Not Found"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("ACCOUNT_NOT_FOUND"));
     }
 
     @Test
@@ -435,10 +450,11 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
-        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
-                .andExpect(status().isBadGateway())
-                .andExpect(jsonPath("$.error").value("Bad Gateway"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("TIMEOUT"));
     }
 
     @Test
@@ -466,5 +482,70 @@ class PlatformAccountControllerTest {
         mockMvc.perform(get("/api/platform-accounts/99999/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void syncAndStatusRequireAuthenticationAndEnforceOwnership() throws Exception {
+        mockMvc.perform(post("/api/platform-accounts/1/sync")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/platform-accounts/1/sync-status")).andExpect(status().isUnauthorized());
+        MvcResult created = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.CODECHEF, "syncuser", null))))
+                .andExpect(status().isCreated()).andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/sync-status")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherUserToken))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherUserToken))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/sync-status")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NEVER_SYNCED"));
+    }
+
+    @Test
+    void syncSuccessIsIdempotentAndFailurePreservesLastSuccessfulStats() throws Exception {
+        var mockData = new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.GraphQLData(
+                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.MatchedUser(
+                        "historyless", new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.UserProfile(1200),
+                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmitStatsGlobal(java.util.List.of(
+                                new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.SubmissionCount("All", 83))),
+                        new com.kodbtw.adapter.leetcode.dto.LeetCodeDto.UserCalendar(2, 10)), null);
+        org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("historyless")).thenReturn(mockData);
+        MvcResult created = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.LEETCODE, "historyless", null))))
+                .andExpect(status().isCreated()).andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(83));
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(83));
+        org.junit.jupiter.api.Assertions.assertEquals(1, platformStatSnapshotRepository.findAll().size());
+        var lastSuccess = platformAccountRepository.findById(id).orElseThrow().getLastSuccessAt();
+
+        org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("historyless"))
+                .thenThrow(new com.kodbtw.exception.PlatformApiException("timeout; upstream-secret"));
+        MvcResult failed = mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("TIMEOUT"))
+                .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(83))
+                .andReturn();
+        org.junit.jupiter.api.Assertions.assertFalse(failed.getResponse().getContentAsString().contains("upstream-secret"));
+        var account = platformAccountRepository.findById(id).orElseThrow();
+        org.junit.jupiter.api.Assertions.assertEquals(lastSuccess, account.getLastSuccessAt());
+        org.junit.jupiter.api.Assertions.assertEquals(1, platformStatSnapshotRepository.findAll().size());
     }
 }

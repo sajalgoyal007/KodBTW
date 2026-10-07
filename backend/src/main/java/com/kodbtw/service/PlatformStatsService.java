@@ -1,13 +1,13 @@
 package com.kodbtw.service;
 
-import com.kodbtw.adapter.PlatformAdapter;
-import com.kodbtw.adapter.PlatformAdapterRegistry;
 import com.kodbtw.dto.DashboardOverview;
 import com.kodbtw.dto.DashboardStatsResponse;
 import com.kodbtw.dto.PlatformStats;
 import com.kodbtw.entity.PlatformAccount;
+import com.kodbtw.entity.PlatformStatSnapshot;
 import com.kodbtw.exception.ResourceNotFoundException;
 import com.kodbtw.repository.PlatformAccountRepository;
+import com.kodbtw.repository.PlatformStatSnapshotRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,12 +19,12 @@ import java.util.List;
 public class PlatformStatsService {
 
     private final PlatformAccountRepository platformAccountRepository;
-    private final PlatformAdapterRegistry platformAdapterRegistry;
+    private final PlatformStatSnapshotRepository snapshotRepository;
 
     public PlatformStatsService(PlatformAccountRepository platformAccountRepository,
-                                PlatformAdapterRegistry platformAdapterRegistry) {
+                                PlatformStatSnapshotRepository snapshotRepository) {
         this.platformAccountRepository = platformAccountRepository;
-        this.platformAdapterRegistry = platformAdapterRegistry;
+        this.snapshotRepository = snapshotRepository;
     }
 
     @Transactional(readOnly = true)
@@ -32,13 +32,50 @@ public class PlatformStatsService {
         PlatformAccount account = platformAccountRepository.findByIdAndUserId(accountId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Platform account not found"));
 
-        return fetchStats(account);
+        return getPersistedStats(account);
     }
 
     @Transactional(readOnly = true)
-    public PlatformStats fetchStats(PlatformAccount account) {
-        PlatformAdapter adapter = platformAdapterRegistry.getAdapter(account.getPlatform());
-        return adapter.fetchStats(account);
+    public PlatformStats getPersistedStats(PlatformAccount account) {
+        PlatformStatSnapshot snapshot = snapshotRepository
+                .findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(account.getUser().getId(), account.getPlatform().name())
+                .orElse(null);
+        if (snapshot == null) {
+            return PlatformStats.builder()
+                    .platform(account.getPlatform())
+                    .username(account.getUsername())
+                    .profileUrl(profileUrl(account))
+                    .lastSyncedAt(null)
+                    .source("UNSYNCED")
+                    .build();
+        }
+        return PlatformStats.builder()
+                .platform(account.getPlatform())
+                .username(account.getUsername())
+                .profileUrl(profileUrl(account))
+                .totalProblemsSolved(snapshot.getTotalSolved())
+                .easySolved(snapshot.getEasySolved())
+                .mediumSolved(snapshot.getMediumSolved())
+                .hardSolved(snapshot.getHardSolved())
+                .rating(snapshot.getRating())
+                .rank(snapshot.getRank())
+                .contestsParticipated(snapshot.getContests())
+                .currentStreak(snapshot.getCurrentStreak())
+                .longestStreak(snapshot.getLongestStreak())
+                .lastSyncedAt(snapshot.getStatsLastSyncedAt())
+                .source(snapshot.getSource())
+                .build();
+    }
+
+    private String profileUrl(PlatformAccount account) {
+        if (account.getProfileUrl() != null && !account.getProfileUrl().isBlank()) return account.getProfileUrl();
+        return switch (account.getPlatform()) {
+            case LEETCODE -> "https://leetcode.com/u/" + account.getUsername() + "/";
+            case CODEFORCES -> "https://codeforces.com/profile/" + account.getUsername();
+            case CODECHEF -> "https://www.codechef.com/users/" + account.getUsername();
+            case GEEKSFORGEEKS -> "https://auth.geeksforgeeks.org/user/" + account.getUsername();
+            case HACKERRANK -> "https://www.hackerrank.com/profile/" + account.getUsername();
+        };
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +98,7 @@ public class PlatformStatsService {
         List<PlatformStats> platformStatsList = new ArrayList<>(accounts.size());
 
         for (PlatformAccount account : accounts) {
-            PlatformStats stats = fetchStats(account);
+            PlatformStats stats = getPersistedStats(account);
             platformStatsList.add(stats);
 
             if (stats.getTotalProblemsSolved() != null) {

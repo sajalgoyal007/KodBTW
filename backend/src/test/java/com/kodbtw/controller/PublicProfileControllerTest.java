@@ -121,6 +121,11 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(paReq)))
                 .andExpect(status().isCreated());
 
+        Long accountId = platformAccountRepository.findAllByUserId(testUser.getId()).get(0).getId();
+        mockMvc.perform(post("/api/platform-accounts/" + accountId + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk());
+
         // Access public profile without any authorization header
         mockMvc.perform(get("/api/public/profiles/testcoder"))
                 .andExpect(status().isOk())
@@ -181,6 +186,11 @@ class PublicProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(mockAccount)))
                 .andExpect(status().isCreated());
+
+        Long accountId = platformAccountRepository.findAllByUserId(testUser.getId()).get(0).getId();
+        mockMvc.perform(post("/api/platform-accounts/" + accountId + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/public/profiles/sourcetest"))
                 .andExpect(status().isOk())

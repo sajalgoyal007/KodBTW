@@ -7,7 +7,6 @@ import com.kodbtw.entity.Profile;
 import com.kodbtw.entity.User;
 import com.kodbtw.repository.LeaderboardUserCacheRepository;
 import com.kodbtw.repository.PlatformAccountRepository;
-import com.kodbtw.repository.PlatformStatSnapshotRepository;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
 import org.slf4j.Logger;
@@ -46,66 +45,62 @@ public class LeaderboardSyncService {
     private static final String MOCK_SOURCE = "MOCK";
 
     private final PlatformAccountRepository platformAccountRepository;
-    private final PlatformStatSnapshotRepository snapshotRepository;
     private final LeaderboardUserCacheRepository cacheRepository;
     private final ProfileRepository profileRepository;
     private final UserRepository userRepository;
     private final PlatformStatsService platformStatsService;
+    private final PlatformSyncService platformSyncService;
 
     public LeaderboardSyncService(
             PlatformAccountRepository platformAccountRepository,
-            PlatformStatSnapshotRepository snapshotRepository,
             LeaderboardUserCacheRepository cacheRepository,
             ProfileRepository profileRepository,
             UserRepository userRepository,
-            PlatformStatsService platformStatsService) {
+            PlatformStatsService platformStatsService,
+            PlatformSyncService platformSyncService) {
         this.platformAccountRepository = platformAccountRepository;
-        this.snapshotRepository = snapshotRepository;
         this.cacheRepository = cacheRepository;
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
         this.platformStatsService = platformStatsService;
+        this.platformSyncService = platformSyncService;
     }
 
     /**
      * Main sync entry point. Called by the scheduler and optionally by the manual trigger endpoint.
      * Iterates all users with platform accounts and syncs them one by one.
      */
-    @Transactional
     public void syncAllUsers() {
+        platformSyncService.syncAllAccounts();
+        rebuildAllCaches();
+    }
+
+    public void rebuildAllCaches() {
         List<Long> userIds = platformAccountRepository.findAllDistinctUserIds();
-        log.info("LeaderboardSyncService: starting sync for {} users", userIds.size());
-
-        int successCount = 0;
-        int failCount = 0;
-
         for (Long userId : userIds) {
             try {
-                syncUser(userId);
-                successCount++;
+                refreshUserCache(userId);
             } catch (Exception e) {
-                failCount++;
-                log.error("LeaderboardSyncService: failed to sync user {} — {}", userId, e.getMessage(), e);
+                log.error("LeaderboardSyncService: failed to rebuild cache for user {}", userId);
             }
         }
-
-        log.info("LeaderboardSyncService: sync complete. success={}, failed={}", successCount, failCount);
     }
 
     /**
      * Syncs a single user: fetches stats per platform, persists snapshots, updates cache.
      */
-    @Transactional
     public void syncUser(Long userId) {
-        List<PlatformAccount> accounts = platformAccountRepository.findAllByUserId(userId);
-        if (accounts.isEmpty()) {
-            return;
+        for (Long id : platformAccountRepository.findAccountIdsByUserId(userId)) {
+            try { platformSyncService.syncScheduledAccount(id); }
+            catch (Exception ex) { log.warn("Skipping a platform account during scheduled sync"); }
         }
+        refreshUserCache(userId);
+    }
 
-        // Sort platform accounts deterministically by platform name
-        accounts = accounts.stream()
-                .sorted((a, b) -> a.getPlatform().name().compareTo(b.getPlatform().name()))
-                .toList();
+    @Transactional
+    public void refreshUserCache(Long userId) {
+        List<PlatformAccount> accounts = platformAccountRepository.findAllByUserId(userId);
+        if (accounts.isEmpty()) return;
 
         // --- Accumulator fields for cache row ---
         int totalSolvedReal = 0;
@@ -117,36 +112,14 @@ public class LeaderboardSyncService {
         boolean allReal = true;
 
         for (PlatformAccount account : accounts) {
-            PlatformStats stats = null;
-            try {
-                stats = platformStatsService.fetchStats(account);
-            } catch (Exception e) {
-                log.warn("LeaderboardSyncService: skipping platform {} for user {} — fetch failed: {}",
-                        account.getPlatform(), userId, e.getMessage());
-                // Don't update the snapshot for this platform — preserve last known value.
-                continue;
-            }
+            PlatformStats stats = platformStatsService.getPersistedStats(account);
 
             boolean isReal = isRealPlatform(stats);
-            boolean isMock = !isReal;
-
-            // Persist/upsert the snapshot regardless of mock status (record what we have).
-            snapshotRepository.upsert(
-                    userId,
-                    stats.getPlatform() != null ? stats.getPlatform().name() : account.getPlatform().name(),
-                    stats.getTotalProblemsSolved(),
-                    stats.getEasySolved(),
-                    stats.getMediumSolved(),
-                    stats.getHardSolved(),
-                    stats.getRating(),
-                    stats.getContestsParticipated(),
-                    stats.getCurrentStreak(),
-                    stats.getSource()
-            );
-
             // Track mock/real flags.
-            if (isMock) {
+            if ("MOCK".equalsIgnoreCase(stats.getSource())) {
                 anyMock = true;
+            }
+            if (!isReal) {
                 allReal = false;
             }
 

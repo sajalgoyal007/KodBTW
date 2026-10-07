@@ -16,6 +16,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 import java.time.LocalDateTime;
+import com.kodbtw.entity.SyncStatus;
 
 @Entity
 @Table(
@@ -50,6 +51,25 @@ public class PlatformAccount {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sync_status", nullable = false, length = 20)
+    private SyncStatus syncStatus = SyncStatus.NEVER_SYNCED;
+
+    @Column(name = "last_attempt_at")
+    private LocalDateTime lastAttemptAt;
+
+    @Column(name = "last_success_at")
+    private LocalDateTime lastSuccessAt;
+
+    @Column(name = "last_failure_at")
+    private LocalDateTime lastFailureAt;
+
+    @Column(name = "last_sync_error_category", length = 40)
+    private String lastSyncErrorCategory;
+
+    @Column(name = "last_sync_error_message", length = 160)
+    private String lastSyncErrorMessage;
 
     public PlatformAccount() {
     }
@@ -139,4 +159,17 @@ public class PlatformAccount {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public SyncStatus getSyncStatus() { return syncStatus; }
+    public void setSyncStatus(SyncStatus syncStatus) { this.syncStatus = syncStatus; }
+    public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }
+    public void setLastAttemptAt(LocalDateTime lastAttemptAt) { this.lastAttemptAt = lastAttemptAt; }
+    public LocalDateTime getLastSuccessAt() { return lastSuccessAt; }
+    public void setLastSuccessAt(LocalDateTime lastSuccessAt) { this.lastSuccessAt = lastSuccessAt; }
+    public LocalDateTime getLastFailureAt() { return lastFailureAt; }
+    public void setLastFailureAt(LocalDateTime lastFailureAt) { this.lastFailureAt = lastFailureAt; }
+    public String getLastSyncErrorCategory() { return lastSyncErrorCategory; }
+    public void setLastSyncErrorCategory(String value) { this.lastSyncErrorCategory = value; }
+    public String getLastSyncErrorMessage() { return lastSyncErrorMessage; }
+    public void setLastSyncErrorMessage(String value) { this.lastSyncErrorMessage = value; }
 }

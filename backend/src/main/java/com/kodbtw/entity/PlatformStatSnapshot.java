@@ -58,10 +58,19 @@ public class PlatformStatSnapshot {
 
     private Integer rating;
 
+    @Column(name = "platform_rank")
+    private Integer rank;
+
     private Integer contests;
 
     @Column(name = "current_streak")
     private Integer currentStreak;
+
+    @Column(name = "longest_streak")
+    private Integer longestStreak;
+
+    @Column(name = "stats_last_synced_at")
+    private LocalDateTime statsLastSyncedAt;
 
     /**
      * Source tag from the platform adapter: e.g. "LEETCODE_REAL", "CODEFORCES_REAL", "MOCK".
@@ -118,11 +127,20 @@ public class PlatformStatSnapshot {
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
 
+    public Integer getRank() { return rank; }
+    public void setRank(Integer rank) { this.rank = rank; }
+
     public Integer getContests() { return contests; }
     public void setContests(Integer contests) { this.contests = contests; }
 
     public Integer getCurrentStreak() { return currentStreak; }
     public void setCurrentStreak(Integer currentStreak) { this.currentStreak = currentStreak; }
+
+    public Integer getLongestStreak() { return longestStreak; }
+    public void setLongestStreak(Integer longestStreak) { this.longestStreak = longestStreak; }
+
+    public LocalDateTime getStatsLastSyncedAt() { return statsLastSyncedAt; }
+    public void setStatsLastSyncedAt(LocalDateTime statsLastSyncedAt) { this.statsLastSyncedAt = statsLastSyncedAt; }
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }

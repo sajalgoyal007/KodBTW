@@ -1,6 +1,7 @@
 package com.kodbtw.config;
 
 import com.kodbtw.service.LeaderboardSyncService;
+import com.kodbtw.service.PlatformSyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,9 +22,12 @@ public class LeaderboardSyncScheduler {
     private static final Logger log = LoggerFactory.getLogger(LeaderboardSyncScheduler.class);
 
     private final LeaderboardSyncService leaderboardSyncService;
+    private final PlatformSyncService platformSyncService;
 
-    public LeaderboardSyncScheduler(LeaderboardSyncService leaderboardSyncService) {
+    public LeaderboardSyncScheduler(LeaderboardSyncService leaderboardSyncService,
+                                    PlatformSyncService platformSyncService) {
         this.leaderboardSyncService = leaderboardSyncService;
+        this.platformSyncService = platformSyncService;
     }
 
     /**
@@ -34,7 +38,8 @@ public class LeaderboardSyncScheduler {
     public void runDailySync() {
         log.info("LeaderboardSyncScheduler: starting scheduled nightly sync");
         try {
-            leaderboardSyncService.syncAllUsers();
+            platformSyncService.syncAllAccounts();
+            leaderboardSyncService.rebuildAllCaches();
             log.info("LeaderboardSyncScheduler: nightly sync completed successfully");
         } catch (Exception e) {
             log.error("LeaderboardSyncScheduler: nightly sync failed with unexpected error — {}", e.getMessage(), e);

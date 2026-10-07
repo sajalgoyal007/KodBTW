@@ -167,6 +167,14 @@
   animation: spin 0.6s linear infinite;
 }
 
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Skeleton */
 .skeleton {
   background: linear-gradient(90deg, var(--color-bg-subtle) 25%, #26334d 50%, var(--color-bg-subtle) 75%);

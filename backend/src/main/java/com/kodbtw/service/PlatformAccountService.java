@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Service
 public class PlatformAccountService {
@@ -93,7 +96,7 @@ public class PlatformAccountService {
     }
 
     private PlatformAccountResponse toResponse(PlatformAccount account) {
-        return new PlatformAccountResponse(
+        PlatformAccountResponse response = new PlatformAccountResponse(
                 account.getId(),
                 account.getUser().getId(),
                 account.getPlatform(),
@@ -103,5 +106,14 @@ public class PlatformAccountService {
                 account.getConnectedAt(),
                 account.getUpdatedAt()
         );
+        response.setSyncStatus(account.getSyncStatus());
+        response.setLastAttemptAt(account.getLastAttemptAt());
+        response.setLastSuccessAt(account.getLastSuccessAt());
+        response.setLastFailureAt(account.getLastFailureAt());
+        response.setLastSyncErrorCategory(account.getLastSyncErrorCategory());
+        response.setLastSyncErrorMessage(account.getLastSyncErrorMessage());
+        response.setFresh(account.getLastSuccessAt() != null
+                && Duration.between(account.getLastSuccessAt(), LocalDateTime.now(ZoneOffset.UTC)).compareTo(Duration.ofHours(24)) <= 0);
+        return response;
     }
 }

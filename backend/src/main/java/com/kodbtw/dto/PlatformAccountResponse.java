@@ -3,6 +3,7 @@ package com.kodbtw.dto;
 import com.kodbtw.entity.Platform;
 
 import java.time.LocalDateTime;
+import com.kodbtw.entity.SyncStatus;
 
 public class PlatformAccountResponse {
 
@@ -14,6 +15,13 @@ public class PlatformAccountResponse {
     private Boolean verified;
     private LocalDateTime connectedAt;
     private LocalDateTime updatedAt;
+    private SyncStatus syncStatus;
+    private LocalDateTime lastAttemptAt;
+    private LocalDateTime lastSuccessAt;
+    private LocalDateTime lastFailureAt;
+    private String lastSyncErrorCategory;
+    private String lastSyncErrorMessage;
+    private boolean fresh;
 
     public PlatformAccountResponse() {
     }
@@ -47,4 +55,18 @@ public class PlatformAccountResponse {
     public void setConnectedAt(LocalDateTime connectedAt) { this.connectedAt = connectedAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public SyncStatus getSyncStatus() { return syncStatus; }
+    public void setSyncStatus(SyncStatus value) { this.syncStatus = value; }
+    public LocalDateTime getLastAttemptAt() { return lastAttemptAt; }
+    public void setLastAttemptAt(LocalDateTime value) { this.lastAttemptAt = value; }
+    public LocalDateTime getLastSuccessAt() { return lastSuccessAt; }
+    public void setLastSuccessAt(LocalDateTime value) { this.lastSuccessAt = value; }
+    public LocalDateTime getLastFailureAt() { return lastFailureAt; }
+    public void setLastFailureAt(LocalDateTime value) { this.lastFailureAt = value; }
+    public String getLastSyncErrorCategory() { return lastSyncErrorCategory; }
+    public void setLastSyncErrorCategory(String value) { this.lastSyncErrorCategory = value; }
+    public String getLastSyncErrorMessage() { return lastSyncErrorMessage; }
+    public void setLastSyncErrorMessage(String value) { this.lastSyncErrorMessage = value; }
+    public boolean isFresh() { return fresh; }
+    public void setFresh(boolean value) { this.fresh = value; }
 }

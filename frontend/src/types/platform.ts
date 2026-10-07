@@ -9,6 +9,13 @@ export interface PlatformAccountResponse {
   verified: boolean;
   connectedAt: string;
   updatedAt: string;
+  syncStatus: 'NEVER_SYNCED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+  lastAttemptAt: string | null;
+  lastSuccessAt: string | null;
+  lastFailureAt: string | null;
+  lastSyncErrorCategory: string | null;
+  lastSyncErrorMessage: string | null;
+  fresh: boolean;
 }
 
 export interface PlatformAccountRequest {

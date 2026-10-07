@@ -1,12 +1,17 @@
 import React from 'react';
 import { PlatformStats } from '../../types/dashboard';
-import { ExternalLink, Calendar, Flame, Trophy } from 'lucide-react';
+import { ExternalLink, Calendar, Flame, Trophy, RefreshCw } from 'lucide-react';
+import { PlatformAccountResponse } from '../../types/platform';
 
 interface PlatformCardProps {
   platform: PlatformStats;
+  account?: PlatformAccountResponse;
+  refreshing: boolean;
+  feedback: { success: boolean; message: string } | null;
+  onRefresh: (accountId: number) => void;
 }
 
-export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
+export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, refreshing, feedback, onRefresh }) => {
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
 
@@ -26,6 +31,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
   };
 
   const getSourceBadge = (source: string) => {
+    if (source === 'UNSYNCED') return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Not synced</span>;
     if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
       return (
         <span
@@ -211,14 +217,29 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
           fontSize: '0.6875rem',
           color: 'var(--color-text-muted)',
         }}
       >
-        <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-          <Calendar size={12} /> Synced
-        </span>
-        <span className="mono">{formatDateTime(platform.lastSyncedAt)}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: '1 1 160px', minWidth: 0 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <Calendar size={12} /> {account?.syncStatus?.replace('_', ' ') || 'Sync status'}
+          </span>
+          <span className="mono">{account?.fresh ? 'Fresh · ' : 'Last successful: '}{formatDateTime(account?.lastSuccessAt ?? null)}</span>
+          {account?.lastSyncErrorMessage && <span role="status" style={{ color: 'var(--color-error)', maxWidth: '220px' }}>{account.lastSyncErrorMessage}</span>}
+          {feedback && <span role="status" style={{ color: feedback.success ? 'var(--color-success)' : 'var(--color-error)', maxWidth: '220px' }}>{feedback.message}</span>}
+        </div>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={!account || refreshing}
+          onClick={() => account && onRefresh(account.id)}
+          style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+        >
+          <RefreshCw size={13} className={refreshing ? 'spin' : ''} /> {refreshing ? 'Refreshing…' : 'Refresh Stats'}
+        </button>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ import {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { stats, analytics, loading, error, refetch } = useDashboard();
+  const { stats, analytics, accounts, loading, error, refetch, refreshAccount, refreshingAccountId, refreshFeedback } = useDashboard();
 
   const overview = stats?.overview;
   const platforms = stats?.platforms || [];
@@ -277,7 +277,16 @@ export const DashboardPage: React.FC = () => {
                 }}
               >
                 {platforms.map((p) => (
-                  <PlatformCard key={`${p.platform}-${p.username}`} platform={p} />
+                  <PlatformCard
+                    key={`${p.platform}-${p.username}`}
+                    platform={p}
+                    account={accounts.find((account) => account.platform === p.platform)}
+                    refreshing={accounts.find((account) => account.platform === p.platform)?.id === refreshingAccountId}
+                    feedback={refreshFeedback && refreshFeedback.accountId === accounts.find((account) => account.platform === p.platform)?.id
+                      ? { success: refreshFeedback.success, message: refreshFeedback.message }
+                      : null}
+                    onRefresh={(accountId) => { void refreshAccount(accountId); }}
+                  />
                 ))}
               </div>
             </div>
