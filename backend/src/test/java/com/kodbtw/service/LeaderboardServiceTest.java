@@ -4,6 +4,7 @@ import com.kodbtw.dto.leaderboard.LeaderboardEntryDto;
 import com.kodbtw.dto.leaderboard.LeaderboardPageResponse;
 import com.kodbtw.dto.leaderboard.MyRankResponse;
 import com.kodbtw.entity.LeaderboardUserCache;
+import com.kodbtw.entity.Profile;
 import com.kodbtw.entity.User;
 import com.kodbtw.repository.LeaderboardUserCacheRepository;
 import com.kodbtw.repository.ProfileRepository;
@@ -83,6 +84,21 @@ class LeaderboardServiceTest {
 
         verify(cacheRepository).findAllRealOnly(any(Pageable.class));
         verify(cacheRepository, never()).findAllIncludingMock(any(Pageable.class));
+    }
+
+    @Test
+    void testGetGlobalLeaderboardIncludesPublicProfileUsername() {
+        LeaderboardUserCache user = buildCache(1L, "Alice", "NSUT", 500, 1500.0, 1800, true, false);
+        Page<LeaderboardUserCache> page = new PageImpl<>(List.of(user));
+        Profile profile = new Profile(user.getUser());
+        profile.setUsername("alice-dev");
+
+        when(cacheRepository.findAllRealOnly(any(Pageable.class))).thenReturn(page);
+        when(profileRepository.findAllByUserIdIn(List.of(1L))).thenReturn(List.of(profile));
+
+        LeaderboardPageResponse response = leaderboardService.getGlobalLeaderboard(0, 25, "score", "real", null);
+
+        assertEquals("alice-dev", response.getEntries().get(0).getUsername());
     }
 
     @Test

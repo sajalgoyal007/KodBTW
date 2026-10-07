@@ -15,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -130,11 +132,17 @@ public class LeaderboardService {
             int page, int size, String sort, String dataFilter,
             Long currentUserId) {
 
-        List<LeaderboardEntryDto> entries = IntStream.range(0, resultPage.getContent().size())
+        List<LeaderboardUserCache> cachedUsers = resultPage.getContent();
+        Map<Long, String> usernamesByUserId = profileRepository.findAllByUserIdIn(
+                        cachedUsers.stream().map(LeaderboardUserCache::getUserId).toList())
+                .stream()
+                .collect(Collectors.toMap(profile -> profile.getUser().getId(), profile -> profile.getUsername()));
+
+        List<LeaderboardEntryDto> entries = IntStream.range(0, cachedUsers.size())
                 .mapToObj(i -> {
-                    LeaderboardUserCache c = resultPage.getContent().get(i);
+                    LeaderboardUserCache c = cachedUsers.get(i);
                     long rank = (long) (page * size) + i + 1;
-                    return toEntry(c, rank, currentUserId);
+                    return toEntry(c, rank, currentUserId, usernamesByUserId.get(c.getUserId()));
                 })
                 .toList();
 
@@ -159,12 +167,13 @@ public class LeaderboardService {
         );
     }
 
-    private LeaderboardEntryDto toEntry(LeaderboardUserCache c, long rank, Long currentUserId) {
+    private LeaderboardEntryDto toEntry(LeaderboardUserCache c, long rank, Long currentUserId, String username) {
         boolean isCurrentUser = currentUserId != null && currentUserId.equals(c.getUserId());
         return new LeaderboardEntryDto(
                 rank,
                 c.getUserId(),
                 c.getDisplayName(),
+                username,
                 c.getCollege(),
                 c.getTotalSolved(),
                 c.getWeightedScore(),

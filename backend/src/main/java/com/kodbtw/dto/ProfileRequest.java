@@ -2,10 +2,16 @@ package com.kodbtw.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.URL;
 
+import java.util.Locale;
+
 public class ProfileRequest {
+
+    @Pattern(regexp = "^[a-z0-9_-]{3,50}$", message = "Username must be 3-50 characters with lowercase letters, numbers, hyphens, and underscores only")
+    private String username;
 
     @Size(max = 100, message = "Display name must not exceed 100 characters")
     private String displayName;
@@ -40,6 +46,14 @@ public class ProfileRequest {
     private String portfolioUrl;
 
     public ProfileRequest() {
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username != null ? username.trim().toLowerCase(Locale.ROOT) : null;
     }
 
     public String getDisplayName() {

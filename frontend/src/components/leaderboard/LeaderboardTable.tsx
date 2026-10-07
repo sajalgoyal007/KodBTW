@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { LeaderboardEntry } from '../../types/leaderboard';
 import {
   Trophy,
@@ -221,15 +222,23 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                     {/* Developer Name + Current User Badge */}
                     <td style={{ padding: '0.875rem 1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span
-                          style={{
-                            fontWeight: isCurrent ? 700 : 500,
-                            color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                            fontSize: '0.9375rem',
-                          }}
-                        >
-                          {entry.displayName || `User #${entry.userId}`}
-                        </span>
+                        {entry.username ? (
+                          <Link
+                            to={`/u/${encodeURIComponent(entry.username)}`}
+                            style={{
+                              fontWeight: isCurrent ? 700 : 500,
+                              color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-primary)',
+                              fontSize: '0.9375rem',
+                              textDecoration: 'none',
+                            }}
+                          >
+                            {entry.displayName || `User #${entry.userId}`}
+                          </Link>
+                        ) : (
+                          <span style={{ fontWeight: isCurrent ? 700 : 500, color: isCurrent ? 'var(--color-primary)' : 'var(--color-text-primary)', fontSize: '0.9375rem' }}>
+                            {entry.displayName || `User #${entry.userId}`}
+                          </span>
+                        )}
                         {isCurrent && (
                           <span
                             className="badge badge-primary"

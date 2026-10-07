@@ -23,4 +23,4 @@ KodBTW is a Java-based unified coding profile and analytics platform enabling st
 - **Phase 7:** Frontend foundation and design system (Dark + Orange)
 - **Phase 8:** Incremental screen implementation (12 screens)
 - **Phase 9:** Frontend-backend integration
-- **Phase 10:** Testing, documentation, and final cleanup
+- **Phase 10:** Public developer profiles and profile sharing, including unique public usernames, an unauthenticated sanitized profile API, profile sharing UI, and leaderboard links to public profiles

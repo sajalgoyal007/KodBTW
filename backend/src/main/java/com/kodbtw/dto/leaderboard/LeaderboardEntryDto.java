@@ -8,6 +8,7 @@ public class LeaderboardEntryDto {
     private final long rank;
     private final Long userId;
     private final String displayName;
+    private final String username;
     private final String college;
     private final Integer totalSolved;
     private final Double weightedScore;
@@ -18,7 +19,7 @@ public class LeaderboardEntryDto {
     private final Boolean realDataOnly;
     private final boolean isCurrentUser;
 
-    public LeaderboardEntryDto(long rank, Long userId, String displayName, String college,
+    public LeaderboardEntryDto(long rank, Long userId, String displayName, String username, String college,
                                Integer totalSolved, Double weightedScore,
                                Integer bestRating, String bestRatingPlatform,
                                Integer totalContests, Boolean hasMockData,
@@ -26,6 +27,7 @@ public class LeaderboardEntryDto {
         this.rank = rank;
         this.userId = userId;
         this.displayName = displayName;
+        this.username = username;
         this.college = college;
         this.totalSolved = totalSolved;
         this.weightedScore = weightedScore;
@@ -40,6 +42,7 @@ public class LeaderboardEntryDto {
     public long getRank() { return rank; }
     public Long getUserId() { return userId; }
     public String getDisplayName() { return displayName; }
+    public String getUsername() { return username; }
     public String getCollege() { return college; }
     public Integer getTotalSolved() { return totalSolved; }
     public Double getWeightedScore() { return weightedScore; }

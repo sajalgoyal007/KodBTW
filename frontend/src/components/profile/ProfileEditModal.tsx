@@ -18,6 +18,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const [username, setUsername] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
   const [bio, setBio] = useState<string>('');
   const [avatarUrl, setAvatarUrl] = useState<string>('');
@@ -33,6 +34,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
   useEffect(() => {
     if (initialProfile) {
+      setUsername(initialProfile.username || '');
       setDisplayName(initialProfile.displayName || '');
       setBio(initialProfile.bio || '');
       setAvatarUrl(initialProfile.avatarUrl || '');
@@ -43,6 +45,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       setLinkedinUrl(initialProfile.linkedinUrl || '');
       setPortfolioUrl(initialProfile.portfolioUrl || '');
     } else {
+      setUsername('');
       setDisplayName('');
       setBio('');
       setAvatarUrl('');
@@ -70,6 +73,13 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     setGeneralError(null);
 
     const errors: Record<string, string> = {};
+
+    if (username.trim()) {
+      const u = username.trim().toLowerCase();
+      if (!/^[a-z0-9_-]{3,50}$/.test(u)) {
+        errors.username = 'Username must be 3-50 characters with lowercase letters, numbers, hyphens, and underscores only';
+      }
+    }
 
     if (displayName.length > 100) {
       errors.displayName = 'Display name must not exceed 100 characters';
@@ -110,6 +120,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
 
     const payload: ProfileRequest = {
+      username: username.trim().toLowerCase() || null,
       displayName: displayName.trim() || null,
       bio: bio.trim() || null,
       avatarUrl: avatarUrl.trim() || null,
@@ -202,6 +213,24 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit}>
+          {/* Username / Handle */}
+          <div className="form-group">
+            <label className="form-label">Username / Public Handle</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. alexchen"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              disabled={isLoading}
+              maxLength={50}
+            />
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>
+              Your public profile will be shareable at /u/{username || 'username'}
+            </div>
+            {fieldErrors.username && <div className="form-error">{fieldErrors.username}</div>}
+          </div>
+
           {/* Display Name */}
           <div className="form-group">
             <label className="form-label">Display Name</label>

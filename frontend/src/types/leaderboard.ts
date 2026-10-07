@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   rank: number;
   userId: number;
   displayName: string | null;
+  username: string | null;
   college: string | null;
   totalSolved: number;
   weightedScore: number;

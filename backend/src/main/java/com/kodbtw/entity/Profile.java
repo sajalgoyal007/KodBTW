@@ -26,6 +26,9 @@ public class Profile {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(name = "username", length = 50, nullable = false, unique = true)
+    private String username;
+
     @Column(name = "display_name", length = 100)
     private String displayName;
 
@@ -91,6 +94,14 @@ public class Profile {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getDisplayName() {

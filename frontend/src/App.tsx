@@ -9,6 +9,7 @@ import { ContestsPage } from './pages/ContestsPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CodingProfilesPage } from './pages/CodingProfilesPage';
+import { PublicProfilePage } from './pages/PublicProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 
@@ -17,6 +18,9 @@ export const App: React.FC = () => {
     <Routes>
       {/* Public landing route */}
       <Route path="/" element={<LandingPage />} />
+
+      {/* Public developer profile route */}
+      <Route path="/u/:username" element={<PublicProfilePage />} />
 
       {/* Guest-only routes */}
       <Route

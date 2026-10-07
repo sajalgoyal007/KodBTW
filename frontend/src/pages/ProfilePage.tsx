@@ -3,6 +3,7 @@ import { AppNavbar } from '../components/layout/AppNavbar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { ProfileEditModal } from '../components/profile/ProfileEditModal';
+import { ShareProfileModal } from '../components/profile/ShareProfileModal';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { getStats } from '../services/api/dashboardApi';
 import { DashboardStatsResponse } from '../types/dashboard';
@@ -13,6 +14,7 @@ import {
   Calendar,
   ExternalLink,
   Edit2,
+  Share2,
   UserCheck,
   CheckCircle2,
   Trophy,
@@ -32,6 +34,7 @@ export const ProfilePage: React.FC = () => {
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStatsResponse | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     getStats()
@@ -238,14 +241,36 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Edit Button */}
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="btn btn-secondary"
-                  style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
-                >
-                  <Edit2 size={15} /> Edit Profile
-                </button>
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {profile?.username && (
+                    <>
+                      <a
+                        href={`/u/${profile.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-secondary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      >
+                        <ExternalLink size={15} /> Public View
+                      </a>
+                      <button
+                        onClick={() => setIsShareModalOpen(true)}
+                        className="btn btn-secondary"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                      >
+                        <Share2 size={15} /> Share Profile
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                  >
+                    <Edit2 size={15} /> Edit Profile
+                  </button>
+                </div>
               </div>
 
               {/* Social links row */}
@@ -368,6 +393,16 @@ export const ProfilePage: React.FC = () => {
         onClose={() => setIsEditModalOpen(false)}
         onSubmit={handleSave}
       />
+
+      {/* Share Profile Modal */}
+      {profile?.username && (
+        <ShareProfileModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          username={profile.username}
+          displayName={profile.displayName}
+        />
+      )}
     </div>
   );
 };
