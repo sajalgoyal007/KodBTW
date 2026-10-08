@@ -44,7 +44,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
             fontSize: '0.6875rem',
           }}
         >
-          Verified Public API
+          Live Public Data
         </span>
       );
     }

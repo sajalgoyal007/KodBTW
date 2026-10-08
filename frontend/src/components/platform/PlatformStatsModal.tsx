@@ -71,7 +71,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
             fontSize: '0.6875rem',
           }}
         >
-          Verified Public API
+          Live Public Data
         </span>
       );
     }
