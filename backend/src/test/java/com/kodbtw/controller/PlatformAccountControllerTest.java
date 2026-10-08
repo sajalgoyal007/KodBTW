@@ -413,7 +413,8 @@ class PlatformAccountControllerTest {
                 .andExpect(jsonPath("$.username").value("tourist"))
                 .andExpect(jsonPath("$.profileUrl").value("https://codeforces.com/profile/tourist"))
                 .andExpect(jsonPath("$.rating").value(3384))
-                .andExpect(jsonPath("$.rank").value(4009))
+                .andExpect(jsonPath("$.maxRating").value(4009))
+                .andExpect(jsonPath("$.rank").doesNotExist())
                 .andExpect(jsonPath("$.totalProblemsSolved").doesNotExist())
                 .andExpect(jsonPath("$.easySolved").doesNotExist())
                 .andExpect(jsonPath("$.mediumSolved").doesNotExist())
@@ -422,6 +423,8 @@ class PlatformAccountControllerTest {
                 .andExpect(jsonPath("$.currentStreak").doesNotExist())
                 .andExpect(jsonPath("$.longestStreak").doesNotExist())
                 .andExpect(jsonPath("$.source").value("CODEFORCES_REAL"));
+        org.junit.jupiter.api.Assertions.assertEquals(4009,
+                platformStatSnapshotRepository.findAll().getFirst().getMaxRating());
     }
 
     @Test
@@ -539,13 +542,20 @@ class PlatformAccountControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.syncStatus.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.cooldownApplied").value(false))
                 .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(83));
         mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cooldownApplied").value(true))
                 .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(83));
         org.junit.jupiter.api.Assertions.assertEquals(1, platformStatSnapshotRepository.findAll().size());
-        var lastSuccess = platformAccountRepository.findById(id).orElseThrow().getLastSuccessAt();
+
+        var accountBeforeRetry = platformAccountRepository.findById(id).orElseThrow();
+        accountBeforeRetry.setLastSuccessAt(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC)
+                .minusMinutes(16).truncatedTo(java.time.temporal.ChronoUnit.MICROS));
+        platformAccountRepository.save(accountBeforeRetry);
+        var lastSuccess = accountBeforeRetry.getLastSuccessAt();
 
         org.mockito.Mockito.when(leetCodeClient.fetchUserProfile("historyless"))
                 .thenThrow(new com.kodbtw.exception.PlatformApiException("timeout; upstream-secret"));
@@ -560,5 +570,26 @@ class PlatformAccountControllerTest {
         var account = platformAccountRepository.findById(id).orElseThrow();
         org.junit.jupiter.api.Assertions.assertEquals(lastSuccess, account.getLastSuccessAt());
         org.junit.jupiter.api.Assertions.assertEquals(1, platformStatSnapshotRepository.findAll().size());
+    }
+
+    @Test
+    void unsupportedMockPlatformReturnsUnavailableWithoutCreatingFakeSnapshot() throws Exception {
+        MvcResult created = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.CODECHEF, "chefuser", null))))
+                .andExpect(status().isCreated()).andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
+                .andExpect(jsonPath("$.syncStatus.failureCategory").value("LIVE_SYNC_UNAVAILABLE"))
+                .andExpect(jsonPath("$.syncStatus.failureMessage").value("Live sync is unavailable for this platform. No live statistics were fetched."))
+                .andExpect(jsonPath("$.currentStats.source").value("UNSYNCED"))
+                .andExpect(jsonPath("$.currentStats.totalProblemsSolved").doesNotExist());
+
+        org.junit.jupiter.api.Assertions.assertTrue(platformStatSnapshotRepository.findAll().isEmpty());
     }
 }

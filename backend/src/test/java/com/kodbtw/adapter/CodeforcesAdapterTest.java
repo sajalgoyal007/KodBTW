@@ -58,7 +58,8 @@ class CodeforcesAdapterTest {
         assertEquals("tourist", stats.getUsername());
         assertEquals("https://codeforces.com/profile/tourist", stats.getProfileUrl());
         assertEquals(3384, stats.getRating());
-        assertEquals(4009, stats.getRank()); // maxRating mapped to rank
+        assertEquals(4009, stats.getMaxRating());
+        assertNull(stats.getRank(), "Codeforces does not provide a numeric global rank in user.info");
         assertNull(stats.getTotalProblemsSolved(), "totalProblemsSolved not available from user.info");
         assertNull(stats.getEasySolved(), "easySolved not available from user.info");
         assertNull(stats.getMediumSolved(), "mediumSolved not available from user.info");
@@ -105,7 +106,7 @@ class CodeforcesAdapterTest {
     }
 
     @Test
-    void shouldMapRankAsMaxRating() {
+    void shouldMapMaxRatingSeparatelyFromRank() {
         PlatformAccount account = new PlatformAccount();
         account.setUsername("ranked_user");
         account.setPlatform(Platform.CODEFORCES);
@@ -118,7 +119,8 @@ class CodeforcesAdapterTest {
         when(codeforcesClient.fetchUserInfo("ranked_user")).thenReturn(mockInfo);
 
         PlatformStats stats = adapter.fetchStats(account);
-        assertEquals(1600, stats.getRank()); // maxRating is mapped to rank
+        assertEquals(1600, stats.getMaxRating());
+        assertNull(stats.getRank());
     }
 
     @Test
@@ -138,7 +140,8 @@ class CodeforcesAdapterTest {
         PlatformStats stats = adapter.fetchStats(account);
 
         assertNull(stats.getRating(), "Unrated user must have null rating");
-        assertNull(stats.getRank(), "Unrated user must have null rank (maxRating)");
+        assertNull(stats.getMaxRating(), "Unrated user must have null max rating");
+        assertNull(stats.getRank(), "Codeforces numeric global rank is not available");
         assertNull(stats.getTotalProblemsSolved());
         assertNull(stats.getEasySolved());
         assertNull(stats.getMediumSolved());

@@ -20,6 +20,7 @@ export interface PlatformStats {
   mediumSolved: number | null;
   hardSolved: number | null;
   rating: number | null;
+  maxRating: number | null;
   rank: number | null;
   contestsParticipated: number | null;
   currentStreak: number | null;

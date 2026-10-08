@@ -5,5 +5,6 @@ public enum SyncFailureCategory {
     RATE_LIMITED,
     ACCOUNT_NOT_FOUND,
     UPSTREAM_UNAVAILABLE,
+    LIVE_SYNC_UNAVAILABLE,
     UNKNOWN
 }

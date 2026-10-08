@@ -104,10 +104,14 @@ export const CodingProfilesPage: React.FC = () => {
       const result = await syncAccount(account.id);
       if (result.syncStatus.status === 'SUCCEEDED') {
         setConnectFeedback({
-          type: 'success',
-          message: justConnected
-            ? `${account.platform} connected and stats refreshed.`
-            : `${account.platform} stats refreshed.`,
+          type: result.currentStats.source === 'MOCK' ? 'error' : 'success',
+          message: result.currentStats.source === 'MOCK'
+            ? `${account.platform} live sync is unavailable. Mock sandbox data is shown.`
+            : result.cooldownApplied
+              ? `${account.platform} was synced recently. Showing the saved stats.`
+              : justConnected
+                ? `${account.platform} connected and stats refreshed.`
+                : `${account.platform} stats refreshed.`,
         });
       } else {
         setConnectFeedback({

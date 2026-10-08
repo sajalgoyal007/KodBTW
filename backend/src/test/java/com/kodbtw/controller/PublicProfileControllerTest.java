@@ -125,6 +125,7 @@ class PublicProfileControllerTest {
         mockMvc.perform(post("/api/platform-accounts/" + accountId + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk());
+        saveMockSnapshot();
 
         // Access public profile without any authorization header
         mockMvc.perform(get("/api/public/profiles/testcoder"))
@@ -191,10 +192,20 @@ class PublicProfileControllerTest {
         mockMvc.perform(post("/api/platform-accounts/" + accountId + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk());
+        saveMockSnapshot();
 
         mockMvc.perform(get("/api/public/profiles/sourcetest"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.platforms[0].source", is("MOCK")));
+    }
+
+    private void saveMockSnapshot() {
+        var snapshot = new com.kodbtw.entity.PlatformStatSnapshot();
+        snapshot.setUser(testUser);
+        snapshot.setPlatform(Platform.CODECHEF.name());
+        snapshot.setSnapshotDate(java.time.LocalDate.now());
+        snapshot.setSource("MOCK");
+        snapshotRepository.save(snapshot);
     }
 
     @Test

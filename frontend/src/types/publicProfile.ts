@@ -29,6 +29,7 @@ export interface PublicPlatformStat {
   mediumSolved: number | null;
   hardSolved: number | null;
   rating: number | null;
+  maxRating: number | null;
   rank: number | null;
   contests: number | null;
   currentStreak: number | null;

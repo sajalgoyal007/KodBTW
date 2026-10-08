@@ -57,6 +57,9 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
   };
 
   const getSourceBadge = (source: string | undefined) => {
+    if (source === 'UNSYNCED' && ['CODECHEF', 'GEEKSFORGEEKS', 'HACKERRANK'].includes(platformName.toUpperCase())) {
+      return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Live sync unavailable</span>;
+    }
     if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
       return (
         <span

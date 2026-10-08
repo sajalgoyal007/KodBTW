@@ -81,6 +81,7 @@ public class PlatformSyncPersistenceService {
         snapshot.setMediumSolved(stats.getMediumSolved());
         snapshot.setHardSolved(stats.getHardSolved());
         snapshot.setRating(stats.getRating());
+        snapshot.setMaxRating(stats.getMaxRating());
         snapshot.setRank(stats.getRank());
         snapshot.setContests(stats.getContestsParticipated());
         snapshot.setCurrentStreak(stats.getCurrentStreak());
@@ -111,6 +112,7 @@ public class PlatformSyncPersistenceService {
             case RATE_LIMITED -> "The platform temporarily limited requests. Try again later.";
             case ACCOUNT_NOT_FOUND -> "The linked platform account could not be found.";
             case UPSTREAM_UNAVAILABLE -> "The platform is temporarily unavailable. Try again later.";
+            case LIVE_SYNC_UNAVAILABLE -> "Live sync is unavailable for this platform. No live statistics were fetched.";
             case UNKNOWN -> "Stats could not be refreshed. Try again later.";
         };
     }

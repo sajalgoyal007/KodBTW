@@ -15,6 +15,7 @@ public class PublicPlatformStatDto {
     private Integer mediumSolved;
     private Integer hardSolved;
     private Integer rating;
+    private Integer maxRating;
     private Integer rank;
     private Integer contests;
     private Integer currentStreak;
@@ -30,6 +31,15 @@ public class PublicPlatformStatDto {
                                  Integer rating, Integer rank, Integer contests,
                                  Integer currentStreak, Integer longestStreak,
                                  String source, LocalDateTime lastSyncedAt) {
+        this(platform, username, profileUrl, verified, totalSolved, easySolved, mediumSolved, hardSolved,
+                rating, null, rank, contests, currentStreak, longestStreak, source, lastSyncedAt);
+    }
+
+    public PublicPlatformStatDto(Platform platform, String username, String profileUrl, boolean verified,
+                                 Integer totalSolved, Integer easySolved, Integer mediumSolved, Integer hardSolved,
+                                 Integer rating, Integer maxRating, Integer rank, Integer contests,
+                                 Integer currentStreak, Integer longestStreak,
+                                 String source, LocalDateTime lastSyncedAt) {
         this.platform = platform;
         this.username = username;
         this.profileUrl = profileUrl;
@@ -39,6 +49,7 @@ public class PublicPlatformStatDto {
         this.mediumSolved = mediumSolved;
         this.hardSolved = hardSolved;
         this.rating = rating;
+        this.maxRating = maxRating;
         this.rank = rank;
         this.contests = contests;
         this.currentStreak = currentStreak;
@@ -73,6 +84,9 @@ public class PublicPlatformStatDto {
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
+
+    public Integer getMaxRating() { return maxRating; }
+    public void setMaxRating(Integer maxRating) { this.maxRating = maxRating; }
 
     public Integer getRank() { return rank; }
     public void setRank(Integer rank) { this.rank = rank; }

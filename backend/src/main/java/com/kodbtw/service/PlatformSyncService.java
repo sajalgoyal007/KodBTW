@@ -6,10 +6,13 @@ import com.kodbtw.dto.PlatformSyncResponse;
 import com.kodbtw.dto.PlatformSyncStatusResponse;
 import com.kodbtw.dto.SyncFailureCategory;
 import com.kodbtw.entity.PlatformAccount;
+import com.kodbtw.entity.SyncStatus;
 import com.kodbtw.exception.PlatformApiException;
+import com.kodbtw.exception.PlatformSyncUnavailableException;
 import com.kodbtw.exception.ResourceNotFoundException;
 import com.kodbtw.repository.PlatformAccountRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -26,6 +29,8 @@ public class PlatformSyncService {
     private final PlatformAdapterRegistry adapters;
     private final PlatformSyncPersistenceService persistence;
     private final PlatformStatsService statsService;
+    @Value("${platform.sync.cooldown:PT15M}")
+    private Duration syncCooldown = Duration.ofMinutes(15);
     private final Semaphore syncGate = new Semaphore(1);
     private volatile long nextCodeforcesCallNanos;
 
@@ -74,6 +79,9 @@ public class PlatformSyncService {
         PlatformAccount account = ownerId == null
                 ? persistence.getAccount(accountId)
                 : persistence.getOwnedAccount(ownerId, accountId);
+        if (account.getSyncStatus() != SyncStatus.RUNNING && isWithinCooldown(account)) {
+            return response(account, ownerId, true);
+        }
         boolean started = ownerId == null
                 ? persistence.markStartedForScheduledSync(accountId)
                 : persistence.markStarted(ownerId, accountId);
@@ -108,10 +116,21 @@ public class PlatformSyncService {
     }
 
     private PlatformSyncResponse response(PlatformAccount account, Long ownerId) {
+        return response(account, ownerId, false);
+    }
+
+    private PlatformSyncResponse response(PlatformAccount account, Long ownerId, boolean cooldownApplied) {
         Long userId = ownerId;
         if (userId == null) userId = accounts.findUserIdByAccountId(account.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Platform account not found"));
-        return new PlatformSyncResponse(status(account), statsService.getStats(userId, account.getId()));
+        return new PlatformSyncResponse(status(account), statsService.getStats(userId, account.getId()), cooldownApplied);
+    }
+
+    private boolean isWithinCooldown(PlatformAccount account) {
+        LocalDateTime lastSuccess = account.getLastSuccessAt();
+        return syncCooldown != null && !syncCooldown.isNegative() && !syncCooldown.isZero()
+                && lastSuccess != null
+                && Duration.between(lastSuccess, LocalDateTime.now(ZoneOffset.UTC)).compareTo(syncCooldown) < 0;
     }
 
     private PlatformSyncStatusResponse status(PlatformAccount account) {
@@ -125,6 +144,7 @@ public class PlatformSyncService {
 
     private SyncFailureCategory classify(Throwable error) {
         String safeToInspect = error.getMessage() == null ? "" : error.getMessage().toLowerCase();
+        if (error instanceof PlatformSyncUnavailableException) return SyncFailureCategory.LIVE_SYNC_UNAVAILABLE;
         if (error instanceof ResourceNotFoundException) return SyncFailureCategory.ACCOUNT_NOT_FOUND;
         if (safeToInspect.contains("timeout") || safeToInspect.contains("timed out")) return SyncFailureCategory.TIMEOUT;
         for (Throwable cause = error; cause != null; cause = cause.getCause()) {

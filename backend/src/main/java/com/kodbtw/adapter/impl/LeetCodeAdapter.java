@@ -14,8 +14,10 @@ import java.util.List;
 /**
  * Adapter for fetching real public statistics from LeetCode.
  *
- * <p>Uses LeetCode's public GraphQL endpoint ({@code https://leetcode.com/graphql}).
- * Note: This uses an unofficial public endpoint which is subject to change without notice.
+ * <p>Uses a publicly reachable but undocumented GraphQL endpoint
+ * ({@code https://leetcode.com/graphql}); LeetCode does not publish a public API
+ * contract for this query. It is subject to change without notice and its use must
+ * be reviewed against LeetCode's current terms.
  * No private user credentials, session cookies, or browser automation are used.
  */
 @Component

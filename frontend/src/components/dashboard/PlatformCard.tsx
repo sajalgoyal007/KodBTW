@@ -30,7 +30,8 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
     }
   };
 
-  const getSourceBadge = (source: string) => {
+  const getSourceBadge = (source: string, account?: PlatformAccountResponse) => {
+    if (source === 'UNSYNCED' && account?.lastSyncErrorCategory === 'LIVE_SYNC_UNAVAILABLE') return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Live sync unavailable</span>;
     if (source === 'UNSYNCED') return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Not synced</span>;
     if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
       return (
@@ -102,7 +103,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
               <h4 style={{ fontSize: '1.0625rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
                 {platform.platform}
               </h4>
-              {getSourceBadge(platform.source)}
+              {getSourceBadge(platform.source, account)}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem' }}>

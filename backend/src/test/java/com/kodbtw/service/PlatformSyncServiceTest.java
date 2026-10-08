@@ -9,6 +9,7 @@ import com.kodbtw.entity.PlatformAccount;
 import com.kodbtw.entity.SyncStatus;
 import com.kodbtw.entity.User;
 import com.kodbtw.exception.PlatformApiException;
+import com.kodbtw.exception.PlatformSyncUnavailableException;
 import com.kodbtw.exception.ResourceNotFoundException;
 import com.kodbtw.repository.PlatformAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,20 +44,47 @@ class PlatformSyncServiceTest {
         account.setPlatform(Platform.LEETCODE); account.setUsername("coder");
     }
 
-    @Test void successfulAndRepeatedRefreshesPersistThroughAdapterBoundary() {
+    @Test void successfulRefreshUsesCooldownToAvoidRepeatedProviderCalls() {
         PlatformStats stats = PlatformStats.builder().platform(Platform.LEETCODE).source("LEETCODE_REAL")
                 .totalProblemsSolved(42).build();
         when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
         when(persistence.markStarted(7L, 9L)).thenReturn(true);
         when(adapter.fetchStats(account)).thenReturn(stats);
         when(statsService.getStats(7L, 9L)).thenReturn(stats);
+        doAnswer(invocation -> {
+            account.setLastSuccessAt(LocalDateTime.now(ZoneOffset.UTC));
+            account.setSyncStatus(SyncStatus.SUCCEEDED);
+            return null;
+        }).when(persistence).recordSuccess(9L, stats);
 
-        service.syncOwnedAccount(7L, 9L);
-        service.syncOwnedAccount(7L, 9L);
+        var first = service.syncOwnedAccount(7L, 9L);
+        var second = service.syncOwnedAccount(7L, 9L);
 
-        verify(adapter, times(2)).fetchStats(account);
-        verify(persistence, times(2)).recordSuccess(9L, stats);
+        assertFalse(first.cooldownApplied());
+        assertTrue(second.cooldownApplied());
+        verify(adapter, times(1)).fetchStats(account);
+        verify(persistence, times(1)).recordSuccess(9L, stats);
+        verify(persistence, times(1)).markStarted(7L, 9L);
         verify(persistence, never()).recordFailure(anyLong(), any());
+    }
+
+    @Test void unavailableLiveProviderGetsExplicitSafeFailureCategory() {
+        when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
+        when(persistence.markStarted(7L, 9L)).thenReturn(true);
+        when(adapter.fetchStats(account)).thenThrow(new PlatformSyncUnavailableException("CodeChef live sync unavailable"));
+        when(statsService.getStats(7L, 9L)).thenReturn(PlatformStats.builder().source("UNSYNCED").build());
+        doAnswer(invocation -> {
+            account.setSyncStatus(SyncStatus.FAILED);
+            account.setLastSyncErrorCategory(SyncFailureCategory.LIVE_SYNC_UNAVAILABLE.name());
+            return null;
+        }).when(persistence).recordFailure(9L, SyncFailureCategory.LIVE_SYNC_UNAVAILABLE);
+
+        var response = service.syncOwnedAccount(7L, 9L);
+
+        assertEquals(SyncStatus.FAILED, response.syncStatus().status());
+        assertEquals(SyncFailureCategory.LIVE_SYNC_UNAVAILABLE.name(), response.syncStatus().failureCategory());
+        verify(persistence).recordFailure(9L, SyncFailureCategory.LIVE_SYNC_UNAVAILABLE);
+        verify(persistence, never()).recordSuccess(eq(9L), any());
     }
 
     @Test void rateLimitFailureIsCategorizedWithoutReplacingPersistedStats() {

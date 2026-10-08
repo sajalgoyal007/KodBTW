@@ -148,6 +148,13 @@ class DashboardControllerTest {
 
         refreshLinkedAccounts();
 
+        User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
+        saveSnapshot(owner, "CODECHEF", "MOCK", 210, 120, 70, 20, 1750);
+        var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
+        mockSnapshot.setContests(25);
+        mockSnapshot.setRank(4500);
+        platformStatSnapshotRepository.save(mockSnapshot);
+
         mockMvc.perform(get("/api/dashboard/stats")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
@@ -202,6 +209,13 @@ class DashboardControllerTest {
                 .andExpect(status().isCreated());
 
         refreshLinkedAccounts();
+
+        User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
+        saveSnapshot(owner, "CODECHEF", "MOCK", 210, 120, 70, 20, 1750);
+        var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
+        mockSnapshot.setContests(25);
+        mockSnapshot.setRank(4500);
+        platformStatSnapshotRepository.save(mockSnapshot);
 
         mockMvc.perform(get("/api/dashboard/analytics")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))

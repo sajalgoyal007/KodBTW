@@ -3,19 +3,18 @@ package com.kodbtw.adapter;
 import com.kodbtw.adapter.impl.CodeChefAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
-import com.kodbtw.dto.PlatformStats;
 import com.kodbtw.entity.Platform;
 import com.kodbtw.entity.PlatformAccount;
+import com.kodbtw.exception.PlatformSyncUnavailableException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MockPlatformAdaptersTest {
 
     @Test
-    void codeChefAdapterShouldReturnDeterministicMockStats() {
+    void codeChefAdapterReportsLiveSyncUnavailableWithoutInventingMetrics() {
         CodeChefAdapter adapter = new CodeChefAdapter();
         assertEquals(Platform.CODECHEF, adapter.getPlatform());
 
@@ -23,25 +22,12 @@ class MockPlatformAdaptersTest {
         account.setUsername("chefuser");
         account.setPlatform(Platform.CODECHEF);
 
-        PlatformStats stats = adapter.fetchStats(account);
-
-        assertEquals(Platform.CODECHEF, stats.getPlatform());
-        assertEquals("chefuser", stats.getUsername());
-        assertEquals("https://www.codechef.com/users/chefuser", stats.getProfileUrl());
-        assertEquals(210, stats.getTotalProblemsSolved());
-        assertEquals(120, stats.getEasySolved());
-        assertEquals(70, stats.getMediumSolved());
-        assertEquals(20, stats.getHardSolved());
-        assertEquals(1750, stats.getRating());
-        assertEquals(4500, stats.getRank());
-        assertEquals(25, stats.getContestsParticipated());
-        assertNull(stats.getCurrentStreak());
-        assertNull(stats.getLongestStreak());
-        assertEquals("MOCK", stats.getSource());
+        assertEquals("CodeChef live sync unavailable",
+                assertThrows(PlatformSyncUnavailableException.class, () -> adapter.fetchStats(account)).getMessage());
     }
 
     @Test
-    void geeksForGeeksAdapterShouldReturnDeterministicMockStats() {
+    void geeksForGeeksAdapterReportsLiveSyncUnavailable() {
         GeeksForGeeksAdapter adapter = new GeeksForGeeksAdapter();
         assertEquals(Platform.GEEKSFORGEEKS, adapter.getPlatform());
 
@@ -49,25 +35,12 @@ class MockPlatformAdaptersTest {
         account.setUsername("gfguser");
         account.setPlatform(Platform.GEEKSFORGEEKS);
 
-        PlatformStats stats = adapter.fetchStats(account);
-
-        assertEquals(Platform.GEEKSFORGEEKS, stats.getPlatform());
-        assertEquals("gfguser", stats.getUsername());
-        assertEquals("https://auth.geeksforgeeks.org/user/gfguser", stats.getProfileUrl());
-        assertEquals(280, stats.getTotalProblemsSolved());
-        assertEquals(140, stats.getEasySolved());
-        assertEquals(100, stats.getMediumSolved());
-        assertEquals(40, stats.getHardSolved());
-        assertNull(stats.getRating());
-        assertEquals(12500, stats.getRank());
-        assertNull(stats.getContestsParticipated());
-        assertEquals(8, stats.getCurrentStreak());
-        assertEquals(25, stats.getLongestStreak());
-        assertEquals("MOCK", stats.getSource());
+        assertEquals("GeeksforGeeks live sync unavailable",
+                assertThrows(PlatformSyncUnavailableException.class, () -> adapter.fetchStats(account)).getMessage());
     }
 
     @Test
-    void hackerRankAdapterShouldReturnDeterministicMockStats() {
+    void hackerRankAdapterReportsLiveSyncUnavailable() {
         HackerRankAdapter adapter = new HackerRankAdapter();
         assertEquals(Platform.HACKERRANK, adapter.getPlatform());
 
@@ -75,32 +48,7 @@ class MockPlatformAdaptersTest {
         account.setUsername("hruser");
         account.setPlatform(Platform.HACKERRANK);
 
-        PlatformStats stats = adapter.fetchStats(account);
-
-        assertEquals(Platform.HACKERRANK, stats.getPlatform());
-        assertEquals("hruser", stats.getUsername());
-        assertEquals("https://www.hackerrank.com/profile/hruser", stats.getProfileUrl());
-        assertEquals(150, stats.getTotalProblemsSolved());
-        assertEquals(80, stats.getEasySolved());
-        assertEquals(50, stats.getMediumSolved());
-        assertEquals(20, stats.getHardSolved());
-        assertNull(stats.getRating());
-        assertNull(stats.getRank());
-        assertEquals(5, stats.getContestsParticipated());
-        assertNull(stats.getCurrentStreak());
-        assertNull(stats.getLongestStreak());
-        assertEquals("MOCK", stats.getSource());
-    }
-
-    @Test
-    void adaptersShouldPreserveCustomProfileUrl() {
-        CodeChefAdapter adapter = new CodeChefAdapter();
-        PlatformAccount account = new PlatformAccount();
-        account.setUsername("customuser");
-        account.setProfileUrl("https://custom-url.com/profile");
-        account.setPlatform(Platform.CODECHEF);
-
-        PlatformStats stats = adapter.fetchStats(account);
-        assertEquals("https://custom-url.com/profile", stats.getProfileUrl());
+        assertEquals("HackerRank live sync unavailable",
+                assertThrows(PlatformSyncUnavailableException.class, () -> adapter.fetchStats(account)).getMessage());
     }
 }

@@ -20,8 +20,9 @@ import java.time.Duration;
  * <p>This is a fully public endpoint. No API key, authentication token,
  * cookies, or browser automation is used. Only a public Codeforces handle is required.
  *
- * <p>Rate limiting: Codeforces API allows approximately 5 requests per second for
- * unauthenticated access. This client does not implement aggressive retries.
+ * <p>Rate limiting: Codeforces documentation specifies no more than one request every
+ * two seconds. The sync service applies this spacing across Codeforces sync calls.
+ * This client does not implement aggressive retries.
  * If rate-limited, the error is propagated cleanly.
  */
 @Component

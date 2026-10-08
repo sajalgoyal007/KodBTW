@@ -133,6 +133,7 @@ public class PublicProfileService {
                     ps.getMediumSolved(),
                     ps.getHardSolved(),
                     ps.getRating(),
+                    ps.getMaxRating(),
                     ps.getRank(),
                     ps.getContestsParticipated(),
                     ps.getCurrentStreak(),

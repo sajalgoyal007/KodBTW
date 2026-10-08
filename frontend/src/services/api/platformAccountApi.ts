@@ -18,6 +18,7 @@ export interface PlatformSyncStatus {
 export interface PlatformSyncResponse {
   syncStatus: PlatformSyncStatus;
   currentStats: PlatformStats;
+  cooldownApplied: boolean;
 }
 
 export function getAll(): Promise<PlatformAccountResponse[]> {

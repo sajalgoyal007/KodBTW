@@ -58,6 +58,7 @@ public class PlatformStatsService {
                 .mediumSolved(snapshot.getMediumSolved())
                 .hardSolved(snapshot.getHardSolved())
                 .rating(snapshot.getRating())
+                .maxRating(snapshot.getMaxRating())
                 .rank(snapshot.getRank())
                 .contestsParticipated(snapshot.getContests())
                 .currentStreak(snapshot.getCurrentStreak())

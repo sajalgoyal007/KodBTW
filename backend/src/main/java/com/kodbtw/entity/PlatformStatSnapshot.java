@@ -58,6 +58,9 @@ public class PlatformStatSnapshot {
 
     private Integer rating;
 
+    @Column(name = "max_rating")
+    private Integer maxRating;
+
     @Column(name = "platform_rank")
     private Integer rank;
 
@@ -126,6 +129,9 @@ public class PlatformStatSnapshot {
 
     public Integer getRating() { return rating; }
     public void setRating(Integer rating) { this.rating = rating; }
+
+    public Integer getMaxRating() { return maxRating; }
+    public void setMaxRating(Integer maxRating) { this.maxRating = maxRating; }
 
     public Integer getRank() { return rank; }
     public void setRank(Integer rank) { this.rank = rank; }

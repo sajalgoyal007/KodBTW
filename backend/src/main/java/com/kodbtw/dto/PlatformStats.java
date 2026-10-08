@@ -14,6 +14,7 @@ public class PlatformStats {
     private Integer mediumSolved;
     private Integer hardSolved;
     private Integer rating;
+    private Integer maxRating;
     private Integer rank;
     private Integer contestsParticipated;
     private Integer currentStreak;
@@ -29,6 +30,15 @@ public class PlatformStats {
                          Integer rating, Integer rank, Integer contestsParticipated,
                          Integer currentStreak, Integer longestStreak,
                          LocalDateTime lastSyncedAt, String source) {
+        this(platform, username, profileUrl, totalProblemsSolved, easySolved, mediumSolved, hardSolved,
+                rating, null, rank, contestsParticipated, currentStreak, longestStreak, lastSyncedAt, source);
+    }
+
+    public PlatformStats(Platform platform, String username, String profileUrl,
+                         Integer totalProblemsSolved, Integer easySolved, Integer mediumSolved, Integer hardSolved,
+                         Integer rating, Integer maxRating, Integer rank, Integer contestsParticipated,
+                         Integer currentStreak, Integer longestStreak,
+                         LocalDateTime lastSyncedAt, String source) {
         this.platform = platform;
         this.username = username;
         this.profileUrl = profileUrl;
@@ -37,6 +47,7 @@ public class PlatformStats {
         this.mediumSolved = mediumSolved;
         this.hardSolved = hardSolved;
         this.rating = rating;
+        this.maxRating = maxRating;
         this.rank = rank;
         this.contestsParticipated = contestsParticipated;
         this.currentStreak = currentStreak;
@@ -113,6 +124,10 @@ public class PlatformStats {
         this.rating = rating;
     }
 
+    public Integer getMaxRating() { return maxRating; }
+
+    public void setMaxRating(Integer maxRating) { this.maxRating = maxRating; }
+
     public Integer getRank() {
         return rank;
     }
@@ -170,6 +185,7 @@ public class PlatformStats {
         private Integer mediumSolved;
         private Integer hardSolved;
         private Integer rating;
+        private Integer maxRating;
         private Integer rank;
         private Integer contestsParticipated;
         private Integer currentStreak;
@@ -217,6 +233,11 @@ public class PlatformStats {
             return this;
         }
 
+        public Builder maxRating(Integer maxRating) {
+            this.maxRating = maxRating;
+            return this;
+        }
+
         public Builder rank(Integer rank) {
             this.rank = rank;
             return this;
@@ -251,7 +272,7 @@ public class PlatformStats {
             return new PlatformStats(
                     platform, username, profileUrl,
                     totalProblemsSolved, easySolved, mediumSolved, hardSolved,
-                    rating, rank, contestsParticipated,
+                    rating, maxRating, rank, contestsParticipated,
                     currentStreak, longestStreak,
                     lastSyncedAt, source
             );

@@ -66,7 +66,8 @@ public class CodeforcesAdapter implements PlatformAdapter {
                 .mediumSolved(null)          // Not available from user.info
                 .hardSolved(null)            // Not available from user.info
                 .rating(rating)
-                .rank(maxRating)             // Use maxRating as the numeric rank metric
+                .maxRating(maxRating)
+                .rank(null)                  // The API's rank is a title, not a numeric global rank
                 .contestsParticipated(null)  // Not available from user.info
                 .currentStreak(null)         // Not available from user.info
                 .longestStreak(null)         // Not available from user.info

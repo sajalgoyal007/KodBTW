@@ -57,11 +57,14 @@ export function useDashboard(): UseDashboardResult {
       const result = await syncAccount(accountId);
       const failed = result.syncStatus.status === 'FAILED';
       const alreadyRunning = result.syncStatus.status === 'RUNNING';
+      const mockData = result.currentStats.source === 'MOCK';
       setRefreshFeedback({
         accountId,
-        success: !failed,
+        success: !failed && !mockData,
         message: failed
           ? (result.syncStatus.failureMessage || 'Refresh failed.')
+          : mockData ? 'Live sync is unavailable; mock sandbox values are shown.'
+          : result.cooldownApplied ? 'Recently synced; showing saved stats.'
           : alreadyRunning ? 'Stats refresh is already in progress.' : 'Stats refreshed successfully.',
       });
       await fetchData(false);
