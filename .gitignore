@@ -43,6 +43,7 @@ hs_err_pid*
 !.env.example
 **/.env*
 !**/.env.example
+!frontend/.env.production
 .env
 .env.local
 .env.*.local
