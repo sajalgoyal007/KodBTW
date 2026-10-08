@@ -114,4 +114,10 @@ No deployment target or hosting provider is configured in this repository. Befor
 6. Confirm Flyway has applied and validated all migrations before directing traffic. Do not enable baseline-on-migrate to bypass missing migration history.
 7. Configure the host’s liveness probe to call `/api/health`, then verify login, `/api/auth/me`, protected dashboard calls, sync ownership, and public profile access in the deployed environment.
 
-This repository currently contains no Dockerfile, container orchestration, or hosting-provider deployment configuration.
+### Render backend container preparation
+
+The backend Dockerfile is `backend/Dockerfile`. For a Render Web Service using this monorepo, select the Docker runtime and branch `main`, set Root Directory to `backend`, Dockerfile Path to `Dockerfile`, and Docker Build Context Directory to `.`. Those paths are relative to the configured service root. Set `/api/health` as the health check path.
+
+The image builds the Spring Boot JAR with Java 21 and runs it on a Java 21 JRE as a non-root user. The app binds to `0.0.0.0` and reads Render’s `PORT`; it contains no database or JWT credentials. Set `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, and `CORS_ALLOWED_ORIGINS` in the Render service environment. This repository does not define a Render account, production database, or deployment URL.
+
+For Vercel, deploy `frontend/` as a Vite project and set `VITE_API_BASE_URL` to the backend origin, or leave it empty when a same-origin proxy serves `/api`. Do not place secrets in frontend environment variables.
