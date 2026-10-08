@@ -74,7 +74,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
                 cy="70"
                 r={radius}
                 fill="transparent"
-                stroke="#10b981"
+                stroke="var(--color-success)"
                 strokeWidth="14"
                 strokeDasharray={`${easyStroke} ${circumference}`}
                 strokeDashoffset="0"
@@ -89,7 +89,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
                 cy="70"
                 r={radius}
                 fill="transparent"
-                stroke="#f59e0b"
+                stroke="var(--color-warning)"
                 strokeWidth="14"
                 strokeDasharray={`${medStroke} ${circumference}`}
                 strokeDashoffset={-easyStroke}
@@ -104,7 +104,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
                 cy="70"
                 r={radius}
                 fill="transparent"
-                stroke="#ef4444"
+                stroke="var(--color-error)"
                 strokeWidth="14"
                 strokeDasharray={`${hardStroke} ${circumference}`}
                 strokeDashoffset={-(easyStroke + medStroke)}
@@ -163,8 +163,8 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#10b981' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#10b981' }}>Easy</span>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-success)' }}>Easy</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <span className="mono" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{formatCount(easyCount)}</span>
@@ -187,8 +187,8 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f59e0b' }}>Medium</span>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--color-warning)' }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-warning)' }}>Medium</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <span className="mono" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{formatCount(medCount)}</span>
@@ -211,8 +211,8 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#ef4444' }}>Hard</span>
+              <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--color-error)' }} />
+              <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-error)' }}>Hard</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <span className="mono" style={{ fontSize: '0.9375rem', fontWeight: 700 }}>{formatCount(hardCount)}</span>

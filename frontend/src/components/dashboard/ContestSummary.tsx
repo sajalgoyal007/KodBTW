@@ -39,7 +39,7 @@ export const ContestSummary: React.FC<ContestSummaryProps> = ({ contests }) => {
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Total Contests</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Contest Participation Count</div>
           <div className="mono" style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {formatMetric(contests?.totalContests)}
           </div>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ProfileResponse, ProfileRequest } from '../../types/profile';
 import { ApiError } from '../../services/api/apiClient';
 import { X, UserCheck, AlertCircle } from 'lucide-react';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 interface ProfileEditModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogAccessibility(isOpen, onClose, dialogRef);
   const [username, setUsername] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
   const [bio, setBio] = useState<string>('');
@@ -165,6 +168,11 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     >
       <div
         className="card"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-edit-dialog-title"
+        tabIndex={-1}
         style={{
           width: '100%',
           maxWidth: '560px',
@@ -194,10 +202,12 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             >
               <UserCheck size={18} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Edit Developer Profile</h3>
+            <h3 id="profile-edit-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 700 }}>Edit Developer Profile</h3>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
+            disabled={isLoading}
             className="btn btn-ghost"
             style={{ padding: '0.25rem', color: 'var(--color-text-muted)' }}
           >

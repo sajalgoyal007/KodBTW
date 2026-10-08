@@ -10,10 +10,10 @@ const RANGES: { value: HistoryRange; label: string }[] = [
   { value: '90d', label: '90D' },
   { value: '1y', label: '1Y' },
 ];
-const COLORS = ['#eb7312', '#38bdf8', '#a78bfa', '#34d399', '#f472b6'];
+const COLORS = ['var(--color-primary)', 'var(--color-primary)', '#a78bfa', '#34d399', '#f472b6'];
 const DIFFICULTIES = [
   { key: 'easySolved' as const, name: 'Easy', color: '#34d399' },
-  { key: 'mediumSolved' as const, name: 'Medium', color: '#f59e0b' },
+  { key: 'mediumSolved' as const, name: 'Medium', color: 'var(--color-warning)' },
   { key: 'hardSolved' as const, name: 'Hard', color: '#f87171' },
 ];
 
@@ -26,7 +26,7 @@ export const DashboardHistorySection: React.FC = () => {
 
   const totalSeries: HistoryChartSeries[] = data ? [{
     name: 'Observed total',
-    color: '#eb7312',
+    color: 'var(--color-primary)',
     points: data.overallSolved.map((point) => ({ date: point.date, value: point.totalSolved })),
   }] : [];
   const platformSeries: HistoryChartSeries[] = (data?.platforms ?? []).map((platform, index) => ({

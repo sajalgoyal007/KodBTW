@@ -9,7 +9,6 @@ import { PlatformType } from '../types/platform';
 import {
   PlusCircle,
   ExternalLink,
-  CheckCircle2,
   Clock,
   BarChart2,
   Edit2,
@@ -128,7 +127,7 @@ export const CodingProfilesPage: React.FC = () => {
         setConnectFeedback({
           type: result.currentStats.source === 'MOCK' ? 'error' : 'success',
           message: result.currentStats.source === 'MOCK'
-            ? `${account.platform} live sync is unavailable. Mock sandbox data is shown.`
+            ? `${account.platform} does not have verified live statistics available. No statistics are shown.`
             : result.cooldownApplied
               ? `${account.platform} was synced recently. Showing the saved stats.`
               : justConnected
@@ -185,7 +184,7 @@ export const CodingProfilesPage: React.FC = () => {
               Coding Platforms
             </h1>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', marginTop: '0.25rem' }}>
-              Connect and manage your competitive programming profiles
+              Add your handles and review which platforms provide live statistics. Handles are self-reported and unverified.
             </p>
           </div>
 
@@ -370,15 +369,9 @@ export const CodingProfilesPage: React.FC = () => {
                       </div>
 
                       <div>
-                        {acc.verified ? (
-                          <span className="badge badge-success">
-                            <CheckCircle2 size={12} /> Verified
-                          </span>
-                        ) : (
-                          <span className="badge badge-muted">
-                            <Clock size={12} /> Connected
-                          </span>
-                        )}
+                        <span className="badge badge-muted" title="Platform handle ownership has not been verified">
+                          <Clock size={12} /> Self-reported · Unverified
+                        </span>
                       </div>
                     </div>
 
@@ -420,7 +413,7 @@ export const CodingProfilesPage: React.FC = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: 'var(--color-text-muted)' }}>Statistics</span>
                         <span className="mono" style={{ color: 'var(--color-text-primary)' }}>
-                          {acc.sourceStatus === 'SOURCE_PENDING' ? 'Live statistics unavailable' : acc.sourceStatus.replace('_', ' ')}
+                          {acc.sourceStatus === 'SOURCE_PENDING' ? 'Connected — live statistics currently unavailable.' : acc.sourceStatus.replace('_', ' ')}
                         </span>
                       </div>
                       {acc.sourceStatus !== 'SOURCE_PENDING' && (

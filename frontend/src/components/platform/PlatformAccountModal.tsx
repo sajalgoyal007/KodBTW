@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PlatformAccountResponse, PlatformAccountRequest, PlatformType } from '../../types/platform';
 import { ApiError } from '../../services/api/apiClient';
 import { X, Layers, AlertCircle } from 'lucide-react';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 interface PlatformAccountModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogAccessibility(isOpen, onClose, dialogRef);
   const isEdit = !!initialAccount;
 
   const [platform, setPlatform] = useState<PlatformType>('LEETCODE');
@@ -119,6 +122,11 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
     >
       <div
         className="card"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="platform-account-dialog-title"
+        tabIndex={-1}
         style={{
           width: '100%',
           maxWidth: '480px',
@@ -146,12 +154,14 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
             >
               <Layers size={18} />
             </div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
+            <h3 id="platform-account-dialog-title" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
               {isEdit ? 'Edit Platform Account' : 'Connect Platform Account'}
             </h3>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
+            disabled={isLoading}
             className="btn btn-ghost"
             style={{ padding: '0.25rem', color: 'var(--color-text-muted)' }}
           >

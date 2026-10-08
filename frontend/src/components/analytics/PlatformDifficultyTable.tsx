@@ -55,13 +55,13 @@ export const PlatformDifficultyTable: React.FC<PlatformDifficultyTableProps> = (
               >
                 <th style={{ padding: '0.75rem 1rem' }}>Platform</th>
                 <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                  <span style={{ color: '#10b981' }}>Easy</span>
+                  <span style={{ color: 'var(--color-success)' }}>Easy</span>
                 </th>
                 <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                  <span style={{ color: '#f59e0b' }}>Medium</span>
+                  <span style={{ color: 'var(--color-warning)' }}>Medium</span>
                 </th>
                 <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                  <span style={{ color: '#ef4444' }}>Hard</span>
+                  <span style={{ color: 'var(--color-error)' }}>Hard</span>
                 </th>
                 <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Total Solved</th>
               </tr>

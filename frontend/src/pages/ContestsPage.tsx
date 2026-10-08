@@ -59,7 +59,7 @@ export const ContestsPage: React.FC = () => {
               )}
             </div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', marginTop: '0.25rem' }}>
-              Track competitive programming contest attendance, official ratings, and standings across platforms
+              Review platform-specific contest ratings and saved rating snapshots. Contest event history is currently unavailable.
             </p>
           </div>
 

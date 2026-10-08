@@ -233,7 +233,7 @@ export const ProfilePage: React.FC = () => {
                       )}
                       {profile?.graduationYear && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                          <Calendar size={14} style={{ color: '#10b981' }} />
+                          <Calendar size={14} style={{ color: 'var(--color-success)' }} />
                           <span>Class of {profile.graduationYear}</span>
                         </div>
                       )}
@@ -345,9 +345,9 @@ export const ProfilePage: React.FC = () => {
                 }}
               >
                 <MetricCard
-                  title="Total Solved"
+                  title="Total Platform Solves"
                   value={overview?.totalProblemsSolved}
-                  subtitle="Aggregated problems"
+                  subtitle="Same problem may be counted on multiple platforms."
                   icon={<CheckCircle2 size={20} />}
                   accentColor="var(--color-primary)"
                 />
@@ -363,21 +363,21 @@ export const ProfilePage: React.FC = () => {
                   value={overview?.currentStreak !== null && overview?.currentStreak !== undefined ? `${overview.currentStreak} days` : null}
                   subtitle="Active daily streak"
                   icon={<Flame size={20} />}
-                  accentColor="#eb7312"
+                  accentColor="var(--color-primary)"
                 />
                 <MetricCard
                   title="Longest Streak"
                   value={overview?.longestStreak !== null && overview?.longestStreak !== undefined ? `${overview.longestStreak} days` : null}
                   subtitle="Personal record"
                   icon={<Flame size={20} />}
-                  accentColor="#f59e0b"
+                  accentColor="var(--color-warning)"
                 />
                 <MetricCard
                   title="Platforms"
                   value={overview?.connectedPlatformsCount}
                   subtitle="Linked services"
                   icon={<Layers size={20} />}
-                  accentColor="#10b981"
+                  accentColor="var(--color-success)"
                 />
               </div>
             </div>

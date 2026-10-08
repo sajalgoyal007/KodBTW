@@ -86,7 +86,7 @@ export const DashboardPage: React.FC = () => {
         )}
 
         {/* Error State */}
-        {!loading && error && (
+        {!loading && error && !stats && (
           <div
             className="card"
             style={{
@@ -180,17 +180,21 @@ export const DashboardPage: React.FC = () => {
         )}
 
         {/* Data Loaded Successfully */}
-        {!loading && !error && !isEmpty && overview && (
+        {!loading && error && stats && (
+          <div className="inline-notice" role="status"><AlertCircle size={16} />{error}<button className="btn btn-secondary" onClick={() => refetch()}>Retry</button></div>
+        )}
+
+        {!loading && !isEmpty && overview && (
           <>
             {/* Overview Metric Row */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
-                  Unified Overview
+                  Your coding overview
                 </h2>
                 <div className="badge badge-muted">
                   <CheckCircle2 size={12} color="var(--color-success)" />
-                  <span>{overview.connectedPlatformsCount} Platform{overview.connectedPlatformsCount > 1 ? 's' : ''} Connected</span>
+                  <span>{overview.connectedPlatformsCount} connected profile{overview.connectedPlatformsCount !== 1 ? 's' : ''}</span>
                 </div>
               </div>
 
@@ -202,16 +206,16 @@ export const DashboardPage: React.FC = () => {
                 }}
               >
                 <MetricCard
-                  title="Total Solved"
+                  title="Total Platform Solves"
                   value={overview.totalProblemsSolved}
-                  subtitle="Aggregated across all profiles"
+                  subtitle="Sum across connected platforms; the same problem may be counted more than once."
                   icon={<CheckCircle2 size={20} />}
                   accentColor="var(--color-primary)"
                 />
                 <MetricCard
-                  title="Contests"
+                  title="Contest Participation Count"
                   value={overview.contestsParticipated}
-                  subtitle="Competitive events attended"
+                  subtitle="Reported participation across connected platforms"
                   icon={<Trophy size={20} />}
                   accentColor="#3b82f6"
                 />
@@ -220,21 +224,21 @@ export const DashboardPage: React.FC = () => {
                   value={overview.currentStreak !== null ? `${overview.currentStreak} days` : null}
                   subtitle="Active daily solving streak"
                   icon={<Flame size={20} />}
-                  accentColor="#eb7312"
+                  accentColor="var(--color-primary)"
                 />
                 <MetricCard
                   title="Longest Streak"
                   value={overview.longestStreak !== null ? `${overview.longestStreak} days` : null}
                   subtitle="All-time personal record"
                   icon={<Flame size={20} />}
-                  accentColor="#f59e0b"
+                  accentColor="var(--color-warning)"
                 />
                 <MetricCard
                   title="Platforms"
                   value={overview.connectedPlatformsCount}
                   subtitle="Active connected sources"
                   icon={<Layers size={20} />}
-                  accentColor="#10b981"
+                  accentColor="var(--color-success)"
                 />
               </div>
             </div>

@@ -39,7 +39,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
           className="badge"
           style={{
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: '#10b981',
+            color: 'var(--color-success)',
             borderColor: 'rgba(16, 185, 129, 0.3)',
             fontSize: '0.6875rem',
           }}
@@ -162,15 +162,15 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
         {/* Sub-metrics: Difficulty pills */}
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.75rem' }}>
           <div style={{ flex: 1, backgroundColor: 'rgba(16, 185, 129, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-            <span style={{ color: '#10b981', fontWeight: 600 }}>E: </span>
+            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>E: </span>
             <span className="mono">{formatMetric(platform.easySolved)}</span>
           </div>
           <div style={{ flex: 1, backgroundColor: 'rgba(245, 158, 11, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-            <span style={{ color: '#f59e0b', fontWeight: 600 }}>M: </span>
+            <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>M: </span>
             <span className="mono">{formatMetric(platform.mediumSolved)}</span>
           </div>
           <div style={{ flex: 1, backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <span style={{ color: '#ef4444', fontWeight: 600 }}>H: </span>
+            <span style={{ color: 'var(--color-error)', fontWeight: 600 }}>H: </span>
             <span className="mono">{formatMetric(platform.hardSolved)}</span>
           </div>
         </div>
@@ -189,7 +189,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <Flame size={14} style={{ color: '#eb7312' }} />
+              <Flame size={14} style={{ color: 'var(--color-primary)' }} />
               Current Streak
             </span>
             <span className="mono" style={{ color: 'var(--color-text-primary)' }}>

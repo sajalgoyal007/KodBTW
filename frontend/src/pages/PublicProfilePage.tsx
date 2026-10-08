@@ -52,7 +52,7 @@ export const PublicProfilePage: React.FC = () => {
       case 'HACKERRANK':
         return '#00EA64';
       default:
-        return 'var(--color-primary, #38bdf8)';
+        return 'var(--color-primary, var(--color-primary))';
     }
   };
 
@@ -69,12 +69,12 @@ export const PublicProfilePage: React.FC = () => {
           fontSize: '0.6875rem',
           fontWeight: 600,
           background: isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-          color: isReal ? '#10b981' : '#f59e0b',
+          color: isReal ? 'var(--color-success)' : 'var(--color-warning)',
           border: `1px solid ${isReal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
         }}
       >
         {isReal ? <CheckCircle2 size={10} /> : null}
-        {isReal ? 'Verified REAL' : source === 'SOURCE_PENDING' ? 'Statistics unavailable' : 'MOCK'}
+        {isReal ? 'REAL statistics' : 'Statistics unavailable'}
       </span>
     );
   };
@@ -88,8 +88,8 @@ export const PublicProfilePage: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--color-bg-base, #0d1117)',
-          color: 'var(--color-text, #f0f6fc)',
+          background: 'var(--color-bg-base, var(--color-bg-base))',
+          color: 'var(--color-text, var(--color-text-primary))',
         }}
       >
         <div
@@ -97,14 +97,14 @@ export const PublicProfilePage: React.FC = () => {
             width: '40px',
             height: '40px',
             border: '3px solid rgba(56, 189, 248, 0.2)',
-            borderTopColor: 'var(--color-primary, #38bdf8)',
+            borderTopColor: 'var(--color-primary, var(--color-primary))',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             marginBottom: '1rem',
           }}
         />
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        <p style={{ color: 'var(--color-text-muted, #8b949e)', fontSize: '0.9375rem' }}>
+        <p style={{ color: 'var(--color-text-muted, var(--color-text-muted))', fontSize: '0.9375rem' }}>
           Loading developer profile...
         </p>
       </div>
@@ -113,10 +113,10 @@ export const PublicProfilePage: React.FC = () => {
 
   if (error && !notFound) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-base, #0d1117)', color: 'var(--color-text, #f0f6fc)', padding: '2rem', textAlign: 'center' }}>
-        <AlertCircle size={32} color="#ef4444" />
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg-base, var(--color-bg-base))', color: 'var(--color-text, var(--color-text-primary))', padding: '2rem', textAlign: 'center' }}>
+        <AlertCircle size={32} color="var(--color-error)" />
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: '1rem 0 0.5rem' }}>Could not load developer profile</h2>
-        <p style={{ color: 'var(--color-text-muted, #8b949e)', marginBottom: '1.5rem' }}>{error}</p>
+        <p style={{ color: 'var(--color-text-muted, var(--color-text-muted))', marginBottom: '1.5rem' }}>{error}</p>
         <button type="button" onClick={() => refetch()} className="btn btn-primary">Try again</button>
       </div>
     );
@@ -131,7 +131,7 @@ export const PublicProfilePage: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--color-bg-base, #0d1117)',
+          background: 'var(--color-bg-base, var(--color-bg-base))',
           padding: '2rem',
           textAlign: 'center',
         }}
@@ -145,18 +145,18 @@ export const PublicProfilePage: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: '#ef4444',
+            color: 'var(--color-error)',
             marginBottom: '1.25rem',
           }}
         >
           <AlertCircle size={32} />
         </div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text, #f0f6fc)', marginBottom: '0.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text, var(--color-text-primary))', marginBottom: '0.5rem' }}>
           Developer Not Found
         </h2>
-        <p style={{ color: 'var(--color-text-muted, #8b949e)', maxWidth: '420px', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+        <p style={{ color: 'var(--color-text-muted, var(--color-text-muted))', maxWidth: '420px', marginBottom: '1.5rem', lineHeight: 1.5 }}>
           No public developer profile exists with the handle{' '}
-          <code style={{ background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-primary, #38bdf8)' }}>
+          <code style={{ background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: '4px', color: 'var(--color-primary, var(--color-primary))' }}>
             @{username}
           </code>
           .
@@ -167,8 +167,8 @@ export const PublicProfilePage: React.FC = () => {
             style={{
               padding: '0.625rem 1.25rem',
               borderRadius: '8px',
-              background: 'var(--color-primary, #38bdf8)',
-              color: '#0d1117',
+              background: 'var(--color-primary, var(--color-primary))',
+              color: 'var(--color-bg-base)',
               textDecoration: 'none',
               fontWeight: 600,
               fontSize: '0.875rem',
@@ -182,8 +182,8 @@ export const PublicProfilePage: React.FC = () => {
               padding: '0.625rem 1.25rem',
               borderRadius: '8px',
               background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid var(--color-border, #30363d)',
-              color: 'var(--color-text, #f0f6fc)',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
+              color: 'var(--color-text, var(--color-text-primary))',
               cursor: 'pointer',
               fontSize: '0.875rem',
             }}
@@ -195,15 +195,18 @@ export const PublicProfilePage: React.FC = () => {
     );
   }
 
-  const { overview, platforms, socialLinks, analytics } = data;
+  const { overview, socialLinks, analytics } = data;
+  const platforms = data.platforms.filter((platform) =>
+    platform.sourceStatus === 'SOURCE_PENDING' || platform.source?.toUpperCase().includes('REAL')
+  );
   const isOwnProfile = isAuthenticated && (user?.email && data.displayName === user.name);
 
   return (
     <div
       style={{
         minHeight: '100vh',
-        background: 'var(--color-bg-base, #0d1117)',
-        color: 'var(--color-text, #f0f6fc)',
+        background: 'var(--color-bg-base, var(--color-bg-base))',
+        color: 'var(--color-text, var(--color-text-primary))',
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -211,7 +214,7 @@ export const PublicProfilePage: React.FC = () => {
       {/* Top Navbar */}
       <header
         style={{
-          borderBottom: '1px solid var(--color-border, #30363d)',
+          borderBottom: '1px solid var(--color-border, var(--color-border-subtle))',
           background: 'rgba(22, 27, 34, 0.85)',
           backdropFilter: 'blur(8px)',
           position: 'sticky',
@@ -236,7 +239,7 @@ export const PublicProfilePage: React.FC = () => {
               alignItems: 'center',
               gap: '0.5rem',
               textDecoration: 'none',
-              color: 'var(--color-text, #f0f6fc)',
+              color: 'var(--color-text, var(--color-text-primary))',
               fontWeight: 700,
               fontSize: '1.125rem',
             }}
@@ -246,7 +249,7 @@ export const PublicProfilePage: React.FC = () => {
                 width: '28px',
                 height: '28px',
                 borderRadius: '6px',
-                background: 'linear-gradient(135deg, var(--color-primary, #38bdf8), #0284c7)',
+                background: 'linear-gradient(135deg, var(--color-primary, var(--color-primary)), #0284c7)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -269,7 +272,7 @@ export const PublicProfilePage: React.FC = () => {
                 borderRadius: '8px',
                 background: 'rgba(56, 189, 248, 0.1)',
                 border: '1px solid rgba(56, 189, 248, 0.3)',
-                color: 'var(--color-primary, #38bdf8)',
+                color: 'var(--color-primary, var(--color-primary))',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -285,8 +288,8 @@ export const PublicProfilePage: React.FC = () => {
                 style={{
                   padding: '0.5rem 0.875rem',
                   borderRadius: '8px',
-                  background: 'var(--color-primary, #38bdf8)',
-                  color: '#0d1117',
+                  background: 'var(--color-primary, var(--color-primary))',
+                  color: 'var(--color-bg-base)',
                   textDecoration: 'none',
                   fontSize: '0.8125rem',
                   fontWeight: 600,
@@ -301,8 +304,8 @@ export const PublicProfilePage: React.FC = () => {
                   padding: '0.5rem 0.875rem',
                   borderRadius: '8px',
                   background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--color-border, #30363d)',
-                  color: 'var(--color-text, #f0f6fc)',
+                  border: '1px solid var(--color-border, var(--color-border-subtle))',
+                  color: 'var(--color-text, var(--color-text-primary))',
                   textDecoration: 'none',
                   fontSize: '0.8125rem',
                   fontWeight: 500,
@@ -324,7 +327,7 @@ export const PublicProfilePage: React.FC = () => {
             padding: '0.625rem 1.5rem',
             textAlign: 'center',
             fontSize: '0.8125rem',
-            color: 'var(--color-primary, #38bdf8)',
+            color: 'var(--color-primary, var(--color-primary))',
           }}
         >
           Viewing your public profile. Other developers see this exact page.{' '}
@@ -342,8 +345,8 @@ export const PublicProfilePage: React.FC = () => {
         {/* Header Profile Card */}
         <section
           style={{
-            background: 'var(--color-bg-card, #161b22)',
-            border: '1px solid var(--color-border, #30363d)',
+            background: 'var(--color-bg-card, var(--color-bg-card))',
+            border: '1px solid var(--color-border, var(--color-border-subtle))',
             borderRadius: '16px',
             padding: '2rem',
             marginBottom: '1.5rem',
@@ -369,7 +372,7 @@ export const PublicProfilePage: React.FC = () => {
                   borderRadius: '50%',
                   background: data.avatarUrl
                     ? `url(${data.avatarUrl}) center/cover no-repeat`
-                    : 'linear-gradient(135deg, #0284c7, #38bdf8)',
+                    : 'linear-gradient(135deg, #0284c7, var(--color-primary))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -389,7 +392,7 @@ export const PublicProfilePage: React.FC = () => {
                   style={{
                     fontSize: '1.75rem',
                     fontWeight: 800,
-                    color: 'var(--color-text, #f0f6fc)',
+                    color: 'var(--color-text, var(--color-text-primary))',
                     margin: '0 0 0.25rem 0',
                   }}
                 >
@@ -400,7 +403,7 @@ export const PublicProfilePage: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.5rem',
-                    color: 'var(--color-primary, #38bdf8)',
+                    color: 'var(--color-primary, var(--color-primary))',
                     fontSize: '0.9375rem',
                     fontWeight: 600,
                     marginBottom: '0.5rem',
@@ -411,7 +414,7 @@ export const PublicProfilePage: React.FC = () => {
                 {data.bio && (
                   <p
                     style={{
-                      color: 'var(--color-text-muted, #8b949e)',
+                      color: 'var(--color-text-muted, var(--color-text-muted))',
                       fontSize: '0.875rem',
                       lineHeight: 1.5,
                       maxWidth: '560px',
@@ -438,8 +441,8 @@ export const PublicProfilePage: React.FC = () => {
                     padding: '0.5rem 0.75rem',
                     borderRadius: '8px',
                     background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--color-border, #30363d)',
-                    color: 'var(--color-text, #f0f6fc)',
+                    border: '1px solid var(--color-border, var(--color-border-subtle))',
+                    color: 'var(--color-text, var(--color-text-primary))',
                     fontSize: '0.8125rem',
                     textDecoration: 'none',
                   }}
@@ -482,8 +485,8 @@ export const PublicProfilePage: React.FC = () => {
                     padding: '0.5rem 0.75rem',
                     borderRadius: '8px',
                     background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--color-border, #30363d)',
-                    color: 'var(--color-text, #f0f6fc)',
+                    border: '1px solid var(--color-border, var(--color-border-subtle))',
+                    color: 'var(--color-text, var(--color-text-primary))',
                     fontSize: '0.8125rem',
                     textDecoration: 'none',
                   }}
@@ -503,9 +506,9 @@ export const PublicProfilePage: React.FC = () => {
               gap: '1rem',
               marginTop: '1.25rem',
               paddingTop: '1.25rem',
-              borderTop: '1px solid var(--color-border, #30363d)',
+              borderTop: '1px solid var(--color-border, var(--color-border-subtle))',
               fontSize: '0.8125rem',
-              color: 'var(--color-text-muted, #8b949e)',
+              color: 'var(--color-text-muted, var(--color-text-muted))',
             }}
           >
             {data.college && (
@@ -541,43 +544,43 @@ export const PublicProfilePage: React.FC = () => {
           {/* Total Solved Card */}
           <div
             style={{
-              background: 'var(--color-bg-card, #161b22)',
-              border: '1px solid var(--color-border, #30363d)',
+              background: 'var(--color-bg-card, var(--color-bg-card))',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
               borderRadius: '12px',
               padding: '1.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, #8b949e)', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
-              <Layers size={16} color="var(--color-primary, #38bdf8)" />
-              Total Problems Solved
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, var(--color-text-muted))', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+              <Layers size={16} color="var(--color-primary, var(--color-primary))" />
+              Total Platform Solves
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
               {formatMetric(overview.totalProblemsSolved)}
             </div>
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', fontSize: '0.6875rem' }}>
-              <span style={{ color: '#10b981' }}>E: {overview.easySolved}</span>
-              <span style={{ color: '#f59e0b' }}>M: {overview.mediumSolved}</span>
-              <span style={{ color: '#ef4444' }}>H: {overview.hardSolved}</span>
+              <span style={{ color: 'var(--color-success)' }}>E: {overview.easySolved}</span>
+              <span style={{ color: 'var(--color-warning)' }}>M: {overview.mediumSolved}</span>
+              <span style={{ color: 'var(--color-error)' }}>H: {overview.hardSolved}</span>
             </div>
           </div>
 
           {/* Best Contest Rating Card */}
           <div
             style={{
-              background: 'var(--color-bg-card, #161b22)',
-              border: '1px solid var(--color-border, #30363d)',
+              background: 'var(--color-bg-card, var(--color-bg-card))',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
               borderRadius: '12px',
               padding: '1.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, #8b949e)', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
-              <Trophy size={16} color="#eab308" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, var(--color-text-muted))', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+              <Trophy size={16} color="var(--color-warning)" />
               Peak Contest Rating
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
               {formatMetric(overview.bestRating)}
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)', marginTop: '0.5rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', marginTop: '0.5rem' }}>
               {overview.bestRatingPlatform ? `on ${overview.bestRatingPlatform}` : '—'}
             </div>
           </div>
@@ -585,20 +588,20 @@ export const PublicProfilePage: React.FC = () => {
           {/* Active Streak Card */}
           <div
             style={{
-              background: 'var(--color-bg-card, #161b22)',
-              border: '1px solid var(--color-border, #30363d)',
+              background: 'var(--color-bg-card, var(--color-bg-card))',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
               borderRadius: '12px',
               padding: '1.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, #8b949e)', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, var(--color-text-muted))', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
               <Flame size={16} color="#f97316" />
               Current Streak
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
               {overview.currentStreak !== null ? `${overview.currentStreak} days` : '—'}
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)', marginTop: '0.5rem' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', marginTop: '0.5rem' }}>
               {overview.longestStreak !== null ? `Best: ${overview.longestStreak} days` : '—'}
             </div>
           </div>
@@ -606,21 +609,21 @@ export const PublicProfilePage: React.FC = () => {
           {/* Contests Attended Card */}
           <div
             style={{
-              background: 'var(--color-bg-card, #161b22)',
-              border: '1px solid var(--color-border, #30363d)',
+              background: 'var(--color-bg-card, var(--color-bg-card))',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
               borderRadius: '12px',
               padding: '1.25rem',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, #8b949e)', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-muted, var(--color-text-muted))', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
               <Calendar size={16} color="#a855f7" />
               Contests Participated
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
               {formatMetric(overview.contestsParticipated)}
             </div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)', marginTop: '0.5rem' }}>
-              Across all platforms
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', marginTop: '0.5rem' }}>
+              Sum across platforms; the same problem may be counted more than once.
             </div>
           </div>
         </section>
@@ -649,8 +652,8 @@ export const PublicProfilePage: React.FC = () => {
                   <div
                     key={p.platform}
                     style={{
-                      background: 'var(--color-bg-card, #161b22)',
-                      border: '1px solid var(--color-border, #30363d)',
+                      background: 'var(--color-bg-card, var(--color-bg-card))',
+                      border: '1px solid var(--color-border, var(--color-border-subtle))',
                       borderRadius: '12px',
                       padding: '1.25rem',
                       display: 'flex',
@@ -686,7 +689,7 @@ export const PublicProfilePage: React.FC = () => {
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: '0.25rem',
-                              color: 'var(--color-primary, #38bdf8)',
+                              color: 'var(--color-primary, var(--color-primary))',
                               textDecoration: 'none',
                               fontSize: '0.8125rem',
                               fontWeight: 500,
@@ -696,15 +699,16 @@ export const PublicProfilePage: React.FC = () => {
                             <ExternalLink size={12} />
                           </a>
                         ) : (
-                          <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted, #8b949e)' }}>
-                            @{p.username}
+                          <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>
+                          @{p.username}
                           </span>
                         )}
+                        <div style={{ marginTop: '0.35rem', color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>Self-reported · unverified handle</div>
                       </div>
 
                       {p.sourceStatus === 'SOURCE_PENDING' ? (
-                        <div style={{ padding: '0.875rem', borderRadius: '8px', marginBottom: '0.75rem', color: 'var(--color-text-muted, #8b949e)', background: 'rgba(0,0,0,0.2)', fontSize: '0.8125rem' }}>
-                          Live statistics are currently unavailable for this connected platform.
+                        <div style={{ padding: '0.875rem', borderRadius: '8px', marginBottom: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', background: 'rgba(0,0,0,0.2)', fontSize: '0.8125rem' }}>
+                          Connected — live statistics currently unavailable.
                         </div>
                       ) : <>
                       {/* Stats Grid */}
@@ -721,24 +725,24 @@ export const PublicProfilePage: React.FC = () => {
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, #8b949e)' }}>Solved</div>
+                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>Solved</div>
                           <div style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{formatMetric(p.totalSolved)}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, #8b949e)' }}>Rating</div>
+                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>Rating</div>
                           <div style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{formatMetric(p.rating)}</div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, #8b949e)' }}>Contests</div>
+                          <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>Contests</div>
                           <div style={{ fontWeight: 700, fontSize: '0.9375rem' }}>{formatMetric(p.contests)}</div>
                         </div>
                       </div>
 
                       {/* Difficulty Sub-counts */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', padding: '0 0.25rem' }}>
-                        <span style={{ color: '#10b981' }}>Easy: {formatMetric(p.easySolved)}</span>
-                        <span style={{ color: '#f59e0b' }}>Medium: {formatMetric(p.mediumSolved)}</span>
-                        <span style={{ color: '#ef4444' }}>Hard: {formatMetric(p.hardSolved)}</span>
+                        <span style={{ color: 'var(--color-success)' }}>Easy: {formatMetric(p.easySolved)}</span>
+                        <span style={{ color: 'var(--color-warning)' }}>Medium: {formatMetric(p.mediumSolved)}</span>
+                        <span style={{ color: 'var(--color-error)' }}>Hard: {formatMetric(p.hardSolved)}</span>
                       </div>
                       </>}
                     </div>
@@ -753,8 +757,8 @@ export const PublicProfilePage: React.FC = () => {
         {platforms.length > 0 && analytics?.difficulty && (
           <section
             style={{
-              background: 'var(--color-bg-card, #161b22)',
-              border: '1px solid var(--color-border, #30363d)',
+              background: 'var(--color-bg-card, var(--color-bg-card))',
+              border: '1px solid var(--color-border, var(--color-border-subtle))',
               borderRadius: '12px',
               padding: '1.5rem',
               marginBottom: '2rem',
@@ -765,29 +769,29 @@ export const PublicProfilePage: React.FC = () => {
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
               <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '8px' }}>
-                <div style={{ color: '#10b981', fontWeight: 600, fontSize: '0.8125rem' }}>Easy</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+                <div style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: '0.8125rem' }}>Easy</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.easy?.count)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>
                   {analytics.difficulty.easy?.percentage != null ? `${analytics.difficulty.easy.percentage}%` : '—'}
                 </div>
               </div>
               <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '8px' }}>
-                <div style={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.8125rem' }}>Medium</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+                <div style={{ color: 'var(--color-warning)', fontWeight: 600, fontSize: '0.8125rem' }}>Medium</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.medium?.count)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>
                   {analytics.difficulty.medium?.percentage != null ? `${analytics.difficulty.medium.percentage}%` : '—'}
                 </div>
               </div>
               <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '8px' }}>
-                <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.8125rem' }}>Hard</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, #f0f6fc)' }}>
+                <div style={{ color: 'var(--color-error)', fontWeight: 600, fontSize: '0.8125rem' }}>Hard</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.hard?.count)}
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))' }}>
                   {analytics.difficulty.hard?.percentage != null ? `${analytics.difficulty.hard.percentage}%` : '—'}
                 </div>
               </div>
@@ -799,14 +803,14 @@ export const PublicProfilePage: React.FC = () => {
       {/* Footer */}
       <footer
         style={{
-          borderTop: '1px solid var(--color-border, #30363d)',
+          borderTop: '1px solid var(--color-border, var(--color-border-subtle))',
           padding: '1.5rem',
           textAlign: 'center',
           fontSize: '0.8125rem',
-          color: 'var(--color-text-muted, #8b949e)',
+          color: 'var(--color-text-muted, var(--color-text-muted))',
         }}
       >
-        Built with <strong style={{ color: 'var(--color-text, #f0f6fc)' }}>KodBTW</strong> • Unified Developer Stats & CP Portfolio
+        Built with <strong style={{ color: 'var(--color-text, var(--color-text-primary))' }}>KodBTW</strong> • Unified Developer Stats & CP Portfolio
       </footer>
 
       {/* Share Profile Modal */}

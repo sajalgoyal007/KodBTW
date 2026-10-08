@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -24,6 +25,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogAccessibility(isOpen, onClose, dialogRef);
   if (!isOpen) return null;
 
   return (
@@ -40,9 +43,16 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         backdropFilter: 'blur(4px)',
       }}
       onClick={onClose}
+      onKeyDown={(event) => { if (event.key === 'Escape' && isLoading) event.stopPropagation(); }}
     >
       <div
         className="card"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-description"
+        tabIndex={-1}
         style={{
           width: '100%',
           maxWidth: '440px',
@@ -73,18 +83,20 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             >
               <AlertTriangle size={20} />
             </div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700 }}>{title}</h3>
+            <h3 id="confirm-dialog-title" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{title}</h3>
           </div>
           <button
             onClick={onClose}
             className="btn btn-ghost"
+            aria-label="Close dialog"
+            disabled={isLoading}
             style={{ padding: '0.25rem', color: 'var(--color-text-muted)' }}
           >
             <X size={18} />
           </button>
         </div>
 
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.5 }}>
+        <p id="confirm-dialog-description" style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.5 }}>
           {message}
         </p>
 

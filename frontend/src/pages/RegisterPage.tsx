@@ -87,7 +87,7 @@ export const RegisterPage: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0b0f19',
+              color: 'var(--color-primary-text)',
               fontWeight: 800,
             }}>
               <Code2 size={24} />

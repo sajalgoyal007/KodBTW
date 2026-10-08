@@ -16,7 +16,7 @@ export const ContestPlatformTable: React.FC<ContestPlatformTableProps> = ({ plat
           className="badge"
           style={{
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: '#10b981',
+            color: 'var(--color-success)',
             borderColor: 'rgba(16, 185, 129, 0.3)',
             fontSize: '0.6875rem',
           }}
@@ -62,7 +62,7 @@ export const ContestPlatformTable: React.FC<ContestPlatformTableProps> = ({ plat
       <div>
         <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Platform Contest Standing</h3>
         <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: '0.125rem' }}>
-          Official contest metrics, active ratings, and competitive rankings across accounts
+          Platform-specific rating snapshots and reported contest participation; event history is unavailable
         </p>
       </div>
 

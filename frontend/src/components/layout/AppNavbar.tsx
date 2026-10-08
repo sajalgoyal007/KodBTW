@@ -1,126 +1,60 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Code2, LogOut, User as UserIcon, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { Code2, LogOut, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
+
+const navItems = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Analytics', path: '/analytics', icon: BarChart2 },
+  { label: 'Contests', path: '/contests', icon: Trophy },
+  { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
+  { label: 'Coding Profiles', path: '/coding-profiles', icon: Terminal },
+];
 
 export const AppNavbar: React.FC = () => {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
 
-  const navItems = [
-    { label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={16} /> },
-    { label: 'Analytics', path: '/analytics', icon: <BarChart2 size={16} /> },
-    { label: 'Contests', path: '/contests', icon: <Trophy size={16} /> },
-    { label: 'Leaderboard', path: '/leaderboard', icon: <Medal size={16} /> },
-    { label: 'Coding Profiles', path: '/coding-profiles', icon: <Terminal size={16} /> },
-    { label: 'Developer Profile', path: '/profile', icon: <UserCircle size={16} /> },
-  ];
+  React.useEffect(() => { setMobileOpen(false); setProfileOpen(false); }, [location.pathname]);
+  React.useEffect(() => {
+    if (!mobileOpen && !profileOpen) return;
+    const close = (event: KeyboardEvent) => { if (event.key === 'Escape') { setMobileOpen(false); setProfileOpen(false); } };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [mobileOpen, profileOpen]);
 
-  return (
-    <header
-      style={{
-        borderBottom: '1px solid var(--color-border-subtle)',
-        backgroundColor: 'var(--color-bg-card)',
-        padding: '0.875rem 1.5rem',
-        position: 'sticky',
-        top: 0,
-        zIndex: 20,
-        backdropFilter: 'blur(8px)',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
-        {/* Brand & Main Nav Links */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-          <Link to="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--color-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#0b0f19',
-                fontWeight: 800,
-              }}
-            >
-              <Code2 size={20} />
-            </div>
-            <span style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
-              Kod<span style={{ color: 'var(--color-primary)' }}>BTW</span>
-            </span>
-          </Link>
-
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 0.875rem',
-                    borderRadius: 'var(--radius-md)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                    backgroundColor: isActive ? 'rgba(235, 115, 18, 0.1)' : 'transparent',
-                    border: `1px solid ${isActive ? 'rgba(235, 115, 18, 0.3)' : 'transparent'}`,
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* User Info & Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: 'var(--color-text-secondary)',
-              fontSize: '0.8125rem',
-              padding: '0.375rem 0.75rem',
-              backgroundColor: 'var(--color-bg-base)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-border-subtle)',
-            }}
-          >
-            <UserIcon size={14} />
-            <span style={{ fontWeight: 500, color: 'var(--color-text-primary)' }}>{user?.name}</span>
-          </div>
-
-          <button
-            onClick={logout}
-            className="btn btn-secondary"
-            style={{ padding: '0.4375rem 0.875rem', fontSize: '0.8125rem' }}
-          >
-            <LogOut size={14} />
-            <span>Sign Out</span>
+  return <header className="app-header">
+    <div className="app-header-inner">
+      <Link to="/dashboard" className="brand" aria-label="KodBTW dashboard">
+        <span className="brand-mark"><Code2 size={19} /></span><span>Kod<span className="brand-accent">BTW</span></span>
+      </Link>
+      <nav id="primary-navigation" className={`primary-nav ${mobileOpen ? 'is-open' : ''}`} aria-label="Primary navigation">
+        {navItems.map(({ label, path, icon: Icon }) => <NavLink key={path} to={path} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+          <Icon size={16} aria-hidden="true" /><span>{label}</span>
+        </NavLink>)}
+      </nav>
+      <div className="header-actions">
+        <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+        <div className="profile-menu-wrap">
+          <button className="profile-menu-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen} aria-haspopup="menu">
+            <span className="avatar">{(user?.name || 'U').slice(0, 1).toUpperCase()}</span>
+            <span className="profile-name">{user?.name}</span><ChevronDown size={14} />
           </button>
+          {profileOpen && <div className="profile-menu" role="menu">
+            <Link to="/profile" role="menuitem"><UserCircle size={16} /> Developer Profile</Link>
+            <button role="menuitem" onClick={logout}><LogOut size={16} /> Sign out</button>
+          </div>}
         </div>
+        <button className="icon-button mobile-menu-toggle" aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'} aria-expanded={mobileOpen} aria-controls="primary-navigation" onClick={() => setMobileOpen((open) => !open)}>
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </div>
-    </header>
-  );
+    </div>
+  </header>;
 };

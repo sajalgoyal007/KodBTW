@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LeaderboardSort, LeaderboardDataFilter } from '../../types/leaderboard';
-import { Search, X, ShieldCheck, Layers, ArrowUpDown } from 'lucide-react';
+import { Search, X, ShieldCheck, ArrowUpDown } from 'lucide-react';
 
 interface LeaderboardFiltersProps {
   sort: LeaderboardSort;
@@ -136,35 +136,14 @@ export const LeaderboardFilters: React.FC<LeaderboardFiltersProps> = ({
                 border: 'none',
                 cursor: 'pointer',
                 backgroundColor: dataFilter === 'real' ? 'var(--color-primary)' : 'transparent',
-                color: dataFilter === 'real' ? '#0b0f19' : 'var(--color-text-secondary)',
+                color: dataFilter === 'real' ? 'var(--color-primary-text)' : 'var(--color-text-secondary)',
                 transition: 'all 0.15s ease',
               }}
             >
               <ShieldCheck size={14} />
-              <span>Verified Only</span>
+              <span>Live stats only</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => onDataFilterChange('all')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.375rem',
-                padding: '0.375rem 0.75rem',
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                borderRadius: 'var(--radius-sm)',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: dataFilter === 'all' ? 'var(--color-primary)' : 'transparent',
-                color: dataFilter === 'all' ? '#0b0f19' : 'var(--color-text-secondary)',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              <Layers size={14} />
-              <span>All Data</span>
-            </button>
           </div>
 
           {/* Sort Dropdown */}
@@ -181,8 +160,8 @@ export const LeaderboardFilters: React.FC<LeaderboardFiltersProps> = ({
               }}
             >
               <option value="score">Sort by: Score (WDS)</option>
-              <option value="solved">Sort by: Total Solved</option>
-              <option value="rating">Sort by: Best Rating</option>
+              <option value="solved">Sort by: Total Platform Solves</option>
+              <option value="rating">Sort by: Platform Rating</option>
             </select>
           </div>
         </div>
@@ -201,13 +180,11 @@ export const LeaderboardFilters: React.FC<LeaderboardFiltersProps> = ({
           padding: '0.5rem 0.75rem',
           backgroundColor: 'rgba(255, 255, 255, 0.02)',
           borderRadius: 'var(--radius-sm)',
-          borderLeft: dataFilter === 'real' ? '3px solid var(--color-primary)' : '3px solid #eab308',
+          borderLeft: dataFilter === 'real' ? '3px solid var(--color-primary)' : '3px solid var(--color-warning)',
         }}
       >
         <span>
-          {dataFilter === 'real'
-            ? '✓ Verified Only: Rankings computed exclusively from live-synced platforms (LeetCode & Codeforces). Mock platforms excluded.'
-            : '⚠ All Data: Includes self-reported or unverified mock platform submissions marked with badges below.'}
+          Rankings use only available live statistics from LeetCode and Codeforces. Platform handles are self-reported and are not ownership-verified.
         </span>
         {college && (
           <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>

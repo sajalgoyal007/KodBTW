@@ -29,7 +29,7 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#eb7312',
+              color: 'var(--color-primary)',
             }}
           >
             <Flame size={18} />
@@ -79,7 +79,7 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.75rem' }}>
                     <div>
                       <span style={{ color: 'var(--color-text-muted)' }}>Current: </span>
-                      <span className="mono" style={{ color: '#eb7312', fontWeight: 700 }}>
+                      <span className="mono" style={{ color: 'var(--color-primary)', fontWeight: 700 }}>
                         {formatDays(item.currentStreak)}
                       </span>
                     </div>
@@ -107,7 +107,7 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
                       style={{
                         width: `${curPct}%`,
                         height: '100%',
-                        backgroundColor: '#eb7312',
+                        backgroundColor: 'var(--color-primary)',
                         borderRadius: 'var(--radius-full)',
                         transition: 'width 0.4s ease',
                       }}

@@ -66,7 +66,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           className="badge"
           style={{
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: '#10b981',
+            color: 'var(--color-success)',
             borderColor: 'rgba(16, 185, 129, 0.3)',
             fontSize: '0.6875rem',
           }}
@@ -165,9 +165,9 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           </div>
         )}
 
-        {!loading && !error && stats && (stats.source === 'SOURCE_PENDING' ? (
+        {!loading && !error && stats && (stats.source === 'SOURCE_PENDING' || !stats.source?.toUpperCase().includes('REAL') ? (
           <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
-            Live statistics are currently unavailable for this connected platform.
+            {stats.source === 'SOURCE_PENDING' ? 'Connected — live statistics currently unavailable.' : 'No verified live statistics are available for this platform.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -216,7 +216,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
                   textAlign: 'center',
                 }}
               >
-                <div style={{ color: '#10b981', fontSize: '0.75rem', fontWeight: 600 }}>Easy</div>
+                <div style={{ color: 'var(--color-success)', fontSize: '0.75rem', fontWeight: 600 }}>Easy</div>
                 <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatMetric(stats.easySolved)}</div>
               </div>
               <div
@@ -229,7 +229,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
                   textAlign: 'center',
                 }}
               >
-                <div style={{ color: '#f59e0b', fontSize: '0.75rem', fontWeight: 600 }}>Medium</div>
+                <div style={{ color: 'var(--color-warning)', fontSize: '0.75rem', fontWeight: 600 }}>Medium</div>
                 <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatMetric(stats.mediumSolved)}</div>
               </div>
               <div
@@ -242,7 +242,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
                   textAlign: 'center',
                 }}
               >
-                <div style={{ color: '#ef4444', fontSize: '0.75rem', fontWeight: 600 }}>Hard</div>
+                <div style={{ color: 'var(--color-error)', fontSize: '0.75rem', fontWeight: 600 }}>Hard</div>
                 <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatMetric(stats.hardSolved)}</div>
               </div>
             </div>
@@ -268,7 +268,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)' }}>
-                  <Flame size={15} style={{ color: '#eb7312' }} /> Current Streak
+                  <Flame size={15} style={{ color: 'var(--color-primary)' }} /> Current Streak
                 </span>
                 <span className="mono" style={{ fontWeight: 600 }}>
                   {stats.currentStreak !== null && stats.currentStreak !== undefined ? `${stats.currentStreak} days` : '—'}

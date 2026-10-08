@@ -24,7 +24,8 @@ export const LeaderboardPage: React.FC = () => {
     refetch,
   } = useLeaderboard();
 
-  const entries = leaderboard?.entries || [];
+  const entries = (leaderboard?.entries || []).filter((entry) => entry.realDataOnly && !entry.hasMockData);
+  const safeMyRank = myRank?.realDataOnly && !myRank.hasMockData ? myRank : null;
   const total = leaderboard?.total || 0;
   const lastSyncedAt = leaderboard?.lastSyncedAt;
 
@@ -75,7 +76,7 @@ export const LeaderboardPage: React.FC = () => {
               )}
             </div>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem', margin: '0.375rem 0 0 0' }}>
-              Global and collegiate developer rankings aggregated across verified platforms.
+                Rankings use live statistics from LeetCode and Codeforces. Total platform solves may count the same problem more than once; platform ratings use different scales.
             </p>
           </div>
 
@@ -110,7 +111,7 @@ export const LeaderboardPage: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               gap: '0.625rem',
-              color: '#eab308',
+              color: 'var(--color-warning)',
               fontSize: '0.8125rem',
             }}
           >
@@ -145,7 +146,7 @@ export const LeaderboardPage: React.FC = () => {
         )}
 
         {/* Personal Standing Card */}
-        <MyRankCard myRank={myRank} loading={loading} />
+        <MyRankCard myRank={safeMyRank} loading={loading} />
 
         {/* Filter Controls */}
         <LeaderboardFilters

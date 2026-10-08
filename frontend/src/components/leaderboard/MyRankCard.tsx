@@ -78,7 +78,7 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
                   className="badge"
                   style={{
                     backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                    color: '#eab308',
+                    color: 'var(--color-warning)',
                     border: '1px solid rgba(234, 179, 8, 0.3)',
                     fontSize: '0.75rem',
                   }}
@@ -162,7 +162,7 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '0.375rem' }}>
-            <Zap size={15} style={{ color: '#eab308' }} />
+            <Zap size={15} style={{ color: 'var(--color-warning)' }} />
             <span>Score (WDS)</span>
           </div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>
@@ -184,14 +184,14 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '0.375rem' }}>
             <Code2 size={15} />
-            <span>Verified Solved</span>
+            <span>Total Platform Solves</span>
           </div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>
             {myRank?.totalSolved != null ? myRank.totalSolved.toLocaleString() : '0'}
           </div>
           {myRank?.bestRating != null && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>
-              Best: {myRank.bestRating} ({myRank.bestRatingPlatform})
+              Rating: {myRank.bestRating} · {myRank.bestRatingPlatform} scale
             </div>
           )}
         </div>

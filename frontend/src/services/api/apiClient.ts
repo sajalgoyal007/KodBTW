@@ -21,7 +21,7 @@ interface RequestOptions extends RequestInit {
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers = {}, ...customConfig } = options;
+  const { params, headers = {}, signal: externalSignal, ...customConfig } = options;
 
   let url = `${BASE_URL}${endpoint}`;
   if (params) {
@@ -47,12 +47,29 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 15_000);
+  const abortFromCaller = () => controller.abort();
+  externalSignal?.addEventListener('abort', abortFromCaller, { once: true });
   const config: RequestInit = {
     ...customConfig,
     headers: requestHeaders,
+    signal: controller.signal,
   };
 
-  const response = await fetch(url, config);
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } catch (error) {
+    if (controller.signal.aborted && !externalSignal?.aborted) {
+      throw new ApiError(408, { error: 'Request timeout', message: 'The request took too long. Please try again.' });
+    }
+    if (externalSignal?.aborted) throw error;
+    throw new ApiError(0, { error: 'Network error', message: 'Unable to reach KodBTW. Check your connection and try again.' });
+  } finally {
+    window.clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', abortFromCaller);
+  }
 
   if (response.status === 401) {
     localStorage.removeItem(TOKEN_STORAGE_KEY);

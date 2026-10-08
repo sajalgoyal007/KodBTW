@@ -30,7 +30,7 @@ export const PlatformShareCard: React.FC<PlatformShareCardProps> = ({ platformCo
           className="badge"
           style={{
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: '#10b981',
+            color: 'var(--color-success)',
             borderColor: 'rgba(16, 185, 129, 0.3)',
             fontSize: '0.6875rem',
           }}

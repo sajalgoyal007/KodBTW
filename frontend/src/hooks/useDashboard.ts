@@ -33,21 +33,17 @@ export function useDashboard(): UseDashboardResult {
     if (showLoading) setLoading(true);
     setError(null);
 
-    try {
-      const [statsRes, analyticsRes, accountsRes] = await Promise.all([
-        getStats(),
-        getAnalytics(),
-        getAll(),
-      ]);
-      setStats(statsRes);
-      setAnalytics(analyticsRes);
-      setAccounts(accountsRes);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch dashboard data. Please try again.');
-    } finally {
-      if (showLoading) setLoading(false);
-      isFetchingRef.current = false;
-    }
+    const results = await Promise.allSettled([getStats(), getAnalytics(), getAll()]);
+    const [statsResult, analyticsResult, accountsResult] = results;
+    if (statsResult.status === 'fulfilled') setStats(statsResult.value);
+    if (analyticsResult.status === 'fulfilled') setAnalytics(analyticsResult.value);
+    if (accountsResult.status === 'fulfilled') setAccounts(accountsResult.value);
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
+    setError(failedCount === 3
+      ? 'Dashboard data could not be loaded. Check your connection and retry.'
+      : failedCount > 0 ? 'Some dashboard sections could not be updated. Available data is still shown.' : null);
+    if (showLoading) setLoading(false);
+    isFetchingRef.current = false;
   }, []);
 
   const refreshAccount = useCallback(async (accountId: number): Promise<boolean> => {
@@ -63,12 +59,12 @@ export function useDashboard(): UseDashboardResult {
         success: !failed && !mockData,
         message: failed
           ? (result.syncStatus.failureMessage || 'Refresh failed.')
-          : mockData ? 'Live sync is unavailable; mock sandbox values are shown.'
+          : mockData ? 'No verified live statistics are available for this platform.'
           : result.cooldownApplied ? 'Recently synced; showing saved stats.'
           : alreadyRunning ? 'Stats refresh is already in progress.' : 'Stats refreshed successfully.',
       });
       await fetchData(false);
-      return !failed;
+      return !failed && !mockData;
     } catch (err: any) {
       setRefreshFeedback({ accountId, success: false, message: err?.message || 'Unable to refresh stats.' });
       return false;

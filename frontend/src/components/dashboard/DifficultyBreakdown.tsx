@@ -53,7 +53,7 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
         <div
           style={{
             width: `${easyPct || 0}%`,
-            backgroundColor: '#10b981',
+            backgroundColor: 'var(--color-success)',
             transition: 'width 0.3s ease',
           }}
           title={`Easy: ${formatPct(easyPct)}`}
@@ -61,7 +61,7 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
         <div
           style={{
             width: `${medPct || 0}%`,
-            backgroundColor: '#f59e0b',
+            backgroundColor: 'var(--color-warning)',
             transition: 'width 0.3s ease',
           }}
           title={`Medium: ${formatPct(medPct)}`}
@@ -69,7 +69,7 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
         <div
           style={{
             width: `${hardPct || 0}%`,
-            backgroundColor: '#ef4444',
+            backgroundColor: 'var(--color-error)',
             transition: 'width 0.3s ease',
           }}
           title={`Hard: ${formatPct(hardPct)}`}
@@ -88,8 +88,8 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981' }} />
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#10b981' }}>Easy</span>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-success)' }} />
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-success)' }}>Easy</span>
           </div>
           <div className="mono" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
             {formatCount(easyCount)}
@@ -109,8 +109,8 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#f59e0b' }}>Medium</span>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-warning)' }} />
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-warning)' }}>Medium</span>
           </div>
           <div className="mono" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
             {formatCount(medCount)}
@@ -130,8 +130,8 @@ export const DifficultyBreakdown: React.FC<DifficultyBreakdownProps> = ({ diffic
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.375rem' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#ef4444' }}>Hard</span>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--color-error)' }} />
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-error)' }}>Hard</span>
           </div>
           <div className="mono" style={{ fontSize: '1.25rem', fontWeight: 700 }}>
             {formatCount(hardCount)}

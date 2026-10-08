@@ -19,7 +19,7 @@ export const PlatformStandingTable: React.FC<PlatformStandingTableProps> = ({ pl
           className="badge"
           style={{
             backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: '#10b981',
+            color: 'var(--color-success)',
             borderColor: 'rgba(16, 185, 129, 0.3)',
             fontSize: '0.6875rem',
           }}
@@ -138,7 +138,7 @@ export const PlatformStandingTable: React.FC<PlatformStandingTableProps> = ({ pl
                       {formatMetric(row.contestsParticipated)}
                     </td>
                     <td className="mono" style={{ padding: '0.875rem 1rem', textAlign: 'center' }}>
-                      <span style={{ color: '#eb7312' }}>{formatDays(row.currentStreak)}</span>
+                      <span style={{ color: 'var(--color-primary)' }}>{formatDays(row.currentStreak)}</span>
                       <span style={{ color: 'var(--color-text-muted)' }}> / </span>
                       <span style={{ color: 'var(--color-text-secondary)' }}>{formatDays(row.longestStreak)}</span>
                     </td>

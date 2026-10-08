@@ -1,7 +1,7 @@
 import React from 'react';
 import { ContestOverviewMetric } from '../../types/contest';
 import { MetricCard } from '../dashboard/MetricCard';
-import { Trophy, Award, Layers } from 'lucide-react';
+import { Trophy, Layers } from 'lucide-react';
 
 interface ContestOverviewCardsProps {
   metrics: ContestOverviewMetric;
@@ -17,23 +17,11 @@ export const ContestOverviewCards: React.FC<ContestOverviewCardsProps> = ({ metr
       }}
     >
       <MetricCard
-        title="Total Contests"
+        title="Contest Participation Count"
         value={metrics.totalContests}
-        subtitle="Aggregated events attended"
+        subtitle="Sum of reported counts; platforms may define participation differently"
         icon={<Trophy size={20} />}
         accentColor="var(--color-primary)"
-      />
-
-      <MetricCard
-        title="Peak Rating"
-        value={metrics.highestRating}
-        subtitle={
-          metrics.highestRatingPlatform
-            ? `Highest on ${metrics.highestRatingPlatform}`
-            : 'Across active platforms'
-        }
-        icon={<Award size={20} />}
-        accentColor="#3b82f6"
       />
 
       <MetricCard
@@ -41,7 +29,7 @@ export const ContestOverviewCards: React.FC<ContestOverviewCardsProps> = ({ metr
         value={metrics.activeContestPlatformsCount}
         subtitle="Profiles with contest activity"
         icon={<Layers size={20} />}
-        accentColor="#10b981"
+        accentColor="var(--color-success)"
       />
     </div>
   );

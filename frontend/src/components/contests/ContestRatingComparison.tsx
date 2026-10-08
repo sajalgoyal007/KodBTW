@@ -24,12 +24,6 @@ export const ContestRatingComparison: React.FC<ContestRatingComparisonProps> = (
     }
   };
 
-  // Find maximum rating for relative scaling
-  const maxRating = Math.max(
-    ...platforms.map((p) => p.rating || 0),
-    2400
-  );
-
   const ratedPlatforms = platforms.filter((p) => p.rating !== null && p.rating !== undefined);
 
   return (
@@ -51,9 +45,9 @@ export const ContestRatingComparison: React.FC<ContestRatingComparisonProps> = (
             <TrendingUp size={18} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Rating Comparison</h3>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Platform Contest Ratings</h3>
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', marginTop: '0.125rem' }}>
-              Relative competitive rating levels across linked profiles
+              Ratings use platform-specific scales and should not be compared directly.
             </p>
           </div>
         </div>
@@ -67,7 +61,6 @@ export const ContestRatingComparison: React.FC<ContestRatingComparisonProps> = (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {ratedPlatforms.map((item) => {
             const rating = item.rating!;
-            const widthPct = Math.min((rating / maxRating) * 100, 100);
             const brandColor = getPlatformBrandColor(item.platform);
 
             return (
@@ -97,26 +90,6 @@ export const ContestRatingComparison: React.FC<ContestRatingComparisonProps> = (
                   </div>
                 </div>
 
-                {/* Relative Rating Progress Bar */}
-                <div
-                  style={{
-                    height: '8px',
-                    backgroundColor: 'var(--color-bg-subtle)',
-                    borderRadius: 'var(--radius-full)',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${widthPct}%`,
-                      height: '100%',
-                      backgroundColor: brandColor,
-                      borderRadius: 'var(--radius-full)',
-                      transition: 'width 0.4s ease',
-                    }}
-                    title={`${item.platform} Rating: ${rating}`}
-                  />
-                </div>
               </div>
             );
           })}

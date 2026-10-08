@@ -7,8 +7,8 @@ export const PublicProfileEmptyState: React.FC = () => {
       style={{
         padding: '3rem 2rem',
         textAlign: 'center',
-        background: 'var(--color-bg-card, #161b22)',
-        border: '1px dashed var(--color-border, #30363d)',
+        background: 'var(--color-bg-card, var(--color-bg-card))',
+        border: '1px dashed var(--color-border, var(--color-border-subtle))',
         borderRadius: '12px',
         marginTop: '1.5rem',
       }}
@@ -23,7 +23,7 @@ export const PublicProfileEmptyState: React.FC = () => {
           alignItems: 'center',
           justifyContent: 'center',
           margin: '0 auto 1rem',
-          color: 'var(--color-primary, #38bdf8)',
+          color: 'var(--color-primary, var(--color-primary))',
         }}
       >
         <Layers size={28} />
@@ -32,7 +32,7 @@ export const PublicProfileEmptyState: React.FC = () => {
         style={{
           fontSize: '1.125rem',
           fontWeight: 600,
-          color: 'var(--color-text, #f0f6fc)',
+          color: 'var(--color-text, var(--color-text-primary))',
           marginBottom: '0.5rem',
         }}
       >
@@ -41,7 +41,7 @@ export const PublicProfileEmptyState: React.FC = () => {
       <p
         style={{
           fontSize: '0.875rem',
-          color: 'var(--color-text-muted, #8b949e)',
+          color: 'var(--color-text-muted, var(--color-text-muted))',
           maxWidth: '440px',
           margin: '0 auto',
           lineHeight: 1.5,

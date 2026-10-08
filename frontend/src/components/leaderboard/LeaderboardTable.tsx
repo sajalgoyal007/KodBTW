@@ -41,7 +41,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
             height: '28px',
             borderRadius: '50%',
             backgroundColor: 'rgba(234, 179, 8, 0.2)',
-            color: '#eab308',
+            color: 'var(--color-warning)',
             fontWeight: 800,
             fontSize: '0.875rem',
             border: '1px solid rgba(234, 179, 8, 0.4)',
@@ -138,7 +138,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
               <th style={{ padding: '0.875rem 1rem' }}>College</th>
               <th style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>Solved</th>
               <th style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>Score (WDS)</th>
-              <th style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>Best Rating</th>
+              <th style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>Rating · Platform</th>
               <th style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>Contests</th>
               <th style={{ padding: '0.875rem 1.25rem', textAlign: 'center', width: '130px' }}>Status</th>
             </tr>
@@ -264,7 +264,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       )}
                     </td>
 
-                    {/* Total Solved */}
+                    {/* Total platform solves */}
                     <td style={{ padding: '0.875rem 1rem', textAlign: 'right', fontWeight: 600 }}>
                       {entry.totalSolved.toLocaleString()}
                     </td>
@@ -281,7 +281,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                       {Math.round(entry.weightedScore).toLocaleString()}
                     </td>
 
-                    {/* Best Rating */}
+                    {/* Highest reported platform rating; rating scales vary. */}
                     <td style={{ padding: '0.875rem 1rem', textAlign: 'right' }}>
                       {entry.bestRating != null ? (
                         <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
@@ -313,10 +313,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                             display: 'inline-flex',
                             gap: '0.25rem',
                           }}
-                          title="Ranked with verified real data only"
+                          title="Ranked with live platform statistics"
                         >
                           <CheckCircle2 size={11} />
-                          <span>Verified</span>
+                          <span>Live stats</span>
                         </span>
                       ) : (
                         <span
@@ -327,10 +327,10 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                             display: 'inline-flex',
                             gap: '0.25rem',
                             backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                            color: '#eab308',
+                            color: 'var(--color-warning)',
                             border: '1px solid rgba(234, 179, 8, 0.3)',
                           }}
-                          title="Includes unverified mock platform data"
+                          title="This entry is excluded from the live statistics leaderboard"
                         >
                           <AlertTriangle size={11} />
                           <span>Unverified</span>

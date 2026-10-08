@@ -27,11 +27,15 @@ export const AnalyticsPage: React.FC = () => {
   const platformComparison = data?.platformComparison || [];
   const contests = data?.contests || null;
 
-  const totalProblems = difficulty?.totalProblemsSolved ?? 0;
+  const hasSolvedMetrics = platformComparison.some((platform) => platform.totalSolved !== null)
+    || (difficulty?.totalProblemsSolved !== null && difficulty?.totalProblemsSolved !== undefined);
+  const hasRatingMetrics = platformComparison.some((platform) => platform.rating !== null || platform.rank !== null);
+  const hasStreakMetrics = platformComparison.some((platform) => platform.currentStreak !== null || platform.longestStreak !== null);
+  const hasContestMetrics = !!contests && (contests.totalContests !== null || contests.platformBreakdown.some((platform) => platform.rating !== null || platform.contests !== null));
   const isEmpty =
     !loading &&
     !error &&
-    (!data || platformComparison.length === 0 || totalProblems === 0);
+    (!data || (!hasSolvedMetrics && !hasRatingMetrics && !hasStreakMetrics && !hasContestMetrics));
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -223,7 +227,7 @@ export const AnalyticsPage: React.FC = () => {
         {!loading && !error && !isEmpty && data && (
           <>
             {/* Row 1: Difficulty Distribution + Platform Problem Share */}
-            <div
+            {hasSolvedMetrics && <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
@@ -232,27 +236,27 @@ export const AnalyticsPage: React.FC = () => {
             >
               <DifficultyDistributionCard difficulty={difficulty || null} />
               <PlatformShareCard platformComparison={platformComparison} />
-            </div>
+            </div>}
 
             {/* Row 2: Platform Difficulty Breakdown Table */}
-            {difficulty?.platformBreakdown && (
+            {difficulty?.platformBreakdown?.length && (
               <PlatformDifficultyTable platformBreakdown={difficulty.platformBreakdown} />
             )}
 
             {/* Row 3: Contest Summary + Streak Comparison */}
-            <div
+            {(hasContestMetrics || hasStreakMetrics) && <div
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
                 gap: '1.5rem',
               }}
             >
-              <ContestSummary contests={contests} />
-              <StreakComparisonCard platformComparison={platformComparison} />
-            </div>
+              {hasContestMetrics && <ContestSummary contests={contests} />}
+              {hasStreakMetrics && <StreakComparisonCard platformComparison={platformComparison} />}
+            </div>}
 
             {/* Row 4: Comprehensive Platform Standing Table */}
-            <PlatformStandingTable platformComparison={platformComparison} />
+            {platformComparison.length > 0 && <PlatformStandingTable platformComparison={platformComparison} />}
           </>
         )}
 
