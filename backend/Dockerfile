@@ -8,7 +8,7 @@ COPY mvnw ./mvnw
 RUN chmod +x ./mvnw
 
 COPY src/ ./src/
-RUN ./mvnw -B -DskipTests package
+RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy
 
