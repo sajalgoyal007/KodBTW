@@ -28,6 +28,7 @@ export const CodingProfilesPage: React.FC = () => {
     createAccount,
     updateAccount,
     deleteAccount,
+    syncAccount,
   } = usePlatformAccounts();
 
   // Modal states
@@ -37,6 +38,9 @@ export const CodingProfilesPage: React.FC = () => {
   const [statsModalAccount, setStatsModalAccount] = useState<PlatformAccountResponse | null>(null);
 
   const [deletingAccount, setDeletingAccount] = useState<PlatformAccountResponse | null>(null);
+  const [initialSyncing, setInitialSyncing] = useState(false);
+  const [refreshingAccountId, setRefreshingAccountId] = useState<number | null>(null);
+  const [connectFeedback, setConnectFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const existingPlatforms = accounts.map((a) => a.platform);
 
@@ -85,7 +89,40 @@ export const CodingProfilesPage: React.FC = () => {
     if (editingAccount) {
       await updateAccount(editingAccount.id, data);
     } else {
-      await createAccount(data);
+      setConnectFeedback(null);
+      const account = await createAccount(data);
+      setInitialSyncing(true);
+      await handleRefreshStats(account, true);
+      setInitialSyncing(false);
+    }
+  };
+
+  const handleRefreshStats = async (account: PlatformAccountResponse, justConnected = false) => {
+    setConnectFeedback(null);
+    setRefreshingAccountId(account.id);
+    try {
+      const result = await syncAccount(account.id);
+      if (result.syncStatus.status === 'SUCCEEDED') {
+        setConnectFeedback({
+          type: 'success',
+          message: justConnected
+            ? `${account.platform} connected and stats refreshed.`
+            : `${account.platform} stats refreshed.`,
+        });
+      } else {
+        setConnectFeedback({
+          type: 'error',
+          message: `${justConnected ? `${account.platform} connected, but ` : ''}stats could not be refreshed. ${result.syncStatus.failureMessage || 'Try again shortly.'}`,
+        });
+      }
+    } catch {
+      // A failed refresh must not make an already-created account look unsaved.
+      setConnectFeedback({
+        type: 'error',
+        message: `${justConnected ? `${account.platform} connected, but ` : ''}stats could not be refreshed. Try again shortly.`,
+      });
+    } finally {
+      setRefreshingAccountId(null);
     }
   };
 
@@ -166,6 +203,12 @@ export const CodingProfilesPage: React.FC = () => {
             <button onClick={() => fetchAccounts()} className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }}>
               <RefreshCw size={14} /> Retry
             </button>
+          </div>
+        )}
+
+        {connectFeedback && (
+          <div className={`alert alert-${connectFeedback.type}`} role="status">
+            {connectFeedback.message}
           </div>
         )}
 
@@ -312,6 +355,12 @@ export const CodingProfilesPage: React.FC = () => {
                           </span>
                         </div>
                       )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--color-text-muted)' }}>Sync Status</span>
+                        <span className="mono" style={{ color: acc.syncStatus === 'FAILED' ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
+                          {acc.syncStatus.replace('_', ' ')}{acc.lastSuccessAt ? ` · ${formatDate(acc.lastSuccessAt)}` : ''}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -332,6 +381,17 @@ export const CodingProfilesPage: React.FC = () => {
                       style={{ flex: 1, padding: '0.4375rem 0.625rem', fontSize: '0.75rem' }}
                     >
                       <BarChart2 size={13} /> Inspect Stats
+                    </button>
+
+                    <button
+                      onClick={() => handleRefreshStats(acc)}
+                      className="btn btn-ghost"
+                      style={{ padding: '0.4375rem 0.625rem', fontSize: '0.75rem' }}
+                      title="Refresh Stats"
+                      aria-label={`Refresh ${acc.platform} stats`}
+                      disabled={refreshingAccountId !== null}
+                    >
+                      <RefreshCw size={13} className={refreshingAccountId === acc.id ? 'spin' : ''} />
                     </button>
 
                     <button
@@ -364,7 +424,7 @@ export const CodingProfilesPage: React.FC = () => {
         isOpen={isAccountModalOpen}
         initialAccount={editingAccount}
         existingPlatforms={existingPlatforms}
-        isLoading={actionLoading}
+        isLoading={actionLoading || initialSyncing}
         onClose={() => setIsAccountModalOpen(false)}
         onSubmit={handleSubmitAccount}
       />

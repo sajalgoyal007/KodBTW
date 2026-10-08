@@ -296,6 +296,12 @@ class PlatformAccountControllerTest {
         Long id = objectMapper.readTree(createResult.getResponse().getContentAsString())
                 .get("id").asLong();
 
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("UNSYNCED"))
+                .andExpect(jsonPath("$.totalProblemsSolved").doesNotExist());
+
         mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
@@ -318,6 +324,13 @@ class PlatformAccountControllerTest {
                 .andExpect(jsonPath("$.currentStreak").value(7))
                 .andExpect(jsonPath("$.longestStreak").doesNotExist())
                 .andExpect(jsonPath("$.source").value("LEETCODE_REAL"));
+
+        mockMvc.perform(get("/api/dashboard/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.overview.totalProblemsSolved").value(350))
+                .andExpect(jsonPath("$.overview.easySolved").value(180))
+                .andExpect(jsonPath("$.platforms[0].source").value("LEETCODE_REAL"));
     }
 
     @Test

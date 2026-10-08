@@ -14,6 +14,9 @@ import org.springframework.web.client.RestClient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -61,7 +64,15 @@ class LeetCodeClientTest {
 
         mockServer.expect(requestTo("https://leetcode.com/graphql"))
                 .andExpect(method(HttpMethod.POST))
+                .andExpect(header("Content-Type", "application/json"))
+                .andExpect(header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"))
                 .andExpect(header("Referer", "https://leetcode.com"))
+                .andExpect(content().string(allOf(
+                        containsString("query getUserProfile"),
+                        containsString("matchedUser(username: $username)"),
+                        containsString("userContestRanking(username: $username)"),
+                        containsString("\"username\":\"lee215\"")
+                )))
                 .andRespond(withSuccess(responseJson, MediaType.APPLICATION_JSON));
 
         LeetCodeDto.GraphQLData data = client.fetchUserProfile("lee215");

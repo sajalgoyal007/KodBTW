@@ -10,6 +10,7 @@ import {
   update,
   deleteAccount as apiDeleteAccount,
   getStats as apiGetStats,
+  sync as apiSyncAccount,
 } from '../services/api/platformAccountApi';
 
 interface UsePlatformAccountsResult {
@@ -22,6 +23,7 @@ interface UsePlatformAccountsResult {
   updateAccount: (id: number, data: PlatformAccountRequest) => Promise<PlatformAccountResponse>;
   deleteAccount: (id: number) => Promise<void>;
   fetchStats: (id: number) => Promise<PlatformStats>;
+  syncAccount: (id: number) => ReturnType<typeof apiSyncAccount>;
 }
 
 export function usePlatformAccounts(): UsePlatformAccountsResult {
@@ -94,6 +96,23 @@ export function usePlatformAccounts(): UsePlatformAccountsResult {
     return apiGetStats(id);
   };
 
+  const syncAccount = async (id: number) => {
+    const result = await apiSyncAccount(id);
+    setAccounts((prev) => prev.map((account) => account.id === id
+      ? {
+          ...account,
+          syncStatus: result.syncStatus.status,
+          lastAttemptAt: result.syncStatus.lastAttemptAt,
+          lastSuccessAt: result.syncStatus.lastSuccessAt,
+          lastFailureAt: result.syncStatus.lastFailureAt,
+          lastSyncErrorCategory: result.syncStatus.failureCategory,
+          lastSyncErrorMessage: result.syncStatus.failureMessage,
+          fresh: result.syncStatus.fresh,
+        }
+      : account));
+    return result;
+  };
+
   return {
     accounts,
     loading,
@@ -104,5 +123,6 @@ export function usePlatformAccounts(): UsePlatformAccountsResult {
     updateAccount,
     deleteAccount,
     fetchStats,
+    syncAccount,
   };
 }
