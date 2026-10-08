@@ -1,55 +1,119 @@
 # Platform data acquisition
 
-Research checked **8 October 2026**. Public-page reachability was checked with ordinary unauthenticated HTTP GET requests. No browser automation, cookies, account credentials, undocumented anti-bot workarounds, or access-control bypasses were used. A reachable HTML page is not treated as permission or a stable machine API.
+Research and ordinary unauthenticated HTTP probes performed **8 October 2026**. These probes checked public-page availability only. No credentials, cookies, browser automation, XHR reverse engineering, or access-control bypasses were used. A page returning HTTP 200 does not establish permission for automated extraction.
 
-## Acquisition matrix
+## Platform findings
 
-| Platform | Source | Auth | Reliability | Metrics available to KodBTW | Rate limit | Risk | Implementation decision |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LeetCode | `POST https://leetcode.com/graphql`, query `matchedUser` and `userContestRanking`; existing client | No account credentials or session cookie in current client. This is an undocumented website GraphQL endpoint, not a documented public API. | Medium to low: endpoint and schema may change without notice. | Current implementation maps solved total and difficulty counts, contest rating, profile ranking, attended contests, current streak. Missing optional fields stay null. Longest streak, max rating, submissions, active days, and last activity are unsupported. | No published limit found for this endpoint; use the 15-minute per-account sync cooldown, serialize requests, and surface provider failures without retries that amplify load. | LeetCode Terms prohibit crawling/scraping and can restrict access. Existing integration is retained as requested, but its undocumented endpoint and terms compatibility remain an unresolved production risk; seek written permission or a supported API before expanding it. | Keep the existing REAL adapter unchanged in scope. Do not add queries or increase automatic frequency until provider permission and endpoint support are established. |
-| Codeforces | Official API: `GET https://codeforces.com/api/user.info?handles={handle}`. Official docs also describe `user.rating` and `user.status`. | Anonymous for public data. API keys are only needed for private user data; KodBTW does not request them. | High for documented profile fields; API response can still fail or be rate-limited. | Current implementation: current rating, max rating, source. `user.info` also returns rank titles, but the numeric KodBTW `rank` is not a suitable field for that title. Solved counts, difficulty breakdown, contests attended, streaks, active days, and activity dates are unavailable from `user.info`. Rating history and public submissions exist as separate official endpoints but are not fetched today. | Official API says no more than one request every two seconds. Current sync serializes provider calls and spaces Codeforces calls by two seconds; the per-account 15-minute cooldown further limits repeats. | Low to medium: documented public API, strict global request cadence, provider availability and API changes. | Keep REAL adapter. Correctly expose `rating` and `maxRating` separately; do not call max rating a global rank. Leave submissions, rating-event history and derived active days for a separately scoped change. |
-| CodeChef | Public profile route `https://www.codechef.com/users/{username}`; no current official public stats API documentation was found during this review. `https://developers.codechef.com` was not available to verify as current public API documentation. | Public profile can be fetched without login by a normal GET (HTTP 200 in this review); this does not establish an authorized machine interface. | Low for automated collection: profile HTML is undocumented and can change. | Profile UI visibly presents rating-related information, but KodBTW has no authorized stable endpoint to map any metric. Solved counts, ranks, contest counts, and activity are not supported by the reviewed interface contract. | No public automated-access limit was verified. | CodeChef Terms prohibit scraping/crawling. Do not parse profile HTML or reverse engineer XHR. | Keep the account connectable, but stop returning fabricated values. Live sync reports `LIVE_SYNC_UNAVAILABLE`; no new snapshot is written. |
-| GeeksforGeeks | Public profile route `https://www.geeksforgeeks.org/user/{username}/`; ordinary unauthenticated GET returned HTTP 200 in this review. No supported public coding-stats API documentation was found. | Public route is readable without credentials, but this does not authorize automated retrieval. | Low for automated stats extraction: no supported response contract found; profile and coding activity may use dynamic site components. | Public pages can present profile/coding-score information. No metric is supported in KodBTW until an authorized stable API is documented. | No public automated-access limit was verified. | GeeksforGeeks Terms prohibit automated/non-human access and data mining/scraping. | Keep offline; return an explicit unavailable sync state and no invented metrics. Do not parse profile HTML or XHR. |
-| HackerRank | Public profile route `https://www.hackerrank.com/profile/{username}`. Official API documentation lists customer/team APIs, not a public profile-stat API. | Public profiles may be viewed without a login when they have visible activity. Official help says profiles with no completed challenge, badge, or public certification can return 404. Documented APIs use API tokens/customer integrations; KodBTW must not request them. | Low to medium for profile availability; no stable public stats API contract found. | Public profile may show badges, skills, or activity when available. No aggregate field is ingested by KodBTW. | The official API overview recommends up to 10 requests/second for its authenticated APIs; this is not a public profile scraping allowance. | Automated public-profile parsing is undocumented; APIs are not intended as anonymous competitive-profile stats feeds. | Keep offline; report `LIVE_SYNC_UNAVAILABLE`, preserve prior snapshots, and do not scrape. |
+### CodeChef
 
-## Normalized metric contract
+| Field | Finding |
+|---|---|
+| Platform | CodeChef |
+| Source | Public user pages: `https://www.codechef.com/users/{username}`. No current official public user-stat API contract was located. |
+| Source type | Public profile HTML; profile page, not a documented data API. |
+| Official/Unofficial | Public page is official; any extracted data endpoint would be undocumented/unverified. |
+| Authentication required? | No login was needed for the successful ordinary GET probe. |
+| Publicly accessible? | Yes for tested handle `lee215` (HTTP 200, `text/html`, page title `lee215 | CodeChef`). The `tourist` probe did not receive an HTTP response in this environment. |
+| Metrics available | **UNKNOWN** for machine-readable acquisition. The page is human-facing; this review did not parse its contents. |
+| Metrics unavailable | **UNKNOWN** for individual metrics from a permitted API. |
+| Request method | `GET` for a public profile page. No implementation request will be made. |
+| Example request | `GET https://www.codechef.com/users/lee215` |
+| Example response shape | Probe: `200 text/html; charset=utf-8` for `lee215`; no page data was extracted. |
+| Rate-limit observations | No public automated-access rate limit was verified. Do not infer permission from lack of a published limit. |
+| Failure modes | Probe failures/network timeout; unverified not-found/private-profile, rate-limit, and page-change responses. Do not bypass any challenge or access restriction. |
+| Terms/compliance concern | CodeChef’s current Terms prohibit spidering, crawling, and scraping in Prohibited Uses, and Section 2 restricts reproducing/copying/exploiting its service without prior written permission. See [Terms of Service](https://www.codechef.com/terms). |
+| Reliability | Low for automated use; HTML is not a supported contract, and extraction is restricted by the terms. |
+| Implementation decision | Keep `LIVE_SYNC_UNAVAILABLE`. Do not parse HTML or reverse engineer endpoints absent written permission or an officially documented public API. |
 
-Fields are nullable. `null` means **UNAVAILABLE**, never zero. `source` and sync status are independent: source identifies where persisted metrics came from; status identifies the last sync attempt.
+### GeeksforGeeks
 
-| Field | Availability rule |
-| --- | --- |
-| `totalProblemsSolved` | AVAILABLE only when a provider reports an unambiguous accepted/solved count. No count is derived from attempts. |
-| `easySolved`, `mediumSolved`, `hardSolved` | AVAILABLE only when the provider supplies that breakdown. Do not infer difficulty from Codeforces problem ratings. |
-| `rating` | Current contest rating when directly reported. |
-| `maxRating` | Peak rating when directly reported. Codeforces supplies it through `user.info`; V7 persists it separately. |
-| `rank` | Numeric platform/global rank only where directly reported as a numeric rank. Codeforces rank titles are not numeric ranks and are not written here. |
-| `contestsParticipated` | AVAILABLE only when the provider reports a count with a clear definition. |
-| `currentStreak`, `longestStreak` | Only direct provider values; never infer from cumulative totals. |
-| `submissions` | Not currently populated. Codeforces `user.status` can return public submissions, but full account counts require pagination and strict API pacing. |
-| `activeDays` | Not currently populated. Do not infer days from cumulative totals. If later derived from dated submissions, identify it as ESTIMATED and define its source/window. |
-| `lastActivity` | Not currently populated. `lastOnlineTimeSeconds` is not equivalent to last coding activity. |
-| `source` | Current values include `LEETCODE_REAL`, `CODEFORCES_REAL`, `MOCK`, and `UNSYNCED`. Unsupported live integrations record a `LIVE_SYNC_UNAVAILABLE` failure and do not create a new snapshot. |
-| `lastSyncedAt` | Time of a successfully persisted provider snapshot only; failed attempts update sync status but preserve this timestamp and existing metrics. |
+| Field | Finding |
+|---|---|
+| Platform | GeeksforGeeks |
+| Source | Public profile pages: `https://www.geeksforgeeks.org/user/{username}/`. A third-party API was also found at `https://gfg-stats.tashif.codes/{username}`. |
+| Source type | Official public profile HTML; third-party unauthenticated JSON API with unverified upstream/provenance. |
+| Official/Unofficial | Profile route is official. `gfg-stats.tashif.codes` is **unofficial** and is not operated or documented by GeeksforGeeks. |
+| Authentication required? | No login for tested profile pages or the third-party API. |
+| Publicly accessible? | Yes: `geeksforgeeks` and `demo` profile routes both returned HTTP 200 HTML. Third-party API requests also returned HTTP 200 for `demo` and `geeksforgeeks`. |
+| Metrics available | Third-party docs claim totals, difficulty, ratings, ranks, contests, and activity, but actual `geeksforgeeks` responses returned `totalSolved: 0`, `totalContests: 0`, null ratings/ranks and all-zero difficulty counts. The tested response does not substantiate the example metrics or prove their accuracy; metrics remain **UNKNOWN**, not verified real values. |
+| Metrics unavailable | Official permitted automated source for solved totals, difficulty, rating, rank, contests, streaks, submissions, active days, and last activity: **UNKNOWN**. Do not interpret API zeros as proof of zero activity. |
+| Request method | `GET` for public profile page; exploratory third-party `GET` only. No production request/client added. |
+| Example request | `GET https://www.geeksforgeeks.org/user/geeksforgeeks/`; third-party probe: `GET https://gfg-stats.tashif.codes/geeksforgeeks/stats` |
+| Example response shape | Official page probe: `200 text/html; charset=utf-8`. Third-party JSON: `{"status":"success","platform":"gfg","username":"geeksforgeeks","data":{"totalSolved":0,"totalQuestions":null,"acceptanceRate":null,"byDifficulty":{"school":0,"basic":0,"easy":0,"medium":0,"hard":0}}}`. This response is not accepted as verified data. |
+| Rate-limit observations | No official public automation limit found. Third-party service did not establish an upstream limit or an authorization to retrieve GeeksforGeeks data. |
+| Failure modes | Public route may return a generic/empty profile; third-party route returned HTTP 404 for an unknown handle; third-party may return apparent success with all-zero data. Timeout, rate-limit, malformed-response and stale-cache behavior are not independently documented/verified. |
+| Terms/compliance concern | GeeksforGeeks Terms prohibit automated/non-human access and systematically retrieving data to build a collection without written permission. A third-party proxy does not resolve this concern when its authorization/upstream source is unknown. See [Terms of Use](https://www.geeksforgeeks.org/legal/terms-of-use/). |
+| Reliability | Low for the third-party service: unknown operator guarantees/upstream, and observed values did not substantiate the documented example metrics. Official HTML extraction is not permitted by the reviewed terms. |
+| Implementation decision | Keep `LIVE_SYNC_UNAVAILABLE`. Do not use the third-party service or parse GFG HTML unless GFG provides written permission/documentation and the source can be verified. |
 
-Use these availability labels consistently: **AVAILABLE** = directly reported and mapped; **UNAVAILABLE** = provider or endpoint cannot supply the field; **ESTIMATED** = explicitly derived with a documented method; **NOT_SUPPORTED** = KodBTW deliberately does not fetch or expose it. No values are backfilled or fabricated for dates without provider observations.
+### HackerRank
 
-## Current implementation and lifecycle
+| Field | Finding |
+|---|---|
+| Platform | HackerRank |
+| Source | Public profile pages: `https://www.hackerrank.com/profile/{username}`. Official API documentation covers enterprise workflow and team/user administration APIs, not anonymous public practice-profile statistics. |
+| Source type | Public profile HTML; documented customer/enterprise APIs for unrelated workflows. |
+| Official/Unofficial | Profile route and enterprise APIs are official; no public profile-stat API was found. |
+| Authentication required? | Profile page probes did not require login. Documented Work APIs require an enterprise account and an API token. KodBTW will not request these credentials. |
+| Publicly accessible? | Yes: ordinary GETs to `Gennady` and `sajal` profile routes returned HTTP 200 HTML. This only confirms page reachability. |
+| Metrics available | **UNKNOWN** for permitted machine access. No public profile metrics were parsed. |
+| Metrics unavailable | Public anonymous coding-profile stats API: **NOT_SUPPORTED** by the reviewed official API documentation. Specific metrics from authorized sources remain **UNKNOWN**. |
+| Request method | `GET` profile-page probes only; no production acquisition call. |
+| Example request | `GET https://www.hackerrank.com/profile/Gennady` |
+| Example response shape | Probe: `200 text/html; charset=utf-8`; no data extracted. Official API overview describes token-authenticated APIs for tests, interviews, users, teams, and candidates rather than anonymous practice-profile stats. |
+| Rate-limit observations | HackerRank’s API overview recommends up to 10 requests/second for its authenticated APIs; this does not authorize public-profile scraping. No public profile endpoint limit found. |
+| Failure modes | Official profile FAQ says profiles without visible challenge/badge/certification activity may be unavailable/404. Other private, rate-limit, timeout, malformed, and server-error behavior was not exhaustively tested. |
+| Terms/compliance concern | No public stats API terms were identified. HackerRank’s Terms restrict copying, distribution, public display, and using the service to develop/provide a competing product. See [Terms](https://www.hackerrank.com/about-us/terms-of-service); official [API overview](https://support.hackerrank.com/articles/2067417637-api-overview). |
+| Reliability | Low for public HTML extraction; page availability does not establish a stable stats contract or reuse permission. |
+| Implementation decision | Keep `LIVE_SYNC_UNAVAILABLE`. Use only if HackerRank publishes a suitable public API or grants explicit integration permission. |
 
-- `PlatformAdapter` remains the provider boundary; `PlatformAdapterRegistry` selects by platform.
-- LeetCode and Codeforces use their real adapters. Provider calls remain outside the short persistence transactions.
-- New account connections run the existing one-account initial sync. Manual refresh and scheduled sync use the same service and a configurable `PLATFORM_SYNC_COOLDOWN` (default `PT15M`). Codeforces calls are additionally spaced at least two seconds apart, as required by its public API documentation.
-- The sync response includes `cooldownApplied`; the UI says when it is showing recent saved data. A cooldown skip does not create a snapshot or update `lastSuccessAt`.
-- CodeChef, GeeksforGeeks, and HackerRank adapters now fail with a safe explicit unavailable category instead of storing invented mock values. Failed attempts preserve any prior snapshot. Existing historical rows, including explicitly `MOCK` rows, are not modified by this change.
-- V7 is additive. It adds `max_rating` and moves the known Codeforces REAL `platform_rank` value into that field because the old adapter stored `maxRating` under the misleading numeric `rank` name. No other records are changed; other historical rank values and existing snapshots remain intact.
+## Existing LeetCode and Codeforces integrations
 
-## Sources
+These integrations were not modified in this research pass.
 
-Official and primary sources reviewed:
+| Platform | Source | Source type | Official/Unofficial | Auth | Publicly accessible | Metrics available | Metrics unavailable | Request method / example | Example response shape | Rate-limit observations | Failure modes | Terms/compliance concern | Reliability | Implementation decision |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| LeetCode | Existing `POST https://leetcode.com/graphql` query for `matchedUser` and `userContestRanking` | Undocumented public GraphQL endpoint | Unofficial/undocumented; LeetCode publishes no public contract for this query | No user credentials/cookies in existing client | Existing adapter uses it; no new live request made in this pass | Solved totals/difficulty counts, rating, ranking, contest attendance, current streak when returned | Max rating, submissions, active days, last activity, longest streak remain unsupported | Existing POST with JSON GraphQL payload | JSON GraphQL envelope with `data.matchedUser`; optional values null when absent | No published limit verified; 15-minute sync cooldown | Timeout, rate limit, not-found, malformed or changed schema | LeetCode Terms prohibit crawling/scraping/spidering; seek an approved API or permission before expanding. [Terms](https://leetcode.com/terms/) | Medium-low; schema is undocumented | Retain existing REAL adapter without expansion; terms compatibility remains a production risk |
+| Codeforces | Official `GET https://codeforces.com/api/user.info?handles={handle}` | Documented public REST API | Official | No auth for public user information | Yes, official docs describe anonymous access | Current rating and max rating; adapter maps both separately | Solved totals/difficulty, numeric rank, contests participated, streak, activity are not provided by `user.info` | GET; e.g. `https://codeforces.com/api/user.info?handles=tourist` | `{\"status\":\"OK\",\"result\":[{\"handle\":\"tourist\",\"rating\":...,\"maxRating\":...,\"rank\":\"...\"}]}` | One request no more often than every two seconds; application serializes and spaces Codeforces calls. [Official docs](https://codeforces.com/apiHelp/?locale=ru&mobile=true) | Not found, rate limit, timeout, upstream error, malformed JSON | Official documented public API; do not infer numeric rank from rank title | High for documented fields | Retain REAL adapter; no submissions/history additions in this scope |
 
-- Codeforces API methods and fields: [official API methods](https://codeforces.com/apiHelp/methods) and [API introduction, anonymous access, and two-second limit](https://codeforces.com/apiHelp/?locale=ru&mobile=true).
-- LeetCode terms: [Terms of Service](https://leetcode.com/terms/), which prohibit crawling/scraping/spidering and reserve the ability to restrict access. No official documentation for the GraphQL query used by the current client was found.
-- CodeChef: [Terms of Service](https://www.codechef.com/terms) prohibit spidering, crawling, and scraping; [public ratings page](https://www.codechef.com/ratings) and public user route demonstrate human-facing data, not a supported API.
-- GeeksforGeeks: [Terms of Use](https://www.geeksforgeeks.org/legal/terms-of-use/) prohibit automated/non-human access and data mining/extraction; [public user profile route](https://www.geeksforgeeks.org/user/geeksforgeeks/) is not a documented stats API.
-- HackerRank: [public profile FAQ](https://help.hackerrank.com/articles/4472358331-profile-and-preferences-faqs) documents conditions where profiles are not publicly accessible; [API overview](https://support.hackerrank.com/articles/2067417637-api-overview) lists token-managed customer APIs and rate-limit guidance; [Terms of Service](https://www.hackerrank.com/about-us/terms-of-service).
+## Normalized metric status
 
-The public CodeChef, GfG, HackerRank, and LeetCode profile pages were probed only with ordinary unauthenticated GET requests on the research date. Some returned public HTML and LeetCode's profile route returned HTTP 403 in this environment. No attempt was made to bypass those responses or inspect protected browser traffic.
+Status describes KodBTW’s permitted, verified acquisition today. **UNKNOWN** is intentionally distinct from **UNAVAILABLE** and zero.
+
+| Metric | CodeChef | GeeksforGeeks | HackerRank |
+|---|---|---|---|
+| `totalProblemsSolved` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `easySolved` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `mediumSolved` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `hardSolved` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `rating` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `maxRating` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `rank` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `contestsParticipated` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `currentStreak` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `longestStreak` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `submissions` | NOT_SUPPORTED | NOT_SUPPORTED | NOT_SUPPORTED |
+| `activeDays` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `lastActivity` | UNKNOWN | UNKNOWN | UNKNOWN |
+| `source` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` |
+| `lastSyncedAt` | null until successful supported acquisition | null until successful supported acquisition | null until successful supported acquisition |
+
+No missing metric is normalized to zero. Existing snapshots labelled `MOCK` remain identifiable as mock data and are not promoted to REAL. Failed syncs continue to preserve any prior successful snapshot.
+
+## Probe and POC results
+
+| Probe | Result |
+|---|---|
+| CodeChef public profile GETs | `lee215`: HTTP 200; `tourist`: no HTTP response in this environment. No page parsing performed. |
+| GeeksforGeeks public profile GETs | `geeksforgeeks` and `demo`: HTTP 200. No profile parsing performed. |
+| Third-party GFG stats API | `demo/profile`, `geeksforgeeks/profile`, `geeksforgeeks`, `/stats`, and `/contests` were reachable without auth. The public profile stats were all zero/null, and an unknown username returned 404. Those results do not prove actual stats correctness or source authorization. |
+| HackerRank public profile GETs | `Gennady` and `sajal`: HTTP 200. No page parsing performed. |
+
+No provider client/adapter POC was created for these platforms: extracting the stats from the official pages would conflict with the reviewed terms or lacks a stable, authorized API; the third-party GFG API failed the data-quality/provenance bar. Existing adapter tests continue to cover safe `LIVE_SYNC_UNAVAILABLE` responses and ensure unsupported adapters do not create fabricated snapshots. A compliant integration should only proceed after the platform documents a suitable API or grants written permission, followed by a real public-account POC and deterministic parser/client tests.
+
+## Existing sync policy
+
+- `PlatformAdapter` remains the provider boundary; the existing LeetCode and Codeforces integrations are unchanged by this research update.
+- For all platforms, provider failures preserve prior successful metrics and timestamps; unsupported integrations return safe `LIVE_SYNC_UNAVAILABLE` status.
+- The configurable 15-minute sync cooldown applies to manual and scheduled sync. Codeforces keeps its separate minimum two-second spacing.
+- New public sources must define their supported metrics, terms, rate limits, failure mapping, and deterministic tests before being connected to the persistence lifecycle.
