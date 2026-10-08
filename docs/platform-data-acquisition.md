@@ -9,21 +9,18 @@ Research and ordinary unauthenticated HTTP probes performed **8 October 2026**. 
 | Field | Finding |
 |---|---|
 | Platform | CodeChef |
-| Source | Public user pages: `https://www.codechef.com/users/{username}`. No current official public user-stat API contract was located. |
-| Source type | Public profile HTML; profile page, not a documented data API. |
-| Official/Unofficial | Public page is official; any extracted data endpoint would be undocumented/unverified. |
-| Authentication required? | No login was needed for the successful ordinary GET probe. |
-| Publicly accessible? | Yes for tested handle `lee215` (HTTP 200, `text/html`, page title `lee215 | CodeChef`). The `tourist` probe did not receive an HTTP response in this environment. |
-| Metrics available | **UNKNOWN** for machine-readable acquisition. The page is human-facing; this review did not parse its contents. |
-| Metrics unavailable | **UNKNOWN** for individual metrics from a permitted API. |
-| Request method | `GET` for a public profile page. No implementation request will be made. |
-| Example request | `GET https://www.codechef.com/users/lee215` |
-| Example response shape | Probe: `200 text/html; charset=utf-8` for `lee215`; no page data was extracted. |
-| Rate-limit observations | No public automated-access rate limit was verified. Do not infer permission from lack of a published limit. |
-| Failure modes | Probe failures/network timeout; unverified not-found/private-profile, rate-limit, and page-change responses. Do not bypass any challenge or access restriction. |
-| Terms/compliance concern | CodeChef’s current Terms prohibit spidering, crawling, and scraping in Prohibited Uses, and Section 2 restricts reproducing/copying/exploiting its service without prior written permission. See [Terms of Service](https://www.codechef.com/terms). |
-| Reliability | Low for automated use; HTML is not a supported contract, and extraction is restricted by the terms. |
-| Implementation decision | Keep `LIVE_SYNC_UNAVAILABLE`. Do not parse HTML or reverse engineer endpoints absent written permission or an officially documented public API. |
+| Official API availability | No current official public API documentation for anonymous user-profile statistics was located. The legacy `developers.codechef.com` portal could not be retrieved in this review. Historical CodeChef Discuss replies say API access required requesting/receiving access, and a CodeChef representative stated the website's internal API was for CodeChef's own use; treat this as historical context, not proof of current API terms. See [API access discussion](https://discuss.codechef.com/t/codechef-api/85506) and [website API clarification](https://discuss.codechef.com/t/codechef-api-not-working/40806). |
+| Official source / integration | CodeChef's [`codechef-org/codechef-sample-app`](https://github.com/codechef-org/codechef-sample-app) demonstrates OAuth with an app client key/secret, user consent, and an API request for a contest problem. It does not document an anonymous public-profile statistics API or establish access to the profile metrics listed below. The sample is not a suitable source for this integration. |
+| Public profile source | `https://www.codechef.com/users/{username}`; ordinary profile `GET`. The earlier public-page probe returned HTTP 200 HTML for `lee215`; `tourist` did not return an HTTP response in that environment. That probe did not parse profile content. No new extraction probe was made after reviewing the current terms. |
+| Public/profile facts | CodeChef's official [FAQ](https://www.codechef.com/faq) describes the user's public profile and rating; its [rating pages](https://www.codechef.com/ratings/all) expose rating, global rank, and country rank in a human-facing listing. These are evidence that some information is publicly viewable, not authorization for automated extraction or evidence of a stable JSON contract. |
+| Structured requests / response | No public JSON, JSON-LD, XHR, or REST profile-stat request was verified in this review. No such endpoint is documented as a public profile API by CodeChef. Do not reverse engineer or depend on website-internal routes. |
+| Authentication | The public profile HTML was reachable without login in the earlier single-handle probe. The official OAuth sample requires application credentials and end-user consent. No unauthenticated profile-stat API was established. |
+| Metrics | For KodBTW's permitted machine-readable source, all normalized metrics remain **UNKNOWN**: total/easy/medium/hard solved, rating/max rating, stars, numeric/global/country/institution rank, contests, submissions, rating history, activity, streak, and last activity. Public human-facing profile/rating pages visibly discuss or display some rating/rank information; do not map those metrics without an approved, stable data source. Difficulty breakdowns and solved totals were not verified. |
+| Rate limits / failure behavior | No rate limits or API error semantics for an approved public-profile API were found. The earlier profile probe had one successful HTML response and one no-response result; not-found, private/no-activity, rate-limit, and schema-change behavior remain unverified. |
+| Terms / production permission | Current [CodeChef Terms of Service](https://www.codechef.com/terms) prohibit use to “spider, crawl, or scrape” (Section 14) and prohibit copying/exploiting the service or access without prior written permission (Section 2). A KodBTW user-triggered or scheduled profile collection is automated extraction; a public browser-visible page does not grant permission. The reviewed terms do not establish permission for it. Obtain written authorization before any automated acquisition. |
+| Third-party source investigated | [Tashif Khan's CodeChef Stats API repository](https://github.com/tashifkhan/codechef-stats-api) explicitly describes itself as scraping public profiles; its docs list its own `/profile/{handle}`, `/heatmap/{handle}`, and `/rating/{handle}` routes. It is operated by an individual maintainer, not CodeChef. The repo indicates upstream fetches/caching/rate limiting but provides no evidence of CodeChef authorization. Maintenance activity does not establish upstream stability or data accuracy. It is not safe as a KodBTW production dependency. |
+| Technical feasibility | Public human-facing pages expose at least some rating/rank information, and third-party projects demonstrate scraping is technically attempted. Structured fields, consistency, complete metrics, and stable unauthenticated endpoint behavior were not verified. |
+| Production decision | **`LIVE_SYNC_UNAVAILABLE`**. Do not implement a profile scraper, parse embedded/page data, or use third-party proxy APIs unless CodeChef documents an appropriate public API or grants written permission and its contract is verified. |
 
 ### GeeksforGeeks
 
@@ -92,7 +89,7 @@ Status describes KodBTW’s permitted, verified acquisition today. **UNKNOWN** i
 | `contestsParticipated` | UNKNOWN | UNKNOWN | UNKNOWN |
 | `currentStreak` | UNKNOWN | UNKNOWN | UNKNOWN |
 | `longestStreak` | UNKNOWN | UNKNOWN | UNKNOWN |
-| `submissions` | NOT_SUPPORTED | NOT_SUPPORTED | NOT_SUPPORTED |
+| `submissions` | UNKNOWN | NOT_SUPPORTED | NOT_SUPPORTED |
 | `activeDays` | UNKNOWN | UNKNOWN | UNKNOWN |
 | `lastActivity` | UNKNOWN | UNKNOWN | UNKNOWN |
 | `source` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` | `UNSYNCED` / `LIVE_SYNC_UNAVAILABLE` |
@@ -104,7 +101,7 @@ No missing metric is normalized to zero. Existing snapshots labelled `MOCK` rema
 
 | Probe | Result |
 |---|---|
-| CodeChef public profile GETs | `lee215`: HTTP 200; `tourist`: no HTTP response in this environment. No page parsing performed. |
+| CodeChef public profile GETs | Earlier probe: `lee215` returned HTTP 200; `tourist` returned no HTTP response. No page parsing was performed. Current terms were reviewed before any new endpoint/field probe; no new extraction request was made. |
 | GeeksforGeeks public profile GETs | `geeksforgeeks` and `demo`: HTTP 200. No profile parsing performed. |
 | Third-party GFG stats API | `demo/profile`, `geeksforgeeks/profile`, `geeksforgeeks`, `/stats`, and `/contests` were reachable without auth. The public profile stats were all zero/null, and an unknown username returned 404. Those results do not prove actual stats correctness or source authorization. |
 | HackerRank public profile GETs | `Gennady` and `sajal`: HTTP 200. No page parsing performed. |
