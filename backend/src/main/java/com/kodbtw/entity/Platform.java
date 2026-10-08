@@ -5,5 +5,9 @@ public enum Platform {
     CODECHEF,
     CODEFORCES,
     GEEKSFORGEEKS,
-    HACKERRANK
+    HACKERRANK;
+
+    public boolean hasLiveStatsSource() {
+        return this == LEETCODE || this == CODEFORCES;
+    }
 }

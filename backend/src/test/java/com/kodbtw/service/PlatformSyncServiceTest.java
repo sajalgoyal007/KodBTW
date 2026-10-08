@@ -87,6 +87,22 @@ class PlatformSyncServiceTest {
         verify(persistence, never()).recordSuccess(eq(9L), any());
     }
 
+    @Test void sourcePendingPlatformReturnsUnavailableStateWithoutAdapterOrPersistenceCalls() {
+        account.setPlatform(Platform.CODECHEF);
+        when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
+        PlatformStats pending = PlatformStats.builder().platform(Platform.CODECHEF).source("SOURCE_PENDING").build();
+        when(statsService.getStats(7L, 9L)).thenReturn(pending);
+
+        var response = service.syncOwnedAccount(7L, 9L);
+
+        assertEquals(SyncStatus.NEVER_SYNCED, response.syncStatus().status());
+        assertEquals("SOURCE_PENDING", response.currentStats().getSource());
+        verify(adapter, never()).fetchStats(any());
+        verify(persistence, never()).markStarted(anyLong(), anyLong());
+        verify(persistence, never()).recordSuccess(anyLong(), any());
+        verify(persistence, never()).recordFailure(anyLong(), any());
+    }
+
     @Test void rateLimitFailureIsCategorizedWithoutReplacingPersistedStats() {
         PlatformStats lastKnown = PlatformStats.builder().platform(Platform.LEETCODE).source("LEETCODE_REAL")
                 .totalProblemsSolved(40).build();

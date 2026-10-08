@@ -21,6 +21,7 @@ public class PublicPlatformStatDto {
     private Integer currentStreak;
     private Integer longestStreak;
     private String source;
+    private String sourceStatus;
     private LocalDateTime lastSyncedAt;
 
     public PublicPlatformStatDto() {
@@ -40,6 +41,17 @@ public class PublicPlatformStatDto {
                                  Integer rating, Integer maxRating, Integer rank, Integer contests,
                                  Integer currentStreak, Integer longestStreak,
                                  String source, LocalDateTime lastSyncedAt) {
+        this(platform, username, profileUrl, verified, totalSolved, easySolved, mediumSolved, hardSolved,
+                rating, maxRating, rank, contests, currentStreak, longestStreak, source,
+                platform != null && platform.hasLiveStatsSource() ? "REAL_AVAILABLE" : "SOURCE_PENDING",
+                lastSyncedAt);
+    }
+
+    public PublicPlatformStatDto(Platform platform, String username, String profileUrl, boolean verified,
+                                 Integer totalSolved, Integer easySolved, Integer mediumSolved, Integer hardSolved,
+                                 Integer rating, Integer maxRating, Integer rank, Integer contests,
+                                 Integer currentStreak, Integer longestStreak,
+                                 String source, String sourceStatus, LocalDateTime lastSyncedAt) {
         this.platform = platform;
         this.username = username;
         this.profileUrl = profileUrl;
@@ -55,6 +67,7 @@ public class PublicPlatformStatDto {
         this.currentStreak = currentStreak;
         this.longestStreak = longestStreak;
         this.source = source;
+        this.sourceStatus = sourceStatus;
         this.lastSyncedAt = lastSyncedAt;
     }
 
@@ -102,6 +115,9 @@ public class PublicPlatformStatDto {
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
+
+    public String getSourceStatus() { return sourceStatus; }
+    public void setSourceStatus(String sourceStatus) { this.sourceStatus = sourceStatus; }
 
     public LocalDateTime getLastSyncedAt() { return lastSyncedAt; }
     public void setLastSyncedAt(LocalDateTime lastSyncedAt) { this.lastSyncedAt = lastSyncedAt; }

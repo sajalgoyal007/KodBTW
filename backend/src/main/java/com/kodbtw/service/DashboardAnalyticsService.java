@@ -46,11 +46,11 @@ public class DashboardAnalyticsService {
         }
 
         DashboardOverview overview = dashboardStats.getOverview();
-        int totalSolved = overview.getTotalProblemsSolved() != null ? overview.getTotalProblemsSolved() : 0;
-        int easySolved = overview.getEasySolved() != null ? overview.getEasySolved() : 0;
-        int mediumSolved = overview.getMediumSolved() != null ? overview.getMediumSolved() : 0;
-        int hardSolved = overview.getHardSolved() != null ? overview.getHardSolved() : 0;
-        int totalContests = overview.getContestsParticipated() != null ? overview.getContestsParticipated() : 0;
+        Integer totalSolved = overview.getTotalProblemsSolved();
+        Integer easySolved = overview.getEasySolved();
+        Integer mediumSolved = overview.getMediumSolved();
+        Integer hardSolved = overview.getHardSolved();
+        Integer totalContests = overview.getContestsParticipated();
 
         DifficultyMetricDto easyMetric = new DifficultyMetricDto(easySolved, calculatePercentage(easySolved, totalSolved));
         DifficultyMetricDto mediumMetric = new DifficultyMetricDto(mediumSolved, calculatePercentage(mediumSolved, totalSolved));
@@ -111,7 +111,8 @@ public class DashboardAnalyticsService {
         return new DashboardAnalyticsResponse(difficulty, comparisonList, contests);
     }
 
-    private double calculatePercentage(int count, int total) {
+    private Double calculatePercentage(Integer count, Integer total) {
+        if (count == null || total == null) return null;
         if (total == 0) {
             return 0.0;
         }

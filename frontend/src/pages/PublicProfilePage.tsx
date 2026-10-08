@@ -74,7 +74,7 @@ export const PublicProfilePage: React.FC = () => {
         }}
       >
         {isReal ? <CheckCircle2 size={10} /> : null}
-        {isReal ? 'Verified REAL' : 'MOCK'}
+        {isReal ? 'Verified REAL' : source === 'SOURCE_PENDING' ? 'Statistics unavailable' : 'MOCK'}
       </span>
     );
   };
@@ -702,6 +702,11 @@ export const PublicProfilePage: React.FC = () => {
                         )}
                       </div>
 
+                      {p.sourceStatus === 'SOURCE_PENDING' ? (
+                        <div style={{ padding: '0.875rem', borderRadius: '8px', marginBottom: '0.75rem', color: 'var(--color-text-muted, #8b949e)', background: 'rgba(0,0,0,0.2)', fontSize: '0.8125rem' }}>
+                          Live statistics are currently unavailable for this connected platform.
+                        </div>
+                      ) : <>
                       {/* Stats Grid */}
                       <div
                         style={{
@@ -735,6 +740,7 @@ export const PublicProfilePage: React.FC = () => {
                         <span style={{ color: '#f59e0b' }}>Medium: {formatMetric(p.mediumSolved)}</span>
                         <span style={{ color: '#ef4444' }}>Hard: {formatMetric(p.hardSolved)}</span>
                       </div>
+                      </>}
                     </div>
                   </div>
                 );
@@ -764,7 +770,7 @@ export const PublicProfilePage: React.FC = () => {
                   {formatMetric(analytics.difficulty.easy?.count)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
-                  {analytics.difficulty.easy?.percentage ? `${analytics.difficulty.easy.percentage}%` : '0%'}
+                  {analytics.difficulty.easy?.percentage != null ? `${analytics.difficulty.easy.percentage}%` : '—'}
                 </div>
               </div>
               <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '8px' }}>
@@ -773,7 +779,7 @@ export const PublicProfilePage: React.FC = () => {
                   {formatMetric(analytics.difficulty.medium?.count)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
-                  {analytics.difficulty.medium?.percentage ? `${analytics.difficulty.medium.percentage}%` : '0%'}
+                  {analytics.difficulty.medium?.percentage != null ? `${analytics.difficulty.medium.percentage}%` : '—'}
                 </div>
               </div>
               <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '8px' }}>
@@ -782,7 +788,7 @@ export const PublicProfilePage: React.FC = () => {
                   {formatMetric(analytics.difficulty.hard?.count)}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted, #8b949e)' }}>
-                  {analytics.difficulty.hard?.percentage ? `${analytics.difficulty.hard.percentage}%` : '0%'}
+                  {analytics.difficulty.hard?.percentage != null ? `${analytics.difficulty.hard.percentage}%` : '—'}
                 </div>
               </div>
             </div>

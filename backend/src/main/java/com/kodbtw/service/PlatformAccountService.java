@@ -4,6 +4,7 @@ import com.kodbtw.dto.PlatformAccountRequest;
 import com.kodbtw.dto.PlatformAccountResponse;
 import com.kodbtw.entity.PlatformAccount;
 import com.kodbtw.entity.User;
+import com.kodbtw.entity.PlatformSourceStatus;
 import com.kodbtw.exception.DuplicatePlatformException;
 import com.kodbtw.exception.ResourceNotFoundException;
 import com.kodbtw.repository.PlatformAccountRepository;
@@ -114,6 +115,17 @@ public class PlatformAccountService {
         response.setLastSyncErrorMessage(account.getLastSyncErrorMessage());
         response.setFresh(account.getLastSuccessAt() != null
                 && Duration.between(account.getLastSuccessAt(), LocalDateTime.now(ZoneOffset.UTC)).compareTo(Duration.ofHours(24)) <= 0);
+        response.setSourceStatus(sourceStatus(account));
         return response;
+    }
+
+    private PlatformSourceStatus sourceStatus(PlatformAccount account) {
+        if (!account.getPlatform().hasLiveStatsSource()) return PlatformSourceStatus.SOURCE_PENDING;
+        return switch (account.getSyncStatus()) {
+            case RUNNING -> PlatformSourceStatus.SYNCING;
+            case SUCCEEDED -> PlatformSourceStatus.SYNCED;
+            case FAILED -> PlatformSourceStatus.SYNC_FAILED;
+            case NEVER_SYNCED -> PlatformSourceStatus.REAL_AVAILABLE;
+        };
     }
 }

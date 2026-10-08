@@ -4,6 +4,7 @@ import com.kodbtw.entity.Platform;
 
 import java.time.LocalDateTime;
 import com.kodbtw.entity.SyncStatus;
+import com.kodbtw.entity.PlatformSourceStatus;
 
 public class PlatformAccountResponse {
 
@@ -22,6 +23,7 @@ public class PlatformAccountResponse {
     private String lastSyncErrorCategory;
     private String lastSyncErrorMessage;
     private boolean fresh;
+    private PlatformSourceStatus sourceStatus;
 
     public PlatformAccountResponse() {
     }
@@ -69,4 +71,6 @@ public class PlatformAccountResponse {
     public void setLastSyncErrorMessage(String value) { this.lastSyncErrorMessage = value; }
     public boolean isFresh() { return fresh; }
     public void setFresh(boolean value) { this.fresh = value; }
+    public PlatformSourceStatus getSourceStatus() { return sourceStatus; }
+    public void setSourceStatus(PlatformSourceStatus value) { this.sourceStatus = value; }
 }

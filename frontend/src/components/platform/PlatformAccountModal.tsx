@@ -7,6 +7,7 @@ interface PlatformAccountModalProps {
   isOpen: boolean;
   initialAccount?: PlatformAccountResponse | null;
   existingPlatforms?: PlatformType[];
+  preferredPlatform?: PlatformType | null;
   isLoading?: boolean;
   onClose: () => void;
   onSubmit: (data: PlatformAccountRequest) => Promise<void>;
@@ -24,6 +25,7 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
   isOpen,
   initialAccount,
   existingPlatforms = [],
+  preferredPlatform = null,
   isLoading = false,
   onClose,
   onSubmit,
@@ -43,14 +45,16 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
       setProfileUrl(initialAccount.profileUrl || '');
     } else {
       // Pick first unlinked platform if available
-      const available = PLATFORM_OPTIONS.find((p) => !existingPlatforms.includes(p.value));
-      setPlatform(available ? available.value : 'LEETCODE');
+      const available = preferredPlatform && !existingPlatforms.includes(preferredPlatform)
+        ? preferredPlatform
+        : PLATFORM_OPTIONS.find((p) => !existingPlatforms.includes(p.value))?.value;
+      setPlatform(available || 'LEETCODE');
       setUsername('');
       setProfileUrl('');
     }
     setFieldErrors({});
     setGeneralError(null);
-  }, [initialAccount, isOpen, existingPlatforms]);
+  }, [initialAccount, isOpen, existingPlatforms, preferredPlatform]);
 
   if (!isOpen) return null;
 

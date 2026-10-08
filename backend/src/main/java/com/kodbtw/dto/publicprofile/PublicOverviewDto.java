@@ -2,11 +2,11 @@ package com.kodbtw.dto.publicprofile;
 
 public class PublicOverviewDto {
 
-    private int totalProblemsSolved;
-    private int easySolved;
-    private int mediumSolved;
-    private int hardSolved;
-    private int contestsParticipated;
+    private Integer totalProblemsSolved;
+    private Integer easySolved;
+    private Integer mediumSolved;
+    private Integer hardSolved;
+    private Integer contestsParticipated;
     private Integer bestRating;
     private String bestRatingPlatform;
     private Integer currentStreak;
@@ -15,8 +15,8 @@ public class PublicOverviewDto {
     public PublicOverviewDto() {
     }
 
-    public PublicOverviewDto(int totalProblemsSolved, int easySolved, int mediumSolved, int hardSolved,
-                             int contestsParticipated, Integer bestRating, String bestRatingPlatform,
+    public PublicOverviewDto(Integer totalProblemsSolved, Integer easySolved, Integer mediumSolved, Integer hardSolved,
+                             Integer contestsParticipated, Integer bestRating, String bestRatingPlatform,
                              Integer currentStreak, Integer longestStreak) {
         this.totalProblemsSolved = totalProblemsSolved;
         this.easySolved = easySolved;
@@ -29,20 +29,20 @@ public class PublicOverviewDto {
         this.longestStreak = longestStreak;
     }
 
-    public int getTotalProblemsSolved() { return totalProblemsSolved; }
-    public void setTotalProblemsSolved(int totalProblemsSolved) { this.totalProblemsSolved = totalProblemsSolved; }
+    public Integer getTotalProblemsSolved() { return totalProblemsSolved; }
+    public void setTotalProblemsSolved(Integer totalProblemsSolved) { this.totalProblemsSolved = totalProblemsSolved; }
 
-    public int getEasySolved() { return easySolved; }
-    public void setEasySolved(int easySolved) { this.easySolved = easySolved; }
+    public Integer getEasySolved() { return easySolved; }
+    public void setEasySolved(Integer easySolved) { this.easySolved = easySolved; }
 
-    public int getMediumSolved() { return mediumSolved; }
-    public void setMediumSolved(int mediumSolved) { this.mediumSolved = mediumSolved; }
+    public Integer getMediumSolved() { return mediumSolved; }
+    public void setMediumSolved(Integer mediumSolved) { this.mediumSolved = mediumSolved; }
 
-    public int getHardSolved() { return hardSolved; }
-    public void setHardSolved(int hardSolved) { this.hardSolved = hardSolved; }
+    public Integer getHardSolved() { return hardSolved; }
+    public void setHardSolved(Integer hardSolved) { this.hardSolved = hardSolved; }
 
-    public int getContestsParticipated() { return contestsParticipated; }
-    public void setContestsParticipated(int contestsParticipated) { this.contestsParticipated = contestsParticipated; }
+    public Integer getContestsParticipated() { return contestsParticipated; }
+    public void setContestsParticipated(Integer contestsParticipated) { this.contestsParticipated = contestsParticipated; }
 
     public Integer getBestRating() { return bestRating; }
     public void setBestRating(Integer bestRating) { this.bestRating = bestRating; }

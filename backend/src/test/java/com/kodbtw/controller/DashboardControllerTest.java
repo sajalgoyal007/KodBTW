@@ -135,7 +135,7 @@ class DashboardControllerTest {
 
     @Test
     void getStats_authenticated_withLinkedAccount_returns200AndAggregatedStats() throws Exception {
-        // Link a CodeChef account (mock adapter)
+        // Link a CodeChef account and prove a legacy MOCK snapshot is excluded.
         PlatformAccountRequest accountRequest = new PlatformAccountRequest();
         accountRequest.setPlatform(Platform.CODECHEF);
         accountRequest.setUsername("testchef");
@@ -159,17 +159,17 @@ class DashboardControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.overview.connectedPlatformsCount", is(1)))
-                .andExpect(jsonPath("$.overview.totalProblemsSolved", is(210)))
-                .andExpect(jsonPath("$.overview.easySolved", is(120)))
-                .andExpect(jsonPath("$.overview.mediumSolved", is(70)))
-                .andExpect(jsonPath("$.overview.hardSolved", is(20)))
-                .andExpect(jsonPath("$.overview.contestsParticipated", is(25)))
+                .andExpect(jsonPath("$.overview.totalProblemsSolved", nullValue()))
+                .andExpect(jsonPath("$.overview.easySolved", nullValue()))
+                .andExpect(jsonPath("$.overview.mediumSolved", nullValue()))
+                .andExpect(jsonPath("$.overview.hardSolved", nullValue()))
+                .andExpect(jsonPath("$.overview.contestsParticipated", nullValue()))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
                 .andExpect(jsonPath("$.platforms[0].platform", is("CODECHEF")))
                 .andExpect(jsonPath("$.platforms[0].username", is("testchef")))
-                .andExpect(jsonPath("$.platforms[0].rating", is(1750)))
-                .andExpect(jsonPath("$.platforms[0].rank", is(4500)))
-                .andExpect(jsonPath("$.platforms[0].source", is("MOCK")));
+                .andExpect(jsonPath("$.platforms[0].rating", nullValue()))
+                .andExpect(jsonPath("$.platforms[0].rank", nullValue()))
+                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")));
     }
 
     @Test
@@ -220,34 +220,34 @@ class DashboardControllerTest {
         mockMvc.perform(get("/api/dashboard/analytics")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.difficulty.totalProblemsSolved", is(210)))
-                .andExpect(jsonPath("$.difficulty.easy.count", is(120)))
-                .andExpect(jsonPath("$.difficulty.easy.percentage", is(57.14)))
-                .andExpect(jsonPath("$.difficulty.medium.count", is(70)))
-                .andExpect(jsonPath("$.difficulty.medium.percentage", is(33.33)))
-                .andExpect(jsonPath("$.difficulty.hard.count", is(20)))
-                .andExpect(jsonPath("$.difficulty.hard.percentage", is(9.52)))
+                .andExpect(jsonPath("$.difficulty.totalProblemsSolved", nullValue()))
+                .andExpect(jsonPath("$.difficulty.easy.count", nullValue()))
+                .andExpect(jsonPath("$.difficulty.easy.percentage", nullValue()))
+                .andExpect(jsonPath("$.difficulty.medium.count", nullValue()))
+                .andExpect(jsonPath("$.difficulty.medium.percentage", nullValue()))
+                .andExpect(jsonPath("$.difficulty.hard.count", nullValue()))
+                .andExpect(jsonPath("$.difficulty.hard.percentage", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown", hasSize(1)))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("CODECHEF")))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].easy", is(120)))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].medium", is(70)))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].hard", is(20)))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].total", is(210)))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].easy", nullValue()))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].medium", nullValue()))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].hard", nullValue()))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].total", nullValue()))
                 .andExpect(jsonPath("$.platformComparison", hasSize(1)))
                 .andExpect(jsonPath("$.platformComparison[0].platform", is("CODECHEF")))
                 .andExpect(jsonPath("$.platformComparison[0].username", is("testchef")))
-                .andExpect(jsonPath("$.platformComparison[0].totalSolved", is(210)))
-                .andExpect(jsonPath("$.platformComparison[0].sharePercentage", is(100.0)))
-                .andExpect(jsonPath("$.platformComparison[0].rating", is(1750)))
-                .andExpect(jsonPath("$.platformComparison[0].rank", is(4500)))
-                .andExpect(jsonPath("$.platformComparison[0].contestsParticipated", is(25)))
-                .andExpect(jsonPath("$.platformComparison[0].source", is("MOCK")))
-                .andExpect(jsonPath("$.contests.totalContests", is(25)))
+                .andExpect(jsonPath("$.platformComparison[0].totalSolved", nullValue()))
+                .andExpect(jsonPath("$.platformComparison[0].sharePercentage", is(0.0)))
+                .andExpect(jsonPath("$.platformComparison[0].rating", nullValue()))
+                .andExpect(jsonPath("$.platformComparison[0].rank", nullValue()))
+                .andExpect(jsonPath("$.platformComparison[0].contestsParticipated", nullValue()))
+                .andExpect(jsonPath("$.platformComparison[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.contests.totalContests", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown", hasSize(1)))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("CODECHEF")))
-                .andExpect(jsonPath("$.contests.platformBreakdown[0].contests", is(25)))
-                .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", is(1750)))
-                .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", is(4500)));
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].contests", nullValue()))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", nullValue()))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", nullValue()));
     }
 
     @Test

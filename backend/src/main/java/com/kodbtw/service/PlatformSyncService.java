@@ -79,6 +79,9 @@ public class PlatformSyncService {
         PlatformAccount account = ownerId == null
                 ? persistence.getAccount(accountId)
                 : persistence.getOwnedAccount(ownerId, accountId);
+        if (!account.getPlatform().hasLiveStatsSource()) {
+            return response(account, ownerId);
+        }
         if (account.getSyncStatus() != SyncStatus.RUNNING && isWithinCooldown(account)) {
             return response(account, ownerId, true);
         }

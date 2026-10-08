@@ -74,8 +74,9 @@ class PlatformStatsServiceTest {
         when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "CODECHEF"))
                 .thenReturn(Optional.empty());
         PlatformStats result = service.getDashboardStats(4L).getPlatforms().get(0);
-        assertEquals("UNSYNCED", result.getSource()); assertNull(result.getRating());
+        assertEquals("SOURCE_PENDING", result.getSource()); assertNull(result.getRating());
         assertNull(result.getLastSyncedAt());
+        assertNull(service.getDashboardStats(4L).getOverview().getTotalProblemsSolved());
     }
 
     @Test void dashboardAggregatesPersistedPlatformsAndUsesMaximumStreaks() {
@@ -97,12 +98,13 @@ class PlatformStatsServiceTest {
                 .thenReturn(Optional.of(mock));
 
         DashboardStatsResponse result = service.getDashboardStats(4L);
-        assertEquals(200, result.getOverview().getTotalProblemsSolved());
-        assertEquals(50, result.getOverview().getEasySolved());
-        assertEquals(10, result.getOverview().getContestsParticipated());
+        assertEquals(120, result.getOverview().getTotalProblemsSolved());
+        assertEquals(30, result.getOverview().getEasySolved());
+        assertEquals(4, result.getOverview().getContestsParticipated());
         assertEquals(8, result.getOverview().getCurrentStreak());
-        assertEquals(25, result.getOverview().getLongestStreak());
-        assertEquals("MOCK", result.getPlatforms().get(1).getSource());
+        assertEquals(18, result.getOverview().getLongestStreak());
+        assertEquals("SOURCE_PENDING", result.getPlatforms().get(1).getSource());
+        assertNull(result.getPlatforms().get(1).getTotalProblemsSolved());
     }
 
     @Test void dashboardWithNoAccountsReturnsEmptyOverview() {

@@ -57,8 +57,8 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
   };
 
   const getSourceBadge = (source: string | undefined) => {
-    if (source === 'UNSYNCED' && ['CODECHEF', 'GEEKSFORGEEKS', 'HACKERRANK'].includes(platformName.toUpperCase())) {
-      return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Live sync unavailable</span>;
+    if (source === 'SOURCE_PENDING') {
+      return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Statistics unavailable</span>;
     }
     if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
       return (
@@ -165,7 +165,11 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           </div>
         )}
 
-        {!loading && !error && stats && (
+        {!loading && !error && stats && (stats.source === 'SOURCE_PENDING' ? (
+          <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+            Live statistics are currently unavailable for this connected platform.
+          </div>
+        ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Top metrics grid */}
             <div
@@ -298,7 +302,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               <span className="mono">{formatDateTime(stats.lastSyncedAt)}</span>
             </div>
           </div>
-        )}
+        ))}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.5rem' }}>
           <button type="button" className="btn btn-secondary" onClick={onClose}>

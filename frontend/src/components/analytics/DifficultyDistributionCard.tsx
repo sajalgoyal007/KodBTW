@@ -6,30 +6,30 @@ interface DifficultyDistributionCardProps {
 }
 
 export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProps> = ({ difficulty }) => {
-  const total = difficulty?.totalProblemsSolved ?? 0;
+  const total = difficulty?.totalProblemsSolved ?? null;
   const easyCount = difficulty?.easy?.count ?? null;
-  const easyPct = difficulty?.easy?.percentage ?? 0;
+  const easyPct = difficulty?.easy?.percentage ?? null;
 
   const medCount = difficulty?.medium?.count ?? null;
-  const medPct = difficulty?.medium?.percentage ?? 0;
+  const medPct = difficulty?.medium?.percentage ?? null;
 
   const hardCount = difficulty?.hard?.count ?? null;
-  const hardPct = difficulty?.hard?.percentage ?? 0;
+  const hardPct = difficulty?.hard?.percentage ?? null;
 
   // SVG Donut calculations (radius = 54, circumference ~ 339.292)
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
 
-  const hasData = total > 0;
-  const easyStroke = hasData ? (easyPct / 100) * circumference : 0;
-  const medStroke = hasData ? (medPct / 100) * circumference : 0;
-  const hardStroke = hasData ? (hardPct / 100) * circumference : 0;
+  const hasData = total !== null && total > 0;
+  const easyStroke = hasData ? ((easyPct ?? 0) / 100) * circumference : 0;
+  const medStroke = hasData ? ((medPct ?? 0) / 100) * circumference : 0;
+  const hardStroke = hasData ? ((hardPct ?? 0) / 100) * circumference : 0;
 
   const formatCount = (val: number | null) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
 
   const formatPct = (val: number | null) =>
-    val !== null && val !== undefined ? `${val.toFixed(1)}%` : '0.0%';
+    val !== null && val !== undefined ? `${val.toFixed(1)}%` : '—';
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -132,7 +132,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
                 lineHeight: 1,
               }}
             >
-              {total.toLocaleString()}
+              {formatCount(total)}
             </span>
             <span
               style={{

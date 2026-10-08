@@ -16,6 +16,7 @@ export interface PlatformAccountResponse {
   lastSyncErrorCategory: string | null;
   lastSyncErrorMessage: string | null;
   fresh: boolean;
+  sourceStatus: 'REAL_AVAILABLE' | 'SOURCE_PENDING' | 'SYNCING' | 'SYNCED' | 'SYNC_FAILED';
 }
 
 export interface PlatformAccountRequest {

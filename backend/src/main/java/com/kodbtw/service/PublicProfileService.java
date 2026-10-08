@@ -104,11 +104,11 @@ public class PublicProfileService {
         }
 
         return new PublicOverviewDto(
-                ov.getTotalProblemsSolved() != null ? ov.getTotalProblemsSolved() : 0,
-                ov.getEasySolved() != null ? ov.getEasySolved() : 0,
-                ov.getMediumSolved() != null ? ov.getMediumSolved() : 0,
-                ov.getHardSolved() != null ? ov.getHardSolved() : 0,
-                ov.getContestsParticipated() != null ? ov.getContestsParticipated() : 0,
+                ov.getTotalProblemsSolved(),
+                ov.getEasySolved(),
+                ov.getMediumSolved(),
+                ov.getHardSolved(),
+                ov.getContestsParticipated(),
                 bestRating,
                 bestRatingPlatform,
                 ov.getCurrentStreak(),
@@ -139,6 +139,8 @@ public class PublicProfileService {
                     ps.getCurrentStreak(),
                     ps.getLongestStreak(),
                     ps.getSource() != null ? ps.getSource() : "MOCK",
+                    ps.getPlatform() != null && ps.getPlatform().hasLiveStatsSource()
+                            ? "REAL_AVAILABLE" : "SOURCE_PENDING",
                     ps.getLastSyncedAt()
             ));
         }

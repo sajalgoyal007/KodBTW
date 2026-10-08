@@ -8,11 +8,11 @@ export interface PublicSocialLinks {
 }
 
 export interface PublicOverview {
-  totalProblemsSolved: number;
-  easySolved: number;
-  mediumSolved: number;
-  hardSolved: number;
-  contestsParticipated: number;
+  totalProblemsSolved: number | null;
+  easySolved: number | null;
+  mediumSolved: number | null;
+  hardSolved: number | null;
+  contestsParticipated: number | null;
   bestRating: number | null;
   bestRatingPlatform: string | null;
   currentStreak: number | null;
@@ -35,6 +35,7 @@ export interface PublicPlatformStat {
   currentStreak: number | null;
   longestStreak: number | null;
   source: string;
+  sourceStatus: 'REAL_AVAILABLE' | 'SOURCE_PENDING';
   lastSyncedAt: string | null;
 }
 

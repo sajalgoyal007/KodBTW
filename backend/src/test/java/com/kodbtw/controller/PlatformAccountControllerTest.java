@@ -121,7 +121,37 @@ class PlatformAccountControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.platform").value("LEETCODE"))
                 .andExpect(jsonPath("$.username").value("sajal007"))
-                .andExpect(jsonPath("$.verified").value(false));
+                .andExpect(jsonPath("$.verified").value(false))
+                .andExpect(jsonPath("$.sourceStatus").value("REAL_AVAILABLE"));
+    }
+
+    @Test
+    void allFivePlatformsCanConnectAndPendingSourcesHaveNoFakeStats() throws Exception {
+        for (Platform platform : Platform.values()) {
+            MvcResult result = mockMvc.perform(post("/api/platform-accounts")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(makeRequest(platform, "same-handle", null))))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.platform").value(platform.name()))
+                    .andReturn();
+            long id = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+            String expectedStatus = platform.hasLiveStatsSource() ? "REAL_AVAILABLE" : "SOURCE_PENDING";
+            mockMvc.perform(get("/api/platform-accounts/" + id)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sourceStatus").value(expectedStatus));
+            if (!platform.hasLiveStatsSource()) {
+                mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.source").value("SOURCE_PENDING"))
+                        .andExpect(jsonPath("$.totalProblemsSolved").doesNotExist())
+                        .andExpect(jsonPath("$.rating").doesNotExist());
+            }
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(platformStatSnapshotRepository.findAll().isEmpty());
+        org.mockito.Mockito.verifyNoInteractions(leetCodeClient, codeforcesClient);
     }
 
     @Test
@@ -198,6 +228,32 @@ class PlatformAccountControllerTest {
         mockMvc.perform(get("/api/platform-accounts/" + id)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void onlyOwnerCanDisconnectAndOtherAccountsRemain() throws Exception {
+        MvcResult first = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.CODECHEF, "chef", null))))
+                .andExpect(status().isCreated()).andReturn();
+        long firstId = objectMapper.readTree(first.getResponse().getContentAsString()).get("id").asLong();
+        MvcResult second = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.HACKERRANK, "chef", null))))
+                .andExpect(status().isCreated()).andReturn();
+        long secondId = objectMapper.readTree(second.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(delete("/api/platform-accounts/" + firstId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + otherUserToken))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/platform-accounts/" + firstId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/platform-accounts/" + secondId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -584,10 +640,8 @@ class PlatformAccountControllerTest {
         mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.syncStatus.status").value("FAILED"))
-                .andExpect(jsonPath("$.syncStatus.failureCategory").value("LIVE_SYNC_UNAVAILABLE"))
-                .andExpect(jsonPath("$.syncStatus.failureMessage").value("Live sync is unavailable for this platform. No live statistics were fetched."))
-                .andExpect(jsonPath("$.currentStats.source").value("UNSYNCED"))
+                .andExpect(jsonPath("$.syncStatus.status").value("NEVER_SYNCED"))
+                .andExpect(jsonPath("$.currentStats.source").value("SOURCE_PENDING"))
                 .andExpect(jsonPath("$.currentStats.totalProblemsSolved").doesNotExist());
 
         org.junit.jupiter.api.Assertions.assertTrue(platformStatSnapshotRepository.findAll().isEmpty());

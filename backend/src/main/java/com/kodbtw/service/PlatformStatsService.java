@@ -5,6 +5,7 @@ import com.kodbtw.dto.DashboardStatsResponse;
 import com.kodbtw.dto.PlatformStats;
 import com.kodbtw.entity.PlatformAccount;
 import com.kodbtw.entity.PlatformStatSnapshot;
+import com.kodbtw.entity.PlatformSourceStatus;
 import com.kodbtw.exception.ResourceNotFoundException;
 import com.kodbtw.repository.PlatformAccountRepository;
 import com.kodbtw.repository.PlatformStatSnapshotRepository;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class PlatformStatsService {
@@ -40,13 +42,14 @@ public class PlatformStatsService {
         PlatformStatSnapshot snapshot = snapshotRepository
                 .findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(account.getUser().getId(), account.getPlatform().name())
                 .orElse(null);
-        if (snapshot == null) {
+        if (!isRealSnapshot(snapshot)) {
             return PlatformStats.builder()
                     .platform(account.getPlatform())
                     .username(account.getUsername())
                     .profileUrl(profileUrl(account))
                     .lastSyncedAt(null)
-                    .source("UNSYNCED")
+                    .source(account.getPlatform().hasLiveStatsSource()
+                            ? "UNSYNCED" : PlatformSourceStatus.SOURCE_PENDING.name())
                     .build();
         }
         return PlatformStats.builder()
@@ -68,13 +71,19 @@ public class PlatformStatsService {
                 .build();
     }
 
+    private boolean isRealSnapshot(PlatformStatSnapshot snapshot) {
+        if (snapshot == null || snapshot.getSource() == null) return false;
+        String source = snapshot.getSource().toUpperCase(Locale.ROOT);
+        return source.endsWith("_REAL") && !source.contains("MOCK");
+    }
+
     private String profileUrl(PlatformAccount account) {
         if (account.getProfileUrl() != null && !account.getProfileUrl().isBlank()) return account.getProfileUrl();
         return switch (account.getPlatform()) {
             case LEETCODE -> "https://leetcode.com/u/" + account.getUsername() + "/";
             case CODEFORCES -> "https://codeforces.com/profile/" + account.getUsername();
             case CODECHEF -> "https://www.codechef.com/users/" + account.getUsername();
-            case GEEKSFORGEEKS -> "https://auth.geeksforgeeks.org/user/" + account.getUsername();
+            case GEEKSFORGEEKS -> "https://www.geeksforgeeks.org/profile/" + account.getUsername();
             case HACKERRANK -> "https://www.hackerrank.com/profile/" + account.getUsername();
         };
     }
@@ -88,11 +97,11 @@ public class PlatformStatsService {
             return new DashboardStatsResponse(emptyOverview, Collections.emptyList());
         }
 
-        int totalSolved = 0;
-        int easySolved = 0;
-        int mediumSolved = 0;
-        int hardSolved = 0;
-        int contests = 0;
+        Integer totalSolved = null;
+        Integer easySolved = null;
+        Integer mediumSolved = null;
+        Integer hardSolved = null;
+        Integer contests = null;
         Integer maxCurrentStreak = null;
         Integer maxLongestStreak = null;
 
@@ -103,19 +112,19 @@ public class PlatformStatsService {
             platformStatsList.add(stats);
 
             if (stats.getTotalProblemsSolved() != null) {
-                totalSolved += stats.getTotalProblemsSolved();
+                totalSolved = (totalSolved == null ? 0 : totalSolved) + stats.getTotalProblemsSolved();
             }
             if (stats.getEasySolved() != null) {
-                easySolved += stats.getEasySolved();
+                easySolved = (easySolved == null ? 0 : easySolved) + stats.getEasySolved();
             }
             if (stats.getMediumSolved() != null) {
-                mediumSolved += stats.getMediumSolved();
+                mediumSolved = (mediumSolved == null ? 0 : mediumSolved) + stats.getMediumSolved();
             }
             if (stats.getHardSolved() != null) {
-                hardSolved += stats.getHardSolved();
+                hardSolved = (hardSolved == null ? 0 : hardSolved) + stats.getHardSolved();
             }
             if (stats.getContestsParticipated() != null) {
-                contests += stats.getContestsParticipated();
+                contests = (contests == null ? 0 : contests) + stats.getContestsParticipated();
             }
 
             if (stats.getCurrentStreak() != null) {

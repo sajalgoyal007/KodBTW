@@ -101,6 +101,15 @@ export function usePlatformAccounts(): UsePlatformAccountsResult {
     setAccounts((prev) => prev.map((account) => account.id === id
       ? {
           ...account,
+          sourceStatus: account.sourceStatus === 'SOURCE_PENDING'
+            ? 'SOURCE_PENDING'
+            : result.syncStatus.status === 'SUCCEEDED'
+              ? 'SYNCED'
+              : result.syncStatus.status === 'RUNNING'
+                ? 'SYNCING'
+                : result.syncStatus.status === 'FAILED'
+                  ? 'SYNC_FAILED'
+                  : 'REAL_AVAILABLE',
           syncStatus: result.syncStatus.status,
           lastAttemptAt: result.syncStatus.lastAttemptAt,
           lastSuccessAt: result.syncStatus.lastSuccessAt,

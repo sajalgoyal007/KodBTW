@@ -111,7 +111,7 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(profileReq)))
                 .andExpect(status().isOk());
 
-        // Connect a platform (CodeChef MOCK)
+        // Connect a platform whose live statistics source is pending.
         PlatformAccountRequest paReq = new PlatformAccountRequest();
         paReq.setPlatform(Platform.CODECHEF);
         paReq.setUsername("chef_coder");
@@ -137,7 +137,9 @@ class PublicProfileControllerTest {
                 .andExpect(jsonPath("$.socialLinks.githubUrl", is("https://github.com/testcoder")))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
                 .andExpect(jsonPath("$.platforms[0].platform", is("CODECHEF")))
-                .andExpect(jsonPath("$.platforms[0].source", is("MOCK")));
+                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].totalSolved").doesNotExist());
     }
 
     @Test
@@ -178,7 +180,7 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(profileReq)))
                 .andExpect(status().isOk());
 
-        // Connect CodeChef (MOCK)
+        // Connect CodeChef; legacy MOCK snapshots must not be exposed as current stats.
         PlatformAccountRequest mockAccount = new PlatformAccountRequest();
         mockAccount.setPlatform(Platform.CODECHEF);
         mockAccount.setUsername("chef_user");
@@ -196,7 +198,9 @@ class PublicProfileControllerTest {
 
         mockMvc.perform(get("/api/public/profiles/sourcetest"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.platforms[0].source", is("MOCK")));
+                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].totalSolved").doesNotExist());
     }
 
     private void saveMockSnapshot() {

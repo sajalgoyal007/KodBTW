@@ -5,6 +5,7 @@ import { PlatformAccountModal } from '../components/platform/PlatformAccountModa
 import { PlatformStatsModal } from '../components/platform/PlatformStatsModal';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { PlatformAccountResponse, PlatformAccountRequest } from '../types/platform';
+import { PlatformType } from '../types/platform';
 import {
   PlusCircle,
   ExternalLink,
@@ -17,6 +18,14 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+
+const SUPPORTED_PLATFORMS = [
+  { platform: 'LEETCODE', label: 'LeetCode' },
+  { platform: 'CODEFORCES', label: 'Codeforces' },
+  { platform: 'CODECHEF', label: 'CodeChef' },
+  { platform: 'GEEKSFORGEEKS', label: 'GeeksforGeeks' },
+  { platform: 'HACKERRANK', label: 'HackerRank' },
+] as const;
 
 export const CodingProfilesPage: React.FC = () => {
   const {
@@ -34,6 +43,7 @@ export const CodingProfilesPage: React.FC = () => {
   // Modal states
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [editingAccount, setEditingAccount] = useState<PlatformAccountResponse | null>(null);
+  const [preferredPlatform, setPreferredPlatform] = useState<PlatformType | null>(null);
 
   const [statsModalAccount, setStatsModalAccount] = useState<PlatformAccountResponse | null>(null);
 
@@ -75,8 +85,9 @@ export const CodingProfilesPage: React.FC = () => {
     }
   };
 
-  const handleOpenCreate = () => {
+  const handleOpenCreate = (platform: PlatformType | null = null) => {
     setEditingAccount(null);
+    setPreferredPlatform(platform);
     setIsAccountModalOpen(true);
   };
 
@@ -91,13 +102,24 @@ export const CodingProfilesPage: React.FC = () => {
     } else {
       setConnectFeedback(null);
       const account = await createAccount(data);
+      if (account.sourceStatus === 'SOURCE_PENDING') {
+        setConnectFeedback({
+          type: 'success',
+          message: `${account.platform} connected. Live statistics are currently unavailable.`,
+        });
+        return;
+      }
       setInitialSyncing(true);
-      await handleRefreshStats(account, true);
-      setInitialSyncing(false);
+      try {
+        await handleRefreshStats(account, true);
+      } finally {
+        setInitialSyncing(false);
+      }
     }
   };
 
   const handleRefreshStats = async (account: PlatformAccountResponse, justConnected = false) => {
+    if (account.sourceStatus === 'SOURCE_PENDING') return;
     setConnectFeedback(null);
     setRefreshingAccountId(account.id);
     try {
@@ -173,7 +195,7 @@ export const CodingProfilesPage: React.FC = () => {
             </div>
 
             <button
-              onClick={handleOpenCreate}
+              onClick={() => handleOpenCreate()}
               className="btn btn-primary"
               disabled={loading || accounts.length >= 5}
               title={accounts.length >= 5 ? 'All 5 supported platforms are connected' : 'Connect a new platform'}
@@ -254,13 +276,49 @@ export const CodingProfilesPage: React.FC = () => {
               </p>
             </div>
             <button
-              onClick={handleOpenCreate}
+              onClick={() => handleOpenCreate()}
               className="btn btn-primary"
               style={{ padding: '0.75rem 1.5rem', fontSize: '0.9375rem' }}
             >
               <PlusCircle size={18} /> Connect Platform
             </button>
           </div>
+        )}
+
+        {!loading && !error && (
+          <section aria-label="Supported coding platforms">
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Supported Platforms</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.75rem' }}>
+              {SUPPORTED_PLATFORMS.map(({ platform, label }) => {
+                const linked = accounts.find((account) => account.platform === platform);
+                const pending = platform === 'CODECHEF' || platform === 'GEEKSFORGEEKS' || platform === 'HACKERRANK';
+                const availabilityLabel = pending ? 'Live statistics unavailable'
+                  : linked?.sourceStatus === 'SYNCED' ? 'Live statistics synced'
+                    : linked?.sourceStatus === 'SYNCING' ? 'Sync in progress'
+                      : linked?.sourceStatus === 'SYNC_FAILED' ? 'Last sync failed'
+                        : 'Live statistics available';
+                return (
+                  <div key={platform} className="card" style={{ padding: '1rem', borderTop: `3px solid ${getPlatformBrandColor(platform)}` }}>
+                    <div style={{ fontWeight: 700 }}>{label}</div>
+                    <div style={{ marginTop: '0.35rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
+                      {linked ? `Connected · @${linked.username}` : 'Not connected'}
+                    </div>
+                    <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
+                      {availabilityLabel}
+                    </div>
+                    {linked?.lastSuccessAt && <div style={{ marginTop: '0.2rem', color: 'var(--color-text-muted)', fontSize: '0.6875rem' }}>Last successful sync · {formatDate(linked.lastSuccessAt)}</div>}
+                    <button
+                      className="btn btn-secondary"
+                      style={{ marginTop: '0.75rem', width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
+                      onClick={() => linked ? setStatsModalAccount(linked) : handleOpenCreate(platform)}
+                    >
+                      {linked ? 'View account stats' : 'Connect'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
 
         {/* Account Cards Grid */}
@@ -360,11 +418,19 @@ export const CodingProfilesPage: React.FC = () => {
                         </div>
                       )}
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: 'var(--color-text-muted)' }}>Sync Status</span>
-                        <span className="mono" style={{ color: acc.syncStatus === 'FAILED' ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
-                          {acc.syncStatus.replace('_', ' ')}{acc.lastSuccessAt ? ` · ${formatDate(acc.lastSuccessAt)}` : ''}
+                        <span style={{ color: 'var(--color-text-muted)' }}>Statistics</span>
+                        <span className="mono" style={{ color: 'var(--color-text-primary)' }}>
+                          {acc.sourceStatus === 'SOURCE_PENDING' ? 'Live statistics unavailable' : acc.sourceStatus.replace('_', ' ')}
                         </span>
                       </div>
+                      {acc.sourceStatus !== 'SOURCE_PENDING' && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--color-text-muted)' }}>Sync Status</span>
+                          <span className="mono" style={{ color: acc.syncStatus === 'FAILED' ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
+                            {acc.syncStatus.replace('_', ' ')}{acc.lastSuccessAt ? ` · ${formatDate(acc.lastSuccessAt)}` : ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -387,7 +453,7 @@ export const CodingProfilesPage: React.FC = () => {
                       <BarChart2 size={13} /> Inspect Stats
                     </button>
 
-                    <button
+                    {acc.sourceStatus !== 'SOURCE_PENDING' && <button
                       onClick={() => handleRefreshStats(acc)}
                       className="btn btn-ghost"
                       style={{ padding: '0.4375rem 0.625rem', fontSize: '0.75rem' }}
@@ -396,7 +462,7 @@ export const CodingProfilesPage: React.FC = () => {
                       disabled={refreshingAccountId !== null}
                     >
                       <RefreshCw size={13} className={refreshingAccountId === acc.id ? 'spin' : ''} />
-                    </button>
+                    </button>}
 
                     <button
                       onClick={() => handleOpenEdit(acc)}
@@ -428,8 +494,9 @@ export const CodingProfilesPage: React.FC = () => {
         isOpen={isAccountModalOpen}
         initialAccount={editingAccount}
         existingPlatforms={existingPlatforms}
+        preferredPlatform={preferredPlatform}
         isLoading={actionLoading || initialSyncing}
-        onClose={() => setIsAccountModalOpen(false)}
+        onClose={() => { setIsAccountModalOpen(false); setPreferredPlatform(null); }}
         onSubmit={handleSubmitAccount}
       />
 
