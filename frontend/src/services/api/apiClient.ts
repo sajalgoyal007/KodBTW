@@ -16,12 +16,18 @@ export class ApiError extends Error {
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
+  timeoutMs?: number;
+  timeoutMessage?: string;
 }
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers = {}, signal: externalSignal, ...customConfig } = options;
+  const { params, headers = {}, signal: externalSignal, timeoutMs = 15_000, timeoutMessage, ...customConfig } = options;
+
+  if (externalSignal?.aborted) {
+    throw new DOMException('The operation was aborted.', 'AbortError');
+  }
 
   let url = `${BASE_URL}${endpoint}`;
   if (params) {
@@ -48,7 +54,7 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
   }
 
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 15_000);
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
   const abortFromCaller = () => controller.abort();
   externalSignal?.addEventListener('abort', abortFromCaller, { once: true });
   const config: RequestInit = {
@@ -62,7 +68,7 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     response = await fetch(url, config);
   } catch (error) {
     if (controller.signal.aborted && !externalSignal?.aborted) {
-      throw new ApiError(408, { error: 'Request timeout', message: 'The request took too long. Please try again.' });
+      throw new ApiError(408, { error: 'Request timeout', message: timeoutMessage || 'The request took too long. Please try again.' });
     }
     if (externalSignal?.aborted) throw error;
     throw new ApiError(0, { error: 'Network error', message: 'Unable to reach KodBTW. Check your connection and try again.' });
