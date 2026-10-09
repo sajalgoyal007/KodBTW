@@ -23,6 +23,11 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
+      - name: Verify Docker is available for Testcontainers
+        run: |
+          docker version
+          docker info
+
       - name: Run backend tests and package
         working-directory: backend
         run: sh ./mvnw -B test package
