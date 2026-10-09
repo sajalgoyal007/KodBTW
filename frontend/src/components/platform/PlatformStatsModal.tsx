@@ -197,9 +197,11 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Rank</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+                  {stats.platform?.toUpperCase() === 'CODEFORCES' ? 'Max Rating' : 'Rank'}
+                </div>
                 <div className="mono" style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {formatMetric(stats.rank)}
+                  {formatMetric(stats.platform?.toUpperCase() === 'CODEFORCES' ? stats.maxRating : stats.rank)}
                 </div>
               </div>
             </div>

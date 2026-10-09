@@ -14,6 +14,7 @@ interface PlatformCardProps {
 export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, refreshing, feedback, onRefresh }) => {
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
+  const isCodeforces = platform.platform.toUpperCase() === 'CODEFORCES';
 
   const formatDateTime = (isoString: string | null) => {
     if (!isoString) return '—';
@@ -152,9 +153,11 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
             </div>
           </div>
           <div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Rank</div>
+            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+              {isCodeforces ? 'Max Rating' : 'Rank'}
+            </div>
             <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-              {formatMetric(platform.rank)}
+              {formatMetric(isCodeforces ? platform.maxRating : platform.rank)}
             </div>
           </div>
         </div>
