@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { getStats } from '../../services/api/platformAccountApi';
 import { X, Calendar, Flame, Trophy, ExternalLink } from 'lucide-react';
+import { isVerifiedStatsSource } from '../../utils/platformStatsSource';
 
 interface PlatformStatsModalProps {
   isOpen: boolean;
@@ -72,6 +73,13 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           }}
         >
           Live Public Data
+        </span>
+      );
+    }
+    if (source === 'CODECHEF_THIRD_PARTY') {
+      return (
+        <span className="badge" style={{ backgroundColor: 'rgba(235, 115, 18, 0.12)', color: 'var(--color-primary)', borderColor: 'rgba(235, 115, 18, 0.3)', fontSize: '0.6875rem' }}>
+          Third-party Live Data
         </span>
       );
     }
@@ -165,7 +173,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           </div>
         )}
 
-        {!loading && !error && stats && (stats.source === 'SOURCE_PENDING' || !stats.source?.toUpperCase().includes('REAL') ? (
+        {!loading && !error && stats && (!isVerifiedStatsSource(stats.source) ? (
           <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
             {stats.source === 'SOURCE_PENDING' ? 'Connected — live statistics currently unavailable.' : 'No verified live statistics are available for this platform.'}
           </div>

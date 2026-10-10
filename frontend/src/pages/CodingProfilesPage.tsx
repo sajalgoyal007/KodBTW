@@ -6,6 +6,7 @@ import { PlatformStatsModal } from '../components/platform/PlatformStatsModal';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { PlatformAccountResponse, PlatformAccountRequest } from '../types/platform';
 import { PlatformType } from '../types/platform';
+import { getPlatformAvailabilityLabel } from '../utils/platformStatsSource';
 import {
   PlusCircle,
   ExternalLink,
@@ -290,12 +291,7 @@ export const CodingProfilesPage: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.75rem' }}>
               {SUPPORTED_PLATFORMS.map(({ platform, label }) => {
                 const linked = accounts.find((account) => account.platform === platform);
-                const pending = platform === 'CODECHEF' || platform === 'GEEKSFORGEEKS' || platform === 'HACKERRANK';
-                const availabilityLabel = pending ? 'Live statistics unavailable'
-                  : linked?.sourceStatus === 'SYNCED' ? 'Live statistics synced'
-                    : linked?.sourceStatus === 'SYNCING' ? 'Sync in progress'
-                      : linked?.sourceStatus === 'SYNC_FAILED' ? 'Last sync failed'
-                        : 'Live statistics available';
+                const availabilityLabel = getPlatformAvailabilityLabel(platform, linked);
                 return (
                   <div key={platform} className="card" style={{ padding: '1rem', borderTop: `3px solid ${getPlatformBrandColor(platform)}` }}>
                     <div style={{ fontWeight: 700 }}>{label}</div>

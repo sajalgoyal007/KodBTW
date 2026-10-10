@@ -3,6 +3,7 @@ import { DashboardStatsResponse, DashboardAnalyticsResponse } from '../types/das
 import { getStats, getAnalytics } from '../services/api/dashboardApi';
 import { getAll, sync as syncAccount } from '../services/api/platformAccountApi';
 import { PlatformAccountResponse } from '../types/platform';
+import { getDashboardRefreshFeedback } from '../utils/platformStatsSource';
 
 interface UseDashboardResult {
   stats: DashboardStatsResponse | null;
@@ -51,20 +52,13 @@ export function useDashboard(): UseDashboardResult {
     setRefreshFeedback(null);
     try {
       const result = await syncAccount(accountId);
-      const failed = result.syncStatus.status === 'FAILED';
-      const alreadyRunning = result.syncStatus.status === 'RUNNING';
-      const mockData = result.currentStats.source === 'MOCK';
+      const feedback = getDashboardRefreshFeedback(result);
       setRefreshFeedback({
         accountId,
-        success: !failed && !mockData,
-        message: failed
-          ? (result.syncStatus.failureMessage || 'Refresh failed.')
-          : mockData ? 'No verified live statistics are available for this platform.'
-          : result.cooldownApplied ? 'Recently synced; showing saved stats.'
-          : alreadyRunning ? 'Stats refresh is already in progress.' : 'Stats refreshed successfully.',
+        ...feedback,
       });
       await fetchData(false);
-      return !failed && !mockData;
+      return feedback.success;
     } catch (err: any) {
       setRefreshFeedback({ accountId, success: false, message: err?.message || 'Unable to refresh stats.' });
       return false;

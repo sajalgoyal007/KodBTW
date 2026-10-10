@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { useAuth } from '../hooks/useAuth';
 import { ShareProfileModal } from '../components/profile/ShareProfileModal';
+import { isVerifiedStatsSource } from '../utils/platformStatsSource';
 import { PublicProfileEmptyState } from '../components/profile/PublicProfileEmptyState';
 import {
   MapPin,
@@ -57,7 +58,8 @@ export const PublicProfilePage: React.FC = () => {
   };
 
   const getSourceBadge = (source: string) => {
-    const isReal = source.toUpperCase().includes('REAL');
+    const isThirdParty = source.toUpperCase() === 'CODECHEF_THIRD_PARTY';
+    const isReal = isVerifiedStatsSource(source);
     return (
       <span
         style={{
@@ -68,13 +70,13 @@ export const PublicProfilePage: React.FC = () => {
           borderRadius: '9999px',
           fontSize: '0.6875rem',
           fontWeight: 600,
-          background: isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-          color: isReal ? 'var(--color-success)' : 'var(--color-warning)',
-          border: `1px solid ${isReal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+          background: isThirdParty ? 'rgba(235, 115, 18, 0.12)' : isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+          color: isThirdParty ? 'var(--color-primary)' : isReal ? 'var(--color-success)' : 'var(--color-warning)',
+          border: `1px solid ${isThirdParty ? 'rgba(235, 115, 18, 0.25)' : isReal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
         }}
       >
         {isReal ? <CheckCircle2 size={10} /> : null}
-        {isReal ? 'REAL statistics' : 'Statistics unavailable'}
+        {isThirdParty ? 'Third-party live data' : isReal ? 'REAL statistics' : 'Statistics unavailable'}
       </span>
     );
   };
@@ -197,7 +199,7 @@ export const PublicProfilePage: React.FC = () => {
 
   const { overview, socialLinks, analytics } = data;
   const platforms = data.platforms.filter((platform) =>
-    platform.sourceStatus === 'SOURCE_PENDING' || platform.source?.toUpperCase().includes('REAL')
+    platform.sourceStatus === 'SOURCE_PENDING' || isVerifiedStatsSource(platform.source)
   );
   const isOwnProfile = isAuthenticated && (user?.email && data.displayName === user.name);
 

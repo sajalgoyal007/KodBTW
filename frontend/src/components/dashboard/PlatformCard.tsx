@@ -2,6 +2,7 @@ import React from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { ExternalLink, Calendar, Flame, Trophy, RefreshCw } from 'lucide-react';
 import { PlatformAccountResponse } from '../../types/platform';
+import { getPlatformStatsSourceLabel, isVerifiedStatsSource } from '../../utils/platformStatsSource';
 
 interface PlatformCardProps {
   platform: PlatformStats;
@@ -32,34 +33,21 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
   };
 
   const getSourceBadge = (source: string, account?: PlatformAccountResponse) => {
-    if (source === 'UNSYNCED' && account?.lastSyncErrorCategory === 'LIVE_SYNC_UNAVAILABLE') return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Live sync unavailable</span>;
-    if (source === 'UNSYNCED') return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Not synced</span>;
-    if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
-      return (
-        <span
-          className="badge"
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-success)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            fontSize: '0.6875rem',
-          }}
-        >
-          Live Public Data
-        </span>
-      );
-    }
+    const label = getPlatformStatsSourceLabel(source, account?.lastSyncErrorCategory);
+    const verified = isVerifiedStatsSource(source);
+    const thirdParty = source.toUpperCase() === 'CODECHEF_THIRD_PARTY';
+    const mock = source.toUpperCase() === 'MOCK';
     return (
       <span
-        className="badge"
+        className={`badge${verified || thirdParty || mock ? '' : ' badge-muted'}`}
         style={{
-          backgroundColor: 'rgba(235, 115, 18, 0.12)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(235, 115, 18, 0.3)',
+          backgroundColor: verified ? 'rgba(16, 185, 129, 0.12)' : thirdParty || mock ? 'rgba(235, 115, 18, 0.12)' : undefined,
+          color: verified ? 'var(--color-success)' : thirdParty || mock ? 'var(--color-primary)' : undefined,
+          borderColor: verified ? 'rgba(16, 185, 129, 0.3)' : thirdParty || mock ? 'rgba(235, 115, 18, 0.3)' : undefined,
           fontSize: '0.6875rem',
         }}
       >
-        Mock Sandbox
+        {label}
       </span>
     );
   };
