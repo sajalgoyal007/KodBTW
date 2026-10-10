@@ -74,7 +74,8 @@ public class PlatformStatsService {
     private boolean isRealSnapshot(PlatformStatSnapshot snapshot) {
         if (snapshot == null || snapshot.getSource() == null) return false;
         String source = snapshot.getSource().toUpperCase(Locale.ROOT);
-        return source.endsWith("_REAL") && !source.contains("MOCK");
+        return (source.endsWith("_REAL") && !source.contains("MOCK"))
+                || source.equals("CODECHEF_THIRD_PARTY");
     }
 
     private String profileUrl(PlatformAccount account) {
