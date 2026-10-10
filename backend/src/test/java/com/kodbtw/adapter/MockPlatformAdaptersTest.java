@@ -1,6 +1,5 @@
 package com.kodbtw.adapter;
 
-import com.kodbtw.adapter.impl.CodeChefAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
 import com.kodbtw.entity.Platform;
@@ -12,19 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MockPlatformAdaptersTest {
-
-    @Test
-    void codeChefAdapterReportsLiveSyncUnavailableWithoutInventingMetrics() {
-        CodeChefAdapter adapter = new CodeChefAdapter();
-        assertEquals(Platform.CODECHEF, adapter.getPlatform());
-
-        PlatformAccount account = new PlatformAccount();
-        account.setUsername("chefuser");
-        account.setPlatform(Platform.CODECHEF);
-
-        assertEquals("CodeChef live sync unavailable",
-                assertThrows(PlatformSyncUnavailableException.class, () -> adapter.fetchStats(account)).getMessage());
-    }
 
     @Test
     void geeksForGeeksAdapterReportsLiveSyncUnavailable() {

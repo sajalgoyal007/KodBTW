@@ -1,5 +1,13 @@
 # Platform data acquisition
 
+## 10 October 2026 CodeChef third-party integration
+
+KodBTW now calls the unofficial third-party endpoint `GET https://codechef-stats.tashif.codes/profile/{handle}` through a backend-only `CodeChefClient`. The `CodeChefAdapter` labels persisted results `CODECHEF_THIRD_PARTY` and maps only `totalSolved`, `currentRating`, `highestRating`, and `globalRank`; difficulty counts, contests, and streaks remain null. Non-200/unsuccessful/unusable responses fail as provider errors, profile-not-found responses map to not-found, and sync failures do not fall back to mock metrics. This is not an official CodeChef API. No live account sync was performed during this verification.
+
+The TrackCoder repository remains reference material only. Its older parser uses `.rating-number` and the fourth heading under `.rating-data-section.problems-solved`; the separate fixture-only HTML parser still has no network access and is not wired into the live adapter. The unrelated `iamsmruti/codechef-api-unofficial` project is a contest-listing API and is not used.
+
+The third-party provider's upstream acquisition and KodBTW's permission to use/redistribute those metrics have not been independently verified. CodeChef's [terms](https://www.codechef.com/terms) restrict scraping/exploitation without permission; obtain and document authorization before production deployment. GFG remains unavailable. TrackCoder's old GFG selectors (`.problemNavbar_head_nav--text__UaGCx` and `.problemList_head_list_item__RlO_s`) have not been verified against current markup; no GFG profile page was fetched. Current [GFG terms](https://www.geeksforgeeks.org/legal/terms-of-use/) restrict automated access and systematic automated collection absent written permission.
+
 Research and ordinary unauthenticated HTTP probes performed **8 October 2026**. These probes checked public-page availability only. No credentials, cookies, browser automation, XHR reverse engineering, or access-control bypasses were used. A page returning HTTP 200 does not establish permission for automated extraction.
 
 ## Platform findings
@@ -20,7 +28,7 @@ Research and ordinary unauthenticated HTTP probes performed **8 October 2026**. 
 | Terms / production permission | Current [CodeChef Terms of Service](https://www.codechef.com/terms) prohibit use to “spider, crawl, or scrape” (Section 14) and prohibit copying/exploiting the service or access without prior written permission (Section 2). A KodBTW user-triggered or scheduled profile collection is automated extraction; a public browser-visible page does not grant permission. The reviewed terms do not establish permission for it. Obtain written authorization before any automated acquisition. |
 | Third-party source investigated | [Tashif Khan's CodeChef Stats API repository](https://github.com/tashifkhan/codechef-stats-api) explicitly describes itself as scraping public profiles; its docs list its own `/profile/{handle}`, `/heatmap/{handle}`, and `/rating/{handle}` routes. It is operated by an individual maintainer, not CodeChef. The repo indicates upstream fetches/caching/rate limiting but provides no evidence of CodeChef authorization. Maintenance activity does not establish upstream stability or data accuracy. It is not safe as a KodBTW production dependency. |
 | Technical feasibility | Public human-facing pages expose at least some rating/rank information, and third-party projects demonstrate scraping is technically attempted. Structured fields, consistency, complete metrics, and stable unauthenticated endpoint behavior were not verified. |
-| Production decision | **`LIVE_SYNC_UNAVAILABLE`**. Do not implement a profile scraper, parse embedded/page data, or use third-party proxy APIs unless CodeChef documents an appropriate public API or grants written permission and its contract is verified. |
+| Production decision at research time (8 October 2026) | **`LIVE_SYNC_UNAVAILABLE`** was the decision before the later third-party integration. The current local adapter uses the provider described at the top of this document; that does not resolve permission or reliability concerns. Do not treat the provider as official or production-cleared. |
 
 ### GeeksforGeeks
 
@@ -226,9 +234,9 @@ This is an unaffiliated proxy over undocumented upstream routes. Public reachabi
 
 **RED — DO NOT USE.** No live POC or production adapter.
 
-### 5. PlatformStats mapping
+### 5. PlatformStats mapping at the time of Phase 13D
 
-This is a future mapping guide, not observed or permitted data. No provider passed the permission gate, so do not implement these mappings or emit `*_THIRD_PARTY` source labels. Map only present, valid fields with verified equivalent semantics; otherwise keep null. Never turn absent difficulty metrics into zero.
+This section records the decision at the time of Phase 13D, before the CodeChef integration described at the top of this document. The CodeChef integration now maps the four fields listed there and labels them `CODECHEF_THIRD_PARTY`; the provider's acquisition permission and reliability remain unverified. The mappings below remain prospective for GeeksforGeeks and HackerRank. Map only present, valid fields with verified equivalent semantics; otherwise keep null. Never turn absent difficulty metrics into zero.
 
 | Candidate provider field | `PlatformStats` mapping if later authorized | Current status |
 |---|---|---|
@@ -240,13 +248,13 @@ This is a future mapping guide, not observed or permitted data. No provider pass
 | Explicit current / longest streak | `currentStreak` / `longestStreak` | Claims only; null |
 | Last activity timestamp | No current direct field | Not mappable without model change and permission |
 | Badges, submissions, heatmap, topics | No direct normalized fields | Not mappable; do not synthesize metrics |
-| Source / sync time | `source` / `lastSyncedAt` | Keep unavailable status; no third-party label |
+| Source / sync time | `source` / `lastSyncedAt` | CodeChef uses `CODECHEF_THIRD_PARTY`; GFG/HackerRank remain unavailable |
 
-### 6. Architecture changes
+### 6. Architecture changes recorded in Phase 13D
 
-None. No client, adapter, registry, sync service, persistence, schema, frontend, or database changes. Existing `PlatformAdapter`, 15-minute sync cooldown, and failure persistence already keep unsupported sources unavailable and preserve prior snapshots after a failed sync.
+None were made in Phase 13D. Later CodeChef integration changes are described at the top of this document. Existing `PlatformAdapter`, 15-minute sync cooldown, and failure persistence preserve prior snapshots after a failed sync.
 
-### 7. Tests
+### 7. Tests recorded in Phase 13D
 
 No adapter or HTTP mock tests were added because implementation was rejected at the permission gate. No live external POC calls were made. Requested existing-project checks are recorded after execution below.
 
@@ -258,13 +266,13 @@ No adapter or HTTP mock tests were added because implementation was rejected at 
 - GFG's MIT license covers repository code, not data use. No hosted-provider terms, explicit student/commercial permission, attribution rules, or availability commitments were found.
 - Calling these hosts would transmit users' platform handles without a verified data-handling agreement.
 
-### 9. Final decision
+### 9. Phase 13D decision (historical)
 
-**DO NOT USE any of the three providers.** All are RED for production. No source meets both permission and reliability requirements. Preserve `LIVE_SYNC_UNAVAILABLE` for CodeChef, GFG, and HackerRank. Do not label data `*_THIRD_PARTY` or `*_REAL`. Reconsider only after platform authorization and provider terms establish permitted use, data handling, stability, and operations.
+At that time, the recommendation was not to use any of the three providers. The current CodeChef implementation uses the unofficial provider but remains subject to the unresolved permission and reliability concerns above. GeeksforGeeks and HackerRank remain `LIVE_SYNC_UNAVAILABLE`. Do not treat `CODECHEF_THIRD_PARTY` as an official or permission-cleared source. Reconsider production use after provider/platform authorization, data handling, stability, and operations are established.
 
 ### 10. Deployment recommendation
 
-Do not deploy an integration from this phase. No runtime code changed and no migration is needed. Keep the existing documentation edits and this review available for review; do not commit automatically.
+This recommendation described Phase 13D, which made no runtime changes. The later CodeChef integration is separate; deployment suitability remains unresolved pending the permission and reliability review above.
 
 ### Verification record
 
@@ -276,11 +284,11 @@ Do not deploy an integration from this phase. No runtime code changed and no mig
 
 ## Platform Authorization Status
 
-This section is the implementation gate for CodeChef, GeeksforGeeks, and HackerRank. Keep each connected account available in the five-platform connection layer, but keep live statistics unavailable until the evidence listed below has been reviewed. A public page or technically reachable endpoint is not sufficient. Do not set a `*_REAL` source based only on an API response.
+This section records authorization requirements. CodeChef currently has a local integration through an unofficial third-party provider, labeled `CODECHEF_THIRD_PARTY`; that implementation does not establish permission or production readiness. GFG and HackerRank remain connected-account-only with live statistics unavailable. A public page or technically reachable endpoint is not sufficient. Do not label third-party data as `*_REAL` or imply official authorization.
 
 | Platform | Current status | Required authorization | Exact data requested | Expected source/API contract | Evidence required before enabling `REAL` | Post-approval implementation files |
 |---|---|---|---|---|---|---|
-| CodeChef | Connectable; `SOURCE_PENDING` / `LIVE_SYNC_UNAVAILABLE` | Current written approval and API access from CodeChef for KodBTW's automated retrieval, aggregation, dashboard/public-profile display, and snapshot storage. Confirm this is permitted for a student/non-commercial third-party product. | Public handle/profile URL; total solved; easy/medium/hard counts if officially supported; current and highest rating; rank with explicit scope; contest count; current/longest streak only if authoritative; source timestamp. Leave unsupported values null. | Official, documented HTTPS API or written-approved endpoint; documented auth/scopes, response schema, error semantics, quota, cache/retention and attribution rules. No website-internal routes. | Written permission or current official developer terms covering this use; approved API docs and credentials flow; successful contract validation for multiple public profiles and not-found/no-activity cases; rate-limit and caching requirements recorded; provenance/version recorded. | `backend/.../adapter/impl/CodeChefAdapter.java`; new `backend/.../adapter/codechef/CodeChefClient.java` and response DTOs/tests; `backend/.../entity/Platform.java`; sync/persistence mapping only if contract requires it; DTO/entity/repository/frontend and migration only for approved fields absent from current schema. |
+| CodeChef | Local integration enabled; `CODECHEF_THIRD_PARTY`; provider permission/reliability unverified and production use not cleared | Written confirmation covering use of this provider and its upstream acquisition method, plus KodBTW's retrieval, aggregation, dashboard/public-profile display, and snapshot storage. Confirm student/non-commercial eligibility. | Implemented fields: total solved, current rating, highest rating, global rank. Difficulty counts, contests, and streaks remain null unless a permitted source supplies them. | Unofficial `https://codechef-stats.tashif.codes/profile/{handle}` provider; no official CodeChef API contract. Provider response validation and error behavior are described above. | Written permission from relevant parties for this acquisition/redistribution path; provider terms/data handling, quotas, caching/retention, attribution, schema and reliability reviewed; contract validated for representative profiles and failure cases. Until then, do not claim official authorization or production readiness. | Existing local integration: `backend/.../adapter/impl/CodeChefAdapter.java`; `backend/.../adapter/codechef/CodeChefClient.java` and DTO/tests; `backend/.../entity/Platform.java`. Frontend recognizes `CODECHEF_THIRD_PARTY`. |
 | GeeksforGeeks | Connectable; `SOURCE_PENDING` / `LIVE_SYNC_UNAVAILABLE` | Explicit written GFG permission for automated retrieval of public profile statistics, aggregation, dashboard/public-profile display, and snapshot storage; clarify student/non-commercial eligibility. | Public handle/profile URL; total solved; easy/medium/hard counts when defined; coding score if GFG authorizes it and product mapping is agreed; rank only with scope; contests/streak/activity only if directly supported and permitted. Do not infer school/basic counts as difficulty counts. | Official documented public profile API or GFG-approved endpoint; schema, auth, quota, errors, cache/retention and attribution defined. No undocumented internal JSON endpoints. | Written authorization specifically covering scheduled/manual automated retrieval and redistribution/display; official or approved contract; multiple profile fixtures validated including private/no-activity and missing fields; field semantics and null behavior agreed; quotas and retention documented. | `backend/.../adapter/impl/GeeksForGeeksAdapter.java`; new `backend/.../adapter/geeksforgeeks/GeeksForGeeksClient.java` and response DTOs/tests; `backend/.../entity/Platform.java`; sync/persistence mapping only if needed; DTO/entity/repository/frontend and migration only for authorized fields not represented today. |
 | HackerRank | Connectable; `SOURCE_PENDING` / `LIVE_SYNC_UNAVAILABLE` | Keep pending unless HackerRank provides an authorized community-profile API or grants explicit written permission for the requested automated acquisition and display. Do not use HackerRank for Work enterprise tokens for community stats. | Public handle/profile URL; total solved; practice score only as its own metric (not rating); difficulty counts only if supported; contest rating/history/count with explicit semantics; rank with scope; badges/activity/streak only if authorized and complete enough. | Official documented community API or written-approved endpoint; contract must distinguish practice track score/rank from contest rating/rank; documented authentication, quotas, error behavior, attribution, cache/retention. | Current official documentation or written authorization for community profile data and aggregation/display; verified contract/schema and profile edge cases; separate metric definitions and permissions; quota, caching, and retention rules recorded. | `backend/.../adapter/impl/HackerRankAdapter.java`; new `backend/.../adapter/hackerrank/HackerRankClient.java` and response DTOs/tests; `backend/.../entity/Platform.java`; sync/persistence mapping only if needed; DTO/entity/repository/frontend and migration only for authorized fields not represented today. |
 
@@ -296,7 +304,7 @@ I am building KodBTW, a student/non-commercial platform that lets users connect 
 
 Could you confirm whether this use is permitted and whether student/non-commercial use is allowed? If available, please share the official developer/API documentation and the supported profile-statistics endpoints, required application/user authentication and scopes, rate limits, and error behavior. Please also specify attribution requirements, permitted caching and historical snapshot retention, and any restrictions on redistribution or display of the statistics.
 
-We will not scrape profile pages or use undocumented website-internal endpoints. We will keep CodeChef statistics unavailable until we have your authorization and follow the approved API contract.
+The current KodBTW implementation obtains these fields through an unofficial third-party provider whose documentation describes scraping CodeChef profile pages. We have not verified that provider's authorization to acquire the data or KodBTW's permission to use, cache, aggregate, and display it. Please confirm whether this acquisition path is permitted, whether KodBTW has permission for the described use, and whether an approved API/contract is available. Until this is resolved, we will not claim that the integration is authorized or production-ready.
 
 Thank you,
 KodBTW team
@@ -331,10 +339,10 @@ We will not use enterprise Work API tokens for community profile data and will n
 Thank you,
 KodBTW team
 
-### Permission-ready verification
+### Permission/reliability status and verification notes
 
-- Five platforms remain in the existing account model; the three pending platforms are connectable and are not live sync sources.
-- Manual and scheduled sync share `PlatformSyncService`; it returns before adapter lookup/fetch for platforms where `Platform.hasLiveStatsSource()` is false. Dashboard/analytics/public-profile reads use `PlatformStatsService`, which rejects snapshots without a non-MOCK `*_REAL` source. Leaderboard rebuild reads the same filtered stats and does not fetch a pending platform; leaderboard scheduling's sync phase shares the same early return. History and insights select/filter `*_REAL` snapshots.
+- Five platforms remain in the existing account model. CodeChef has a live adapter backed by the unofficial provider and is labeled `CODECHEF_THIRD_PARTY`; GFG and HackerRank remain source-pending and unavailable.
+- Manual and scheduled sync share `PlatformSyncService`; source-pending platforms return before adapter lookup/fetch. `PlatformStatsService` accepts the established `*_REAL` sources and explicitly accepts `CODECHEF_THIRD_PARTY`; it does not generally accept arbitrary non-mock sources. History and insights retain their existing real-source filtering and are not broadened by this CodeChef integration.
 - No MOCK snapshot is returned as current stats or consumed as real dashboard/analytics/history/public-profile data. Leaderboard score aggregation is real-only. MOCK-labelled data may still be recognized internally as mock metadata, but it is not presented as verified stats.
 - Existing LeetCode and Codeforces adapter/client code was not changed. This review does not certify their upstream terms beyond the research findings above.
 - No external permission requests were sent.

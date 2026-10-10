@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.net.SocketTimeoutException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,9 +89,9 @@ class PlatformSyncServiceTest {
     }
 
     @Test void sourcePendingPlatformReturnsUnavailableStateWithoutAdapterOrPersistenceCalls() {
-        account.setPlatform(Platform.CODECHEF);
+        account.setPlatform(Platform.GEEKSFORGEEKS);
         when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
-        PlatformStats pending = PlatformStats.builder().platform(Platform.CODECHEF).source("SOURCE_PENDING").build();
+        PlatformStats pending = PlatformStats.builder().platform(Platform.GEEKSFORGEEKS).source("SOURCE_PENDING").build();
         when(statsService.getStats(7L, 9L)).thenReturn(pending);
 
         var response = service.syncOwnedAccount(7L, 9L);
@@ -114,6 +115,33 @@ class PlatformSyncServiceTest {
         var response = service.syncOwnedAccount(7L, 9L);
         assertEquals(lastKnown, response.currentStats());
         verify(persistence).recordFailure(9L, SyncFailureCategory.RATE_LIMITED);
+        verify(persistence, never()).recordSuccess(eq(9L), any());
+    }
+
+    @Test void codeChefTimeoutFailureKeepsThirdPartySnapshotAndRecordsSafeFailure() {
+        when(adapter.getPlatform()).thenReturn(Platform.CODECHEF);
+        service = new PlatformSyncService(accounts, new PlatformAdapterRegistry(List.of(adapter)), persistence, statsService);
+        account.setPlatform(Platform.CODECHEF);
+        PlatformStats lastKnown = PlatformStats.builder().platform(Platform.CODECHEF)
+                .source("CODECHEF_THIRD_PARTY").totalProblemsSolved(656).rating(1247).build();
+        PlatformApiException timeout = new PlatformApiException("CodeChef provider request failed",
+                new SocketTimeoutException("Read timed out"));
+        when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
+        when(persistence.markStarted(7L, 9L)).thenReturn(true);
+        when(adapter.fetchStats(account)).thenThrow(timeout);
+        when(statsService.getStats(7L, 9L)).thenReturn(lastKnown);
+        doAnswer(invocation -> {
+            account.setSyncStatus(SyncStatus.FAILED);
+            account.setLastSyncErrorCategory(SyncFailureCategory.TIMEOUT.name());
+            return null;
+        }).when(persistence).recordFailure(9L, SyncFailureCategory.TIMEOUT);
+
+        var response = service.syncOwnedAccount(7L, 9L);
+
+        assertEquals(SyncStatus.FAILED, response.syncStatus().status());
+        assertEquals(SyncFailureCategory.TIMEOUT.name(), response.syncStatus().failureCategory());
+        assertEquals(lastKnown, response.currentStats());
+        verify(persistence).recordFailure(9L, SyncFailureCategory.TIMEOUT);
         verify(persistence, never()).recordSuccess(eq(9L), any());
     }
 

@@ -100,9 +100,9 @@ class PlatformStatsServiceTest {
     @Test void missingSnapshotIsUnsyncedAndDoesNotFabricateMetrics() {
         User user = new User(); user.setId(4L);
         PlatformAccount account = new PlatformAccount();
-        account.setUser(user); account.setPlatform(Platform.CODECHEF); account.setUsername("cc");
+        account.setUser(user); account.setPlatform(Platform.GEEKSFORGEEKS); account.setUsername("gfg");
         when(accounts.findAllByUserId(4L)).thenReturn(List.of(account));
-        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "CODECHEF"))
+        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "GEEKSFORGEEKS"))
                 .thenReturn(Optional.empty());
         PlatformStats result = service.getDashboardStats(4L).getPlatforms().get(0);
         assertEquals("SOURCE_PENDING", result.getSource()); assertNull(result.getRating());
@@ -114,18 +114,18 @@ class PlatformStatsServiceTest {
         User user = new User(); user.setId(4L);
         PlatformAccount leetCode = new PlatformAccount();
         leetCode.setUser(user); leetCode.setPlatform(Platform.LEETCODE); leetCode.setUsername("lc");
-        PlatformAccount codeChef = new PlatformAccount();
-        codeChef.setUser(user); codeChef.setPlatform(Platform.CODECHEF); codeChef.setUsername("cc");
+        PlatformAccount geeksForGeeks = new PlatformAccount();
+        geeksForGeeks.setUser(user); geeksForGeeks.setPlatform(Platform.GEEKSFORGEEKS); geeksForGeeks.setUsername("gfg");
         PlatformStatSnapshot real = snapshot("LEETCODE", "LEETCODE_REAL");
         real.setTotalSolved(120); real.setEasySolved(30); real.setMediumSolved(50); real.setHardSolved(40);
         real.setContests(4); real.setCurrentStreak(8); real.setLongestStreak(18);
-        PlatformStatSnapshot mock = snapshot("CODECHEF", "MOCK");
+        PlatformStatSnapshot mock = snapshot("GEEKSFORGEEKS", "MOCK");
         mock.setTotalSolved(80); mock.setEasySolved(20); mock.setMediumSolved(40); mock.setHardSolved(20);
         mock.setContests(6); mock.setCurrentStreak(3); mock.setLongestStreak(25);
-        when(accounts.findAllByUserId(4L)).thenReturn(List.of(leetCode, codeChef));
+        when(accounts.findAllByUserId(4L)).thenReturn(List.of(leetCode, geeksForGeeks));
         when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "LEETCODE"))
                 .thenReturn(Optional.of(real));
-        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "CODECHEF"))
+        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "GEEKSFORGEEKS"))
                 .thenReturn(Optional.of(mock));
 
         DashboardStatsResponse result = service.getDashboardStats(4L);

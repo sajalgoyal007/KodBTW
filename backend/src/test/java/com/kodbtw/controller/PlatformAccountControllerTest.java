@@ -57,6 +57,9 @@ class PlatformAccountControllerTest {
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.kodbtw.adapter.codeforces.CodeforcesClient codeforcesClient;
 
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private com.kodbtw.adapter.codechef.CodeChefClient codeChefClient;
+
     private String userToken;
     private String otherUserToken;
 
@@ -629,11 +632,54 @@ class PlatformAccountControllerTest {
     }
 
     @Test
+    void codeChefSyncReturnsTheThirdPartyStatsPersistedInItsSnapshot() throws Exception {
+        String username = "sajalgoyal2007";
+        var profile = new com.kodbtw.adapter.codechef.dto.CodeChefApiResponse.Profile(
+                "https://www.codechef.com/users/" + username, "Test User", 1247, 1519,
+                null, "India", 76970, 73803, "1★", 656);
+        org.mockito.Mockito.when(codeChefClient.fetchProfile(username)).thenReturn(
+                new com.kodbtw.adapter.codechef.dto.CodeChefApiResponse(
+                        true, 200, username, profile, "OK", "CodeChef"));
+
+        MvcResult created = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.CODECHEF, username, null))))
+                .andExpect(status().isCreated()).andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/platform-accounts/" + id + "/sync")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.syncStatus.status").value("SUCCEEDED"))
+                .andExpect(jsonPath("$.currentStats.source").value("CODECHEF_THIRD_PARTY"))
+                .andExpect(jsonPath("$.currentStats.totalProblemsSolved").value(656))
+                .andExpect(jsonPath("$.currentStats.rating").value(1247))
+                .andExpect(jsonPath("$.currentStats.maxRating").value(1519))
+                .andExpect(jsonPath("$.currentStats.rank").value(76970))
+                .andExpect(jsonPath("$.currentStats.lastSyncedAt").isNotEmpty())
+                .andExpect(jsonPath("$.currentStats.easySolved").doesNotExist())
+                .andExpect(jsonPath("$.currentStats.contestsParticipated").doesNotExist());
+
+        var snapshot = platformStatSnapshotRepository.findAll().get(0);
+        org.junit.jupiter.api.Assertions.assertEquals("CODECHEF_THIRD_PARTY", snapshot.getSource());
+        org.junit.jupiter.api.Assertions.assertEquals(656, snapshot.getTotalSolved());
+        org.junit.jupiter.api.Assertions.assertEquals(1247, snapshot.getRating());
+        org.junit.jupiter.api.Assertions.assertNotNull(snapshot.getStatsLastSyncedAt());
+
+        mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("CODECHEF_THIRD_PARTY"))
+                .andExpect(jsonPath("$.totalProblemsSolved").value(656));
+    }
+
+    @Test
     void unsupportedMockPlatformReturnsUnavailableWithoutCreatingFakeSnapshot() throws Exception {
         MvcResult created = mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(makeRequest(Platform.CODECHEF, "chefuser", null))))
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.GEEKSFORGEEKS, "chefuser", null))))
                 .andExpect(status().isCreated()).andReturn();
         long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
 

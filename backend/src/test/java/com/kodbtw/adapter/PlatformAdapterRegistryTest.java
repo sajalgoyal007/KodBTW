@@ -1,6 +1,7 @@
 package com.kodbtw.adapter;
 
 import com.kodbtw.adapter.impl.CodeChefAdapter;
+import com.kodbtw.adapter.codechef.CodeChefClient;
 import com.kodbtw.adapter.impl.CodeforcesAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
@@ -24,7 +25,7 @@ class PlatformAdapterRegistryTest {
     void setUp() {
         List<PlatformAdapter> adapters = List.of(
                 new LeetCodeAdapter(username -> null),
-                new CodeChefAdapter(),
+                new CodeChefAdapter((CodeChefClient) handle -> null),
                 new CodeforcesAdapter(handle -> null),
                 new GeeksForGeeksAdapter(),
                 new HackerRankAdapter()

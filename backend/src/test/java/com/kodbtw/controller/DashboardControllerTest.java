@@ -135,9 +135,9 @@ class DashboardControllerTest {
 
     @Test
     void getStats_authenticated_withLinkedAccount_returns200AndAggregatedStats() throws Exception {
-        // Link a CodeChef account and prove a legacy MOCK snapshot is excluded.
+        // Link a GFG account and prove a legacy MOCK snapshot is excluded.
         PlatformAccountRequest accountRequest = new PlatformAccountRequest();
-        accountRequest.setPlatform(Platform.CODECHEF);
+        accountRequest.setPlatform(Platform.GEEKSFORGEEKS);
         accountRequest.setUsername("testchef");
 
         mockMvc.perform(post("/api/platform-accounts")
@@ -149,7 +149,7 @@ class DashboardControllerTest {
         refreshLinkedAccounts();
 
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        saveSnapshot(owner, "CODECHEF", "MOCK", 210, 120, 70, 20, 1750);
+        saveSnapshot(owner, "GEEKSFORGEEKS", "MOCK", 210, 120, 70, 20, 1750);
         var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
         mockSnapshot.setContests(25);
         mockSnapshot.setRank(4500);
@@ -165,7 +165,7 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.overview.hardSolved", nullValue()))
                 .andExpect(jsonPath("$.overview.contestsParticipated", nullValue()))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
-                .andExpect(jsonPath("$.platforms[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.platforms[0].platform", is("GEEKSFORGEEKS")))
                 .andExpect(jsonPath("$.platforms[0].username", is("testchef")))
                 .andExpect(jsonPath("$.platforms[0].rating", nullValue()))
                 .andExpect(jsonPath("$.platforms[0].rank", nullValue()))
@@ -199,7 +199,7 @@ class DashboardControllerTest {
     @Test
     void getAnalytics_authenticated_withLinkedAccount_returns200AndAnalytics() throws Exception {
         PlatformAccountRequest accountRequest = new PlatformAccountRequest();
-        accountRequest.setPlatform(Platform.CODECHEF);
+        accountRequest.setPlatform(Platform.GEEKSFORGEEKS);
         accountRequest.setUsername("testchef");
 
         mockMvc.perform(post("/api/platform-accounts")
@@ -211,7 +211,7 @@ class DashboardControllerTest {
         refreshLinkedAccounts();
 
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        saveSnapshot(owner, "CODECHEF", "MOCK", 210, 120, 70, 20, 1750);
+        saveSnapshot(owner, "GEEKSFORGEEKS", "MOCK", 210, 120, 70, 20, 1750);
         var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
         mockSnapshot.setContests(25);
         mockSnapshot.setRank(4500);
@@ -228,13 +228,13 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.difficulty.hard.count", nullValue()))
                 .andExpect(jsonPath("$.difficulty.hard.percentage", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown", hasSize(1)))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("GEEKSFORGEEKS")))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].easy", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].medium", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].hard", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].total", nullValue()))
                 .andExpect(jsonPath("$.platformComparison", hasSize(1)))
-                .andExpect(jsonPath("$.platformComparison[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.platformComparison[0].platform", is("GEEKSFORGEEKS")))
                 .andExpect(jsonPath("$.platformComparison[0].username", is("testchef")))
                 .andExpect(jsonPath("$.platformComparison[0].totalSolved", nullValue()))
                 .andExpect(jsonPath("$.platformComparison[0].sharePercentage", is(0.0)))
@@ -244,7 +244,7 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.platformComparison[0].source", is("SOURCE_PENDING")))
                 .andExpect(jsonPath("$.contests.totalContests", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown", hasSize(1)))
-                .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("GEEKSFORGEEKS")))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].contests", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", nullValue()));

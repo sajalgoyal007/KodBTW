@@ -113,7 +113,7 @@ class PublicProfileControllerTest {
 
         // Connect a platform whose live statistics source is pending.
         PlatformAccountRequest paReq = new PlatformAccountRequest();
-        paReq.setPlatform(Platform.CODECHEF);
+        paReq.setPlatform(Platform.GEEKSFORGEEKS);
         paReq.setUsername("chef_coder");
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -136,7 +136,7 @@ class PublicProfileControllerTest {
                 .andExpect(jsonPath("$.college", is("Tech Institute")))
                 .andExpect(jsonPath("$.socialLinks.githubUrl", is("https://github.com/testcoder")))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
-                .andExpect(jsonPath("$.platforms[0].platform", is("CODECHEF")))
+                .andExpect(jsonPath("$.platforms[0].platform", is("GEEKSFORGEEKS")))
                 .andExpect(jsonPath("$.platforms[0].sourceStatus", is("SOURCE_PENDING")))
                 .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")))
                 .andExpect(jsonPath("$.platforms[0].totalSolved").doesNotExist());
@@ -180,9 +180,9 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(profileReq)))
                 .andExpect(status().isOk());
 
-        // Connect CodeChef; legacy MOCK snapshots must not be exposed as current stats.
+        // Connect GFG; legacy MOCK snapshots must not be exposed as current stats.
         PlatformAccountRequest mockAccount = new PlatformAccountRequest();
-        mockAccount.setPlatform(Platform.CODECHEF);
+        mockAccount.setPlatform(Platform.GEEKSFORGEEKS);
         mockAccount.setUsername("chef_user");
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -206,7 +206,7 @@ class PublicProfileControllerTest {
     private void saveMockSnapshot() {
         var snapshot = new com.kodbtw.entity.PlatformStatSnapshot();
         snapshot.setUser(testUser);
-        snapshot.setPlatform(Platform.CODECHEF.name());
+        snapshot.setPlatform(Platform.GEEKSFORGEEKS.name());
         snapshot.setSnapshotDate(java.time.LocalDate.now());
         snapshot.setSource("MOCK");
         snapshotRepository.save(snapshot);

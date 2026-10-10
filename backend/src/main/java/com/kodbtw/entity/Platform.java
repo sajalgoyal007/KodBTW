@@ -8,6 +8,8 @@ public enum Platform {
     HACKERRANK;
 
     public boolean hasLiveStatsSource() {
-        return this == LEETCODE || this == CODEFORCES;
+        return this == LEETCODE
+                || this == CODECHEF
+                || this == CODEFORCES;
     }
 }
