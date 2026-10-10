@@ -1,4 +1,4 @@
-import { ApiErrorResponse } from '../../types/auth';
+import type { ApiErrorResponse } from '../../types/auth';
 
 export const TOKEN_STORAGE_KEY = 'kodbtw_jwt';
 
@@ -20,7 +20,7 @@ interface RequestOptions extends RequestInit {
   timeoutMessage?: string;
 }
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const BASE_URL = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, headers = {}, signal: externalSignal, timeoutMs = 15_000, timeoutMessage, ...customConfig } = options;

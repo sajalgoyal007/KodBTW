@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../types/auth';
 import { authApi } from '../services/api/authApi';
 import { TOKEN_STORAGE_KEY } from '../services/api/apiClient';
+import { AUTH_TIMEOUT_MESSAGES } from '../services/api/authTimeoutMessages';
 
 export interface AuthContextType {
   user: User | null;
@@ -54,17 +55,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    const response = await authApi.login({ email, password });
+  const loginWithTimeoutMessage = async (
+    email: string,
+    password: string,
+    timeoutMessage?: string,
+  ): Promise<void> => {
+    const response = await authApi.login({ email, password }, timeoutMessage);
     localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
     setToken(response.token);
     setUser(response.user);
   };
 
+  const login = async (email: string, password: string): Promise<void> => {
+    await loginWithTimeoutMessage(email, password);
+  };
+
   const register = async (name: string, email: string, password: string): Promise<void> => {
     await authApi.register({ name, email, password });
     // Auto-login after successful registration
-    await login(email, password);
+    await loginWithTimeoutMessage(email, password, AUTH_TIMEOUT_MESSAGES.registrationAutoLogin);
   };
 
   const logout = (): void => {

@@ -1,15 +1,19 @@
 import { apiClient } from './apiClient';
 import { LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
+import { AUTH_TIMEOUT_MESSAGES } from './authTimeoutMessages';
 
 const AUTH_REQUEST_TIMEOUT_MS = 75_000;
 
 export const authApi = {
-  login: (data: LoginRequest): Promise<LoginResponse> => {
+  login: (
+    data: LoginRequest,
+    timeoutMessage: string = AUTH_TIMEOUT_MESSAGES.login,
+  ): Promise<LoginResponse> => {
     return apiClient<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
-      timeoutMessage: 'The server is taking longer than expected to wake up. Please try signing in again.',
+      timeoutMessage,
     });
   },
 
@@ -18,7 +22,7 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify(data),
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
-      timeoutMessage: 'The server is taking longer than expected. If your account may have been created, try signing in before submitting registration again.',
+      timeoutMessage: AUTH_TIMEOUT_MESSAGES.registration,
     });
   },
 
