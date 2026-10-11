@@ -1,5 +1,7 @@
 package com.kodbtw.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,8 +15,12 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidCredentials(InvalidCredentialsException ex) {
+    public ResponseEntity<Map<String, String>> handleInvalidCredentials(
+            InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                 "error", "Unauthorized",
                 "message", ex.getMessage()
@@ -22,7 +28,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
+    public ResponseEntity<Map<String, String>> handleEmailAlreadyExists(
+            EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "Conflict",
                 "message", ex.getMessage()
@@ -30,7 +37,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(DuplicatePlatformException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicatePlatform(DuplicatePlatformException ex) {
+    public ResponseEntity<Map<String, String>> handleDuplicatePlatform(
+            DuplicatePlatformException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "Conflict",
                 "message", ex.getMessage()
@@ -38,7 +46,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UsernameAlreadyExistsException.class)
-    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
+    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExists(
+            UsernameAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "Conflict",
                 "message", ex.getMessage()
@@ -46,7 +55,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<Map<String, String>> handleResourceNotFound(
+            ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", "Not Found",
                 "message", ex.getMessage()
@@ -54,7 +64,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(UnsupportedPlatformException.class)
-    public ResponseEntity<Map<String, String>> handleUnsupportedPlatform(UnsupportedPlatformException ex) {
+    public ResponseEntity<Map<String, String>> handleUnsupportedPlatform(
+            UnsupportedPlatformException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "error", "Bad Request",
                 "message", ex.getMessage()
@@ -62,7 +73,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(
+            IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
                 "error", "Bad Request",
                 "message", ex.getMessage()
@@ -70,7 +82,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PlatformApiException.class)
-    public ResponseEntity<Map<String, String>> handlePlatformApi(PlatformApiException ex) {
+    public ResponseEntity<Map<String, String>> handlePlatformApi(
+            PlatformApiException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                 "error", "Bad Gateway",
                 "message", "The platform is temporarily unavailable. Please try again later."
@@ -78,8 +91,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
+
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.put(error.getField(), error.getDefaultMessage());
         }
@@ -93,7 +108,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+    public ResponseEntity<Map<String, String>> handleGenericException(
+            Exception ex) {
+        Throwable rootCause = ex;
+        for (int depth = 0; depth < 8 && rootCause.getCause() != null
+                && rootCause.getCause() != rootCause; depth++) {
+            rootCause = rootCause.getCause();
+        }
+        StackTraceElement origin = ex.getStackTrace().length == 0 ? null : ex.getStackTrace()[0];
+        log.error("Unhandled exception type={} rootCauseType={} origin={}",
+                ex.getClass().getName(), rootCause.getClass().getName(), origin);
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "Internal Server Error",
                 "message", "An unexpected error occurred. Please try again later."
