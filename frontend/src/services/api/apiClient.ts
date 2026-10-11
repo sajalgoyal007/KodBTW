@@ -18,12 +18,21 @@ interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
   timeoutMs?: number;
   timeoutMessage?: string;
+  auth?: boolean;
 }
 
 const BASE_URL = (import.meta.env?.VITE_API_BASE_URL || '').replace(/\/+$/, '');
 
 export async function apiClient<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers = {}, signal: externalSignal, timeoutMs = 15_000, timeoutMessage, ...customConfig } = options;
+  const {
+    params,
+    headers = {},
+    signal: externalSignal,
+    timeoutMs = 15_000,
+    timeoutMessage,
+    auth = true,
+    ...customConfig
+  } = options;
 
   if (externalSignal?.aborted) {
     throw new DOMException('The operation was aborted.', 'AbortError');
@@ -43,14 +52,16 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     }
   }
 
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(auth ? { 'Content-Type': 'application/json' } : {}),
     ...(headers as Record<string, string>),
   };
 
-  if (token) {
-    requestHeaders['Authorization'] = `Bearer ${token}`;
+  if (auth) {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token) {
+      requestHeaders['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   const controller = new AbortController();
@@ -61,6 +72,7 @@ export async function apiClient<T>(endpoint: string, options: RequestOptions = {
     ...customConfig,
     headers: requestHeaders,
     signal: controller.signal,
+    ...(auth ? {} : { credentials: 'omit' }),
   };
 
   let response: Response;
