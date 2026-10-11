@@ -175,6 +175,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .header().exists("X-Request-ID"))
                 .andExpect(jsonPath("$.token").isString())
                 .andExpect(jsonPath("$.token", startsWith("eyJ")))
                 .andExpect(jsonPath("$.user.id").isNumber())
@@ -182,6 +184,17 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.user.email").value("sajal@example.com"));
     }
 
+    @Test
+    void loginCorsPreflightAllowsTheCorrelationIdHeader() throws Exception {
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/auth/login")
+                        .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "content-type,x-request-id"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                                org.hamcrest.Matchers.containsStringIgnoringCase("x-request-id")));
+    }
     @Test
     void testLoginInvalidPassword() throws Exception {
         RegisterRequest registerReq = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");

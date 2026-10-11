@@ -4,6 +4,13 @@ import { AUTH_TIMEOUT_MESSAGES } from './authTimeoutMessages';
 
 const AUTH_REQUEST_TIMEOUT_MS = 75_000;
 
+function authRequestHeaders(): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'X-Request-ID': globalThis.crypto.randomUUID(),
+  };
+}
+
 export const authApi = {
   login: (
     data: LoginRequest,
@@ -12,6 +19,8 @@ export const authApi = {
     return apiClient<LoginResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      auth: false,
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
       timeoutMessage,
     });
@@ -21,6 +30,8 @@ export const authApi = {
     return apiClient<User>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      auth: false,
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
       timeoutMessage: AUTH_TIMEOUT_MESSAGES.registration,
     });
