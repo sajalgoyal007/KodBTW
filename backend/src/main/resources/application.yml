@@ -40,6 +40,12 @@ platform:
   sync:
     cooldown: ${PLATFORM_SYNC_COOLDOWN:PT15M}
 
+contest-calendar:
+  provider: ${CONTEST_CALENDAR_PROVIDER:codeforces}
+  cache-ttl: ${CONTEST_CALENDAR_CACHE_TTL:PT10M}
+  fixture:
+    scenario: ${CONTEST_CALENDAR_FIXTURE_SCENARIO:multiple}
+
 jwt:
   secret: ${JWT_SECRET}
   expiration-ms: ${JWT_EXPIRATION_MS:86400000}

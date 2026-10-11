@@ -5,6 +5,7 @@ import { useContests } from '../hooks/useContests';
 import { ContestOverviewCards } from '../components/contests/ContestOverviewCards';
 import { ContestPlatformTable } from '../components/contests/ContestPlatformTable';
 import { ContestRatingComparison } from '../components/contests/ContestRatingComparison';
+import { UpcomingContestSection } from '../components/contests/UpcomingContestSection';
 import {
   Trophy,
   RefreshCw,
@@ -76,6 +77,8 @@ export const ContestsPage: React.FC = () => {
             </button>
           </div>
         </div>
+
+        <UpcomingContestSection />
 
         {/* Loading Skeletons */}
         {loading && (
