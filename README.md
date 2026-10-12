@@ -1,6 +1,6 @@
 # KodBTW 
  
-KodBTW brings coding-platform profiles, persisted statistics, dashboard analytics, historical progress, and public developer profiles into one application.
+KodBTW brings coding-platform profiles, persisted statistics, dashboard analytics, historical progress, and public developer profiles into one application.It's boost your resume 
 
 ## Architecture and stack
 
