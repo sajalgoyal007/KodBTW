@@ -1738,6 +1738,10 @@
     padding: 1rem 1.25rem;
   }
 
+  .kod-dashboard-topbar { flex-wrap: wrap; gap: .5rem; padding: .75rem; }
+  .kod-dashboard-url-pill { flex: 1 1 8rem; min-width: 0; justify-content: center; }
+  .kod-dashboard-url-pill > span { min-width: 0; overflow-wrap: anywhere; }
+  .kod-dashboard-status-tag { flex: 1 1 100%; justify-content: center; text-align: center; }
   .kod-hero {
     padding: 7rem 1rem 3.5rem;
   }
