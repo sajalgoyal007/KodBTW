@@ -1,6 +1,7 @@
 import React from 'react';
 import { PlatformComparison } from '../../types/dashboard';
 import { Flame } from 'lucide-react';
+import { getKnownStreakBarPercentage } from '../../utils/analyticsPresentation';
 
 interface StreakComparisonCardProps {
   platformComparison: PlatformComparison[];
@@ -25,7 +26,7 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
               width: '32px',
               height: '32px',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(235, 115, 18, 0.12)',
+              backgroundColor: 'var(--color-primary-soft)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -50,10 +51,8 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {platformComparison.map((item) => {
-            const curVal = item.currentStreak ?? 0;
-            const longVal = item.longestStreak ?? 0;
-            const curPct = Math.min((curVal / maxStreak) * 100, 100);
-            const longPct = Math.min((longVal / maxStreak) * 100, 100);
+            const curPct = getKnownStreakBarPercentage(item.currentStreak, maxStreak);
+            const longPct = getKnownStreakBarPercentage(item.longestStreak, maxStreak);
 
             return (
               <div
@@ -93,9 +92,9 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
                 </div>
 
                 {/* Dual comparative bar */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }} aria-hidden="true">
                   {/* Current streak bar */}
-                  <div
+                  {curPct !== null && <div
                     style={{
                       height: '6px',
                       backgroundColor: 'var(--color-bg-subtle)',
@@ -111,12 +110,11 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
                         borderRadius: 'var(--radius-full)',
                         transition: 'width 0.4s ease',
                       }}
-                      title={`Current: ${curVal} days`}
                     />
-                  </div>
+                  </div>}
 
                   {/* Longest streak bar */}
-                  <div
+                  {longPct !== null && <div
                     style={{
                       height: '6px',
                       backgroundColor: 'var(--color-bg-subtle)',
@@ -132,9 +130,8 @@ export const StreakComparisonCard: React.FC<StreakComparisonCardProps> = ({ plat
                         borderRadius: 'var(--radius-full)',
                         transition: 'width 0.4s ease',
                       }}
-                      title={`Longest: ${longVal} days`}
                     />
-                  </div>
+                  </div>}
                 </div>
               </div>
             );

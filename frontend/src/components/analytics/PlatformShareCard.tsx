@@ -1,5 +1,8 @@
 import React from 'react';
 import { PlatformComparison } from '../../types/dashboard';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel } from '../../utils/platformStatsSource';
+import { formatPlatformSharePercentage } from '../../utils/platformStats';
+import { getKnownPlatformSharePercentage } from '../../utils/dashboardPresentation';
 
 interface PlatformShareCardProps {
   platformComparison: PlatformComparison[];
@@ -23,42 +26,10 @@ export const PlatformShareCard: React.FC<PlatformShareCardProps> = ({ platformCo
     }
   };
 
-  const getSourceBadge = (source: string) => {
-    if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
-      return (
-        <span
-          className="badge"
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-success)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            fontSize: '0.6875rem',
-          }}
-        >
-          Verified Public API
-        </span>
-      );
-    }
-    return (
-      <span
-        className="badge"
-        style={{
-          backgroundColor: 'rgba(235, 115, 18, 0.12)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(235, 115, 18, 0.3)',
-          fontSize: '0.6875rem',
-        }}
-      >
-        Mock Sandbox
-      </span>
-    );
-  };
-
-  const formatPct = (val: number | null | undefined) =>
-    val !== null && val !== undefined ? `${val.toFixed(1)}%` : '0.0%';
-
   const formatSolved = (val: number | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
+
+  const knownShares = platformComparison.filter((item) => getKnownPlatformSharePercentage(item) !== null);
 
   return (
     <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -79,15 +50,15 @@ export const PlatformShareCard: React.FC<PlatformShareCardProps> = ({ platformCo
           backgroundColor: 'var(--color-bg-subtle)',
         }}
       >
-        {platformComparison.map((c) => (
+        {knownShares.map((c) => (
           <div
             key={c.platform}
             style={{
-              width: `${c.sharePercentage || 0}%`,
+              width: `${getKnownPlatformSharePercentage(c)}%`,
               backgroundColor: getBrandColor(c.platform),
               transition: 'width 0.4s ease',
             }}
-            title={`${c.platform}: ${formatPct(c.sharePercentage)}`}
+            title={`${c.platform}: ${formatPlatformSharePercentage(getKnownPlatformSharePercentage(c))}`}
           />
         ))}
       </div>
@@ -114,7 +85,9 @@ export const PlatformShareCard: React.FC<PlatformShareCardProps> = ({ platformCo
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{item.platform}</span>
-                    {getSourceBadge(item.source)}
+                    <span className={`badge ${getPlatformStatsSourceBadgeClass(item.source)}`} style={{ fontSize: '0.6875rem' }}>
+                      {getPlatformStatsSourceLabel(item.source)}
+                    </span>
                   </div>
                   <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.125rem' }}>
                     @{item.username}
@@ -124,7 +97,7 @@ export const PlatformShareCard: React.FC<PlatformShareCardProps> = ({ platformCo
 
               <div style={{ textAlign: 'right' }}>
                 <div className="mono" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {formatPct(item.sharePercentage)}
+                  {formatPlatformSharePercentage(getKnownPlatformSharePercentage(item))}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                   {formatSolved(item.totalSolved)} solved

@@ -67,37 +67,20 @@ export const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem 1.5rem',
-      backgroundColor: 'var(--color-bg-base)',
-    }}>
-      <div style={{ width: '100%', maxWidth: '420px' }}>
+    <div className="auth-page">
+      <div className="auth-panel">
         {/* Branding */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-primary-text)',
-              fontWeight: 800,
-            }}>
+        <div className="auth-heading">
+          <Link to="/" className="auth-brand">
+            <div className="auth-brand-mark">
               <Code2 size={24} />
             </div>
-            <span style={{ fontWeight: 700, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
+            <span className="auth-wordmark">
               Kod<span style={{ color: 'var(--color-primary)' }}>BTW</span>
             </span>
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>Create an account</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+          <h1>Create an account</h1>
+          <p>
             Start unifying your competitive coding statistics
           </p>
         </div>
@@ -105,7 +88,7 @@ export const RegisterPage: React.FC = () => {
         {/* Register Card */}
         <div className="card">
           {error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" role="alert">
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
               <span>{error}</span>
             </div>
@@ -123,8 +106,10 @@ export const RegisterPage: React.FC = () => {
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
                 disabled={isLoading}
+                aria-invalid={Boolean(fieldErrors.name)}
+                aria-describedby={fieldErrors.name ? 'register-name-error' : undefined}
               />
-              {fieldErrors.name && <span className="form-error">{fieldErrors.name}</span>}
+              {fieldErrors.name && <span id="register-name-error" className="form-error" role="alert">{fieldErrors.name}</span>}
             </div>
 
             <div className="form-group">
@@ -138,8 +123,10 @@ export const RegisterPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 disabled={isLoading}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
               />
-              {fieldErrors.email && <span className="form-error">{fieldErrors.email}</span>}
+              {fieldErrors.email && <span id="register-email-error" className="form-error" role="alert">{fieldErrors.email}</span>}
             </div>
 
             <div className="form-group">
@@ -153,8 +140,10 @@ export const RegisterPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
                 disabled={isLoading}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
               />
-              {fieldErrors.password && <span className="form-error">{fieldErrors.password}</span>}
+              {fieldErrors.password && <span id="register-password-error" className="form-error" role="alert">{fieldErrors.password}</span>}
             </div>
 
             <button
@@ -177,12 +166,7 @@ export const RegisterPage: React.FC = () => {
         </div>
 
         {/* Footer Link */}
-        <p style={{
-          textAlign: 'center',
-          marginTop: '1.5rem',
-          fontSize: '0.875rem',
-          color: 'var(--color-text-secondary)',
-        }}>
+        <p className="auth-footer">
           Already have an account?{' '}
           <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
             Sign in

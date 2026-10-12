@@ -1,5 +1,6 @@
 import React from 'react';
 import { DifficultyAnalytics } from '../../types/dashboard';
+import { getDifficultyDistributionState } from '../../utils/analyticsPresentation';
 
 interface DifficultyDistributionCardProps {
   difficulty: DifficultyAnalytics | null;
@@ -20,10 +21,11 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
 
-  const hasData = total !== null && total > 0;
-  const easyStroke = hasData ? ((easyPct ?? 0) / 100) * circumference : 0;
-  const medStroke = hasData ? ((medPct ?? 0) / 100) * circumference : 0;
-  const hardStroke = hasData ? ((hardPct ?? 0) / 100) * circumference : 0;
+  const distributionState = getDifficultyDistributionState(difficulty);
+  const hasCompleteDistribution = distributionState === 'available';
+  const easyStroke = hasCompleteDistribution ? (easyPct! / 100) * circumference : 0;
+  const medStroke = hasCompleteDistribution ? (medPct! / 100) * circumference : 0;
+  const hardStroke = hasCompleteDistribution ? (hardPct! / 100) * circumference : 0;
 
   const formatCount = (val: number | null) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
@@ -68,7 +70,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             />
 
             {/* Easy Segment */}
-            {hasData && (
+            {hasCompleteDistribution && (
               <circle
                 cx="70"
                 cy="70"
@@ -83,7 +85,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             )}
 
             {/* Medium Segment */}
-            {hasData && (
+            {hasCompleteDistribution && (
               <circle
                 cx="70"
                 cy="70"
@@ -98,7 +100,7 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             )}
 
             {/* Hard Segment */}
-            {hasData && (
+            {hasCompleteDistribution && (
               <circle
                 cx="70"
                 cy="70"
@@ -147,6 +149,14 @@ export const DifficultyDistributionCard: React.FC<DifficultyDistributionCardProp
             </span>
           </div>
         </div>
+
+        {!hasCompleteDistribution && (
+          <p className="analytics-coverage-note" role="status">
+            {distributionState === 'zero-total'
+              ? 'No solved problems are recorded yet, so there is no proportional split to display.'
+              : 'Difficulty distribution is incomplete. Counts are shown where available; the chart is withheld until the categories reconcile with the total.'}
+          </p>
+        )}
 
         {/* Legend / Metrics List */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', minWidth: '180px', flex: 1 }}>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlatformComparison } from '../../types/dashboard';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel } from '../../utils/platformStatsSource';
 
 interface PlatformStandingTableProps {
   platformComparison: PlatformComparison[];
@@ -12,36 +13,11 @@ export const PlatformStandingTable: React.FC<PlatformStandingTableProps> = ({ pl
   const formatDays = (val: number | null | undefined) =>
     val !== null && val !== undefined ? `${val}d` : '—';
 
-  const getSourceBadge = (source: string) => {
-    if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
-      return (
-        <span
-          className="badge"
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-success)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            fontSize: '0.6875rem',
-          }}
-        >
-          Verified Public API
-        </span>
-      );
-    }
-    return (
-      <span
-        className="badge"
-        style={{
-          backgroundColor: 'rgba(235, 115, 18, 0.12)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(235, 115, 18, 0.3)',
-          fontSize: '0.6875rem',
-        }}
-      >
-        Mock Sandbox
-      </span>
-    );
-  };
+  const getSourceBadge = (source: string) => (
+    <span className={`badge ${getPlatformStatsSourceBadgeClass(source)}`} style={{ fontSize: '0.6875rem' }}>
+      {getPlatformStatsSourceLabel(source)}
+    </span>
+  );
 
   const getPlatformBrandColor = (pName: string) => {
     switch (pName.toUpperCase()) {
@@ -74,8 +50,9 @@ export const PlatformStandingTable: React.FC<PlatformStandingTableProps> = ({ pl
           No platform data available
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div className="analytics-table-scroll" role="region" aria-label="Comparative platform standing table" tabIndex={0}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <caption className="sr-only">Solved counts, ratings, rank, contests, streak, and source by connected platform profile</caption>
             <thead>
               <tr
                 style={{

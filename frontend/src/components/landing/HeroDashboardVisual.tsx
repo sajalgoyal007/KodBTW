@@ -1,13 +1,11 @@
 import React, { useMemo } from 'react';
 import {
-  CheckCircle2,
   TrendingUp,
   Flame,
   Trophy,
   Activity,
   Layers,
   Terminal,
-  ShieldCheck,
 } from 'lucide-react';
 
 interface HeroDashboardVisualProps {
@@ -26,7 +24,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
     };
   }, [pointerOffset]);
 
-  // Generate 52 weeks x 7 days realistic deterministic heatmap data
+  // Deterministic illustrative values for the static product preview.
   const heatmapData = useMemo(() => {
     const cells = [];
     for (let i = 0; i < 52 * 7; i++) {
@@ -55,12 +53,11 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
 
           <div className="kod-dashboard-url-pill">
             <span className="kod-url-domain">kodbtw.vercel.app/u/</span>
-            <span className="kod-url-path">alexrivera</span>
+            <span className="kod-url-path">sample-developer</span>
           </div>
 
           <div className="kod-dashboard-status-tag">
-            <span className="kod-pulse-dot" style={{ width: '6px', height: '6px' }} />
-            <span>REAL-TIME SNAPSHOT</span>
+            <span>ILLUSTRATIVE DEMO · SAMPLE DATA</span>
           </div>
         </div>
 
@@ -69,30 +66,27 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
           {/* Developer Profile Header Strip */}
           <div className="kod-dash-profile-row">
             <div className="kod-dash-dev-info">
-              <div className="kod-dev-avatar">AR</div>
+              <div className="kod-dev-avatar">SD</div>
               <div className="kod-dev-names">
                 <h3>
-                  Alex Rivera
-                  <CheckCircle2 size={16} className="kod-verified-check" />
+                  Sample Developer
                 </h3>
-                <p>@alexrivera · Staff Systems & Algorithm Engineer</p>
+                <p>Example profile · sample statistics</p>
               </div>
             </div>
 
             <div className="kod-dash-platform-badges">
-              <span className="kod-platform-pill live" title="Live sync enabled">
-                <span className="kod-pulse-dot" style={{ width: '5px', height: '5px' }} />
-                LeetCode · 2,185
+              <span className="kod-platform-pill" title="Illustrative sample data">
+                LeetCode · sample
               </span>
-              <span className="kod-platform-pill live" title="Live sync enabled">
-                <span className="kod-pulse-dot" style={{ width: '5px', height: '5px' }} />
-                Codeforces · 1,940
+              <span className="kod-platform-pill" title="Illustrative sample data">
+                Codeforces · sample
               </span>
-              <span className="kod-platform-pill" title="Connected source">
-                CodeChef · 4★
+              <span className="kod-platform-pill" title="Illustrative sample data">
+                CodeChef · sample
               </span>
-              <span className="kod-platform-pill" title="Connected source">
-                HackerRank
+              <span className="kod-platform-pill" title="Illustrative sample data">
+                HackerRank · sample
               </span>
             </div>
           </div>
@@ -100,7 +94,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
           {/* Metric Cards Grid */}
           <div className="kod-dash-metrics-grid">
             <div className="kod-dash-metric-card">
-              <span className="kod-metric-label">Total Solved</span>
+                <span className="kod-metric-label">Sample Total Solved</span>
               <span className="kod-metric-number">1,482</span>
               <span className="kod-metric-subtext">
                 <TrendingUp size={13} />
@@ -109,7 +103,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
             </div>
 
             <div className="kod-dash-metric-card">
-              <span className="kod-metric-label">Best Contest Rating</span>
+                <span className="kod-metric-label">Sample Contest Rating</span>
               <span className="kod-metric-number">2,185</span>
               <span className="kod-metric-subtext">
                 <Trophy size={13} />
@@ -118,7 +112,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
             </div>
 
             <div className="kod-dash-metric-card">
-              <span className="kod-metric-label">Active Streak</span>
+                <span className="kod-metric-label">Sample Streak</span>
               <span className="kod-metric-number">42 Days</span>
               <span className="kod-metric-subtext" style={{ color: 'var(--kod-accent-amber)' }}>
                 <Flame size={13} />
@@ -127,11 +121,11 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
             </div>
 
             <div className="kod-dash-metric-card">
-              <span className="kod-metric-label">Data Fidelity</span>
-              <span className="kod-metric-number">100%</span>
+                <span className="kod-metric-label">Example Snapshot</span>
+              <span className="kod-metric-number">Demo</span>
               <span className="kod-metric-subtext" style={{ color: 'var(--kod-accent-emerald)' }}>
-                <ShieldCheck size={13} />
-                Deterministic snapshot
+                <Activity size={13} />
+                Illustrative, not live data
               </span>
             </div>
           </div>
@@ -145,22 +139,22 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
                   <Activity size={16} color="var(--kod-accent-cyan)" />
                   <span>Contest Rating Progression</span>
                 </div>
-                <span className="kod-panel-tag">6-MONTH TRAJECTORY</span>
+                <span className="kod-panel-tag">ILLUSTRATIVE TREND</span>
               </div>
 
               <div className="kod-chart-container">
                 <svg viewBox="0 0 500 130" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0284C7" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="#0284C7" stopOpacity="0.0" />
+                      <stop offset="0%" stopColor="var(--color-chart-2)" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="var(--color-chart-2)" stopOpacity="0.0" />
                     </linearGradient>
                   </defs>
 
                   {/* Horizontal Guide Lines */}
-                  <line x1="0" y1="20" x2="500" y2="20" stroke="rgba(15, 23, 42, 0.08)" strokeDasharray="4 4" />
-                  <line x1="0" y1="60" x2="500" y2="60" stroke="rgba(15, 23, 42, 0.08)" strokeDasharray="4 4" />
-                  <line x1="0" y1="100" x2="500" y2="100" stroke="rgba(15, 23, 42, 0.08)" strokeDasharray="4 4" />
+                  <line x1="0" y1="20" x2="500" y2="20" stroke="var(--kod-border-hairline)" strokeDasharray="4 4" />
+                  <line x1="0" y1="60" x2="500" y2="60" stroke="var(--kod-border-hairline)" strokeDasharray="4 4" />
+                  <line x1="0" y1="100" x2="500" y2="100" stroke="var(--kod-border-hairline)" strokeDasharray="4 4" />
 
                   {/* Area fill */}
                   <path
@@ -172,16 +166,16 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
                   <path
                     d="M 10 110 Q 70 95, 120 85 T 220 70 T 320 40 T 420 30 T 490 20"
                     fill="none"
-                    stroke="#0284C7"
+                    stroke="var(--color-chart-2)"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                   />
 
                   {/* Key milestone dots */}
-                  <circle cx="120" cy="85" r="3.5" fill="#FFFFFF" stroke="#0284C7" strokeWidth="2" />
-                  <circle cx="220" cy="70" r="3.5" fill="#FFFFFF" stroke="#0284C7" strokeWidth="2" />
-                  <circle cx="320" cy="40" r="3.5" fill="#FFFFFF" stroke="#0284C7" strokeWidth="2" />
-                  <circle cx="490" cy="20" r="4.5" fill="#0284C7" stroke="#FFFFFF" strokeWidth="2" />
+                  <circle cx="120" cy="85" r="3.5" fill="var(--kod-bg-card)" stroke="var(--color-chart-2)" strokeWidth="2" />
+                  <circle cx="220" cy="70" r="3.5" fill="var(--kod-bg-card)" stroke="var(--color-chart-2)" strokeWidth="2" />
+                  <circle cx="320" cy="40" r="3.5" fill="var(--kod-bg-card)" stroke="var(--color-chart-2)" strokeWidth="2" />
+                  <circle cx="490" cy="20" r="4.5" fill="var(--color-chart-2)" stroke="var(--kod-bg-card)" strokeWidth="2" />
                 </svg>
               </div>
 
@@ -236,8 +230,8 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
               </div>
 
               <div style={{ marginTop: 'auto', paddingTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--kod-text-muted)' }}>
-                <span>Verification Method</span>
-                <span style={{ color: 'var(--kod-text-secondary)', fontFamily: 'var(--font-mono)' }}>SHA256 Profile Sync</span>
+                <span>Sample values</span>
+                <span style={{ color: 'var(--kod-text-secondary)', fontFamily: 'var(--font-mono)' }}>Not account history</span>
               </div>
             </div>
           </div>
@@ -247,7 +241,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
             <div className="kod-panel-header" style={{ marginBottom: '0.5rem' }}>
               <div className="kod-panel-title" style={{ fontSize: '0.8rem' }}>
                 <Terminal size={14} color="var(--kod-accent-cyan)" />
-                <span>Aggregated Activity Cadence (52 Weeks across connected platforms)</span>
+                <span>Illustrative activity pattern · sample values</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.68rem', color: 'var(--kod-text-muted)' }}>
                 <span>Less</span>
@@ -266,7 +260,7 @@ export const HeroDashboardVisual: React.FC<HeroDashboardVisualProps> = ({ pointe
                   <div
                     key={cell.id}
                     className={`kod-heat-cell ${cell.level > 0 ? `c${cell.level}` : ''}`}
-                    title={`Day ${cell.id}: ${cell.count} problems solved`}
+                    title={`Sample day ${cell.id}: ${cell.count} illustrative problems`}
                   />
                 ))}
               </div>

@@ -193,7 +193,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 width: '32px',
                 height: '32px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(235, 115, 18, 0.12)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

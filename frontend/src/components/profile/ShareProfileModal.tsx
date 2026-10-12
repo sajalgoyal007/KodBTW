@@ -107,11 +107,11 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({
                 width: '32px',
                 height: '32px',
                 borderRadius: '8px',
-                background: 'rgba(56, 189, 248, 0.1)',
+                background: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--color-primary, var(--color-primary))',
+                color: 'var(--color-primary)',
               }}
             >
               <Share2 size={18} />

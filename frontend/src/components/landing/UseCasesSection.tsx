@@ -22,10 +22,10 @@ export const UseCasesSection: React.FC = () => {
           </div>
           <h3 className="kod-usecase-title">Build a visible, verifiable technical journey.</h3>
           <p className="kod-usecase-desc">
-            Campus placements often ask for multiple platform links. KodBTW gives you a unified public profile with college credentials, graduation year, and verified problem counts to share with campus placement drives.
+            Campus placements often ask for multiple platform links. KodBTW gives you a unified public profile with college credentials, graduation year, and available platform statistics to share with campus placement drives.
           </p>
           <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--kod-accent-cyan)', fontWeight: 600 }}>
-            <span>Verified graduation & college attribution</span>
+            <span>College and graduation details</span>
           </div>
         </div>
 

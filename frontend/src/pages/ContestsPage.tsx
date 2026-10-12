@@ -110,8 +110,8 @@ export const ContestsPage: React.FC = () => {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '1rem',
-              borderColor: 'rgba(239, 68, 68, 0.4)',
-              backgroundColor: 'rgba(239, 68, 68, 0.05)',
+              borderColor: 'var(--color-error-border)',
+              backgroundColor: 'var(--color-error-soft)',
             }}
           >
             <div
@@ -119,7 +119,7 @@ export const ContestsPage: React.FC = () => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                backgroundColor: 'var(--color-error-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -166,7 +166,7 @@ export const ContestsPage: React.FC = () => {
                 width: '56px',
                 height: '56px',
                 borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'rgba(235, 115, 18, 0.1)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Code2, ArrowRight, Menu, X, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 export const LandingNavbar: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileToggleRef = useRef<HTMLButtonElement>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,6 +18,37 @@ export const LandingNavbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const drawer = mobileDrawerRef.current;
+    const getFocusable = () => drawer?.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ) ?? [];
+    getFocusable()[0]?.focus();
+
+    const handleKeys = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        mobileToggleRef.current?.focus();
+      }
+      if (event.key === 'Tab') {
+        const items = getFocusable();
+        if (!items.length) return;
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeys);
+    return () => document.removeEventListener('keydown', handleKeys);
+  }, [mobileMenuOpen]);
 
   const scrollToSection = (id: string) => {
     setMobileMenuOpen(false);
@@ -87,11 +121,15 @@ export const LandingNavbar: React.FC = () => {
                 </Link>
               </>
             )}
+            <ThemeToggle className="kod-theme-toggle" />
             <button
               type="button"
               className="kod-nav-mobile-toggle"
+              ref={mobileToggleRef}
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open Navigation Menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="landing-mobile-navigation"
             >
               <Menu size={22} />
             </button>
@@ -100,7 +138,7 @@ export const LandingNavbar: React.FC = () => {
       </header>
 
       {/* Premium Fullscreen/Side Drawer Mobile Navigation */}
-      <div className={`kod-mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
+      <div ref={mobileDrawerRef} id="landing-mobile-navigation" className={`kod-mobile-drawer ${mobileMenuOpen ? 'open' : ''}`} role="dialog" aria-label="Site navigation" aria-modal="true" aria-hidden={!mobileMenuOpen}>
         <div className="kod-mobile-drawer-header">
           <Link to="/" className="kod-nav-logo" onClick={() => setMobileMenuOpen(false)}>
             <div className="kod-logo-icon">
@@ -113,7 +151,7 @@ export const LandingNavbar: React.FC = () => {
           <button
             type="button"
             className="kod-btn-ghost"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={() => { setMobileMenuOpen(false); mobileToggleRef.current?.focus(); }}
             aria-label="Close Navigation Menu"
             style={{ padding: '0.4rem' }}
           >
@@ -190,7 +228,7 @@ export const LandingNavbar: React.FC = () => {
 
         <div style={{ marginTop: 'auto', paddingTop: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--kod-text-muted)', fontSize: '0.8rem' }}>
           <ShieldCheck size={16} color="var(--kod-accent-cyan)" />
-          <span>Unified Coding Intelligence · Production Ready</span>
+          <span>Unified coding profiles for developers</span>
         </div>
       </div>
     </>

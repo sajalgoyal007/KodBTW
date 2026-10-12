@@ -35,11 +35,11 @@ export const ContestRatingComparison: React.FC<ContestRatingComparisonProps> = (
               width: '32px',
               height: '32px',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(59, 130, 246, 0.12)',
+              backgroundColor: 'var(--color-info-soft)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#3b82f6',
+              color: 'var(--color-info)',
             }}
           >
             <TrendingUp size={18} />

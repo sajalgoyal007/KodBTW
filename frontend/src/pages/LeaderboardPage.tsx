@@ -105,8 +105,8 @@ export const LeaderboardPage: React.FC = () => {
           <div
             style={{
               padding: '0.75rem 1rem',
-              backgroundColor: 'rgba(234, 179, 8, 0.1)',
-              border: '1px solid rgba(234, 179, 8, 0.3)',
+              backgroundColor: 'var(--color-warning-soft)',
+              border: '1px solid var(--color-warning-border)',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',
@@ -128,8 +128,8 @@ export const LeaderboardPage: React.FC = () => {
           <div
             style={{
               padding: '1rem',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              backgroundColor: 'var(--color-error-soft)',
+              border: '1px solid var(--color-error-border)',
               borderRadius: 'var(--radius-md)',
               display: 'flex',
               alignItems: 'center',

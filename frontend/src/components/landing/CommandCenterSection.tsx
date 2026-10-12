@@ -78,7 +78,7 @@ export const CommandCenterSection: React.FC = () => {
                 <span className="kod-section-eyebrow">IDENTITY PERSISTENCE</span>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Unified Developer Entity</h3>
                 <p style={{ color: 'var(--kod-text-secondary)', fontSize: '0.875rem', lineHeight: 1.6 }}>
-                  Maps multiple remote handles (LeetCode, Codeforces, HackerRank) to an owner-scoped UUID in MySQL with verified credential tokens.
+                  Associates user-provided handles with a KodBTW account. Statistics are available only where a supported data source can provide them.
                 </p>
                 <div style={{ marginTop: 'auto', display: 'flex', gap: '0.5rem', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--kod-text-muted)' }}>
                   <span>SCHEMA: user_platforms</span> · <span>INDEX: unique_handle</span>
@@ -86,10 +86,10 @@ export const CommandCenterSection: React.FC = () => {
               </div>
 
               <div style={{ background: 'rgba(5,7,11,0.6)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--kod-border-hairline)', fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: 'var(--kod-text-secondary)' }}>
-                <div style={{ color: 'var(--kod-accent-cyan)', marginBottom: '0.5rem' }}>// GET /api/public/profiles/alexrivera</div>
+                <div style={{ color: 'var(--kod-accent-cyan)', marginBottom: '0.5rem' }}>// Illustrative profile summary, not an API response</div>
                 <div>{'{'}</div>
-                <div style={{ paddingLeft: '1rem' }}>"username": "alexrivera",</div>
-                <div style={{ paddingLeft: '1rem' }}>"verified": true,</div>
+                <div style={{ paddingLeft: '1rem' }}>"username": "sample-developer",</div>
+                <div style={{ paddingLeft: '1rem' }}>"platforms": ["LeetCode", "Codeforces"],</div>
                 <div style={{ paddingLeft: '1rem' }}>"sources": ["LEETCODE", "CODEFORCES", "CODECHEF"],</div>
                 <div style={{ paddingLeft: '1rem' }}>"totalSolved": 1482,</div>
                 <div style={{ paddingLeft: '1rem' }}>"bestRating": 2185</div>
@@ -199,7 +199,7 @@ export const CommandCenterSection: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--kod-accent-cyan)', fontSize: '0.8rem' }}>
                   <CheckCircle2 size={16} />
-                  <span>Multi-platform verified (LeetCode & Codeforces live)</span>
+                  <span>Live data sources include LeetCode and Codeforces</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--kod-accent-violet-light)', fontSize: '0.8rem' }}>
                   <CheckCircle2 size={16} />

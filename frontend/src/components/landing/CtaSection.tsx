@@ -24,7 +24,7 @@ export const CtaSection: React.FC = () => {
           </h2>
 
           <p className="kod-final-subtitle">
-            Connect your platforms in under two minutes. Start publishing your unified developer profile today.
+            Connect supported platforms and build a unified developer profile with the statistics each source can provide.
           </p>
 
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1rem' }}>

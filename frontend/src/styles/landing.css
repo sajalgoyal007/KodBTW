@@ -1,44 +1,44 @@
 /* ==========================================================================
    KodBTW — Premium Enterprise Design System & Landing Page Styles
-   WHITE PREMIUM THEME — High contrast, editorial clarity
+   Theme-aware public product presentation
    ========================================================================== */
 
 :root {
-  --kod-bg-base: #FFFFFF;
-  --kod-bg-secondary: #F8FAFC;
-  --kod-bg-surface: #F1F5F9;
-  --kod-bg-elevated: #E2E8F0;
-  --kod-bg-card: rgba(255, 255, 255, 0.85);
-  --kod-bg-card-hover: rgba(241, 245, 249, 0.95);
+  --kod-bg-base: var(--color-bg-base);
+  --kod-bg-secondary: var(--color-bg-card);
+  --kod-bg-surface: var(--color-bg-elevated);
+  --kod-bg-elevated: var(--color-bg-subtle);
+  --kod-bg-card: var(--color-bg-card);
+  --kod-bg-card-hover: var(--color-bg-elevated);
   
-  --kod-border-hairline: rgba(0, 0, 0, 0.08);
-  --kod-border-subtle: rgba(0, 0, 0, 0.12);
-  --kod-border-hover: rgba(0, 0, 0, 0.22);
-  --kod-border-cyan: rgba(2, 132, 199, 0.4);
-  --kod-border-violet: rgba(79, 70, 229, 0.35);
+  --kod-border-hairline: color-mix(in srgb, var(--color-border-subtle) 65%, transparent);
+  --kod-border-subtle: var(--color-border-subtle);
+  --kod-border-hover: var(--color-border-hover);
+  --kod-border-cyan: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  --kod-border-violet: color-mix(in srgb, var(--color-chart-2) 35%, transparent);
 
-  --kod-accent-cyan: #0284C7;
-  --kod-accent-electric: #0369A1;
-  --kod-accent-violet: #4F46E5;
-  --kod-accent-violet-light: #6366F1;
-  --kod-accent-emerald: #059669;
-  --kod-accent-amber: #D97706;
-  --kod-accent-rose: #E11D48;
+  --kod-accent-cyan: var(--color-primary);
+  --kod-accent-electric: var(--color-primary-hover);
+  --kod-accent-violet: var(--color-chart-2);
+  --kod-accent-violet-light: var(--color-chart-2);
+  --kod-accent-emerald: var(--color-success);
+  --kod-accent-amber: var(--color-warning);
+  --kod-accent-rose: var(--color-error);
 
-  --kod-text-primary: #0F172A;
-  --kod-text-secondary: #475569;
-  --kod-text-muted: #94A3B8;
-  --kod-text-faint: #CBD5E1;
+  --kod-text-primary: var(--color-text-primary);
+  --kod-text-secondary: var(--color-text-secondary);
+  --kod-text-muted: var(--color-text-muted);
+  --kod-text-faint: var(--color-text-muted);
 
-  --kod-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --kod-shadow-md: 0 4px 16px -2px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --kod-shadow-lg: 0 12px 40px -8px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --kod-shadow-glow: 0 0 35px -5px rgba(2, 132, 199, 0.12);
+  --kod-shadow-sm: var(--shadow-card);
+  --kod-shadow-md: var(--shadow-card);
+  --kod-shadow-lg: var(--shadow-card);
+  --kod-shadow-glow: none;
 
-  --kod-radius-sm: 6px;
-  --kod-radius-md: 10px;
-  --kod-radius-lg: 16px;
-  --kod-radius-xl: 24px;
+  --kod-radius-sm: var(--radius-sm);
+  --kod-radius-md: var(--radius-md);
+  --kod-radius-lg: var(--radius-lg);
+  --kod-radius-xl: var(--radius-lg);
   --kod-radius-full: 9999px;
 }
 
@@ -55,6 +55,32 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.kod-landing :focus-visible,
+.kod-nav-link:focus-visible,
+.kod-nav-mobile-toggle:focus-visible,
+.kod-btn-primary:focus-visible,
+.kod-btn-secondary:focus-visible,
+.kod-btn-ghost:focus-visible { outline: 2px solid var(--kod-accent-cyan); outline-offset: 3px; }
+
+.kod-theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid var(--kod-border-subtle);
+  border-radius: var(--kod-radius-md);
+  color: var(--kod-text-secondary);
+  background: var(--kod-bg-card);
+  cursor: pointer;
+  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+.kod-theme-toggle:hover { color: var(--kod-text-primary); background: var(--kod-bg-surface); }
+.kod-theme-toggle:focus-visible { outline: 2px solid var(--kod-accent-cyan); outline-offset: 3px; }
+.kod-mobile-drawer[aria-hidden='true'] { visibility: hidden; pointer-events: none; }
+.kod-mobile-drawer[aria-hidden='false'] { visibility: visible; pointer-events: auto; }
+.kod-illustrative-note { width: fit-content; max-width: 100%; margin: -1rem auto 1.25rem; padding: .55rem .8rem; border: 1px solid var(--kod-border-subtle); border-radius: var(--kod-radius-sm); color: var(--kod-text-secondary); background: var(--kod-bg-secondary); font-size: .8rem; text-align: center; }
 
 /* Background Atmosphere */
 .kod-atmosphere {
@@ -104,7 +130,7 @@
 .kod-glow-orb-tertiary {
   width: 550px;
   height: 400px;
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--kod-accent-cyan) 5%, transparent) 0%, transparent 70%);
   bottom: 10%;
   right: 15%;
 }
@@ -115,7 +141,7 @@
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.05) 0%, rgba(79, 70, 229, 0.015) 40%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--kod-accent-cyan) 5%, transparent) 0%, rgba(79, 70, 229, 0.015) 40%, transparent 70%);
   pointer-events: none;
   z-index: 1;
   transform: translate(-50%, -50%);
@@ -146,7 +172,7 @@
 
 .kod-nav.scrolled {
   padding: 0.75rem 2rem;
-  background: rgba(255, 255, 255, 0.88);
+  background: color-mix(in srgb, var(--kod-bg-base) 88%, transparent);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--kod-border-hairline);
@@ -176,19 +202,19 @@
   width: 34px;
   height: 34px;
   border-radius: var(--kod-radius-sm);
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(79, 70, 229, 0.1));
-  border: 1px solid rgba(2, 132, 199, 0.3);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--kod-accent-cyan) 12%, transparent), rgba(79, 70, 229, 0.1));
+  border: 1px solid var(--kod-border-cyan);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--kod-accent-cyan);
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--kod-accent-cyan) 10%, transparent);
   transition: all 0.25s ease;
 }
 
 .kod-nav-logo:hover .kod-logo-icon {
   border-color: var(--kod-accent-cyan);
-  box-shadow: 0 2px 12px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--kod-accent-cyan) 20%, transparent);
   transform: translateY(-1px);
 }
 
@@ -198,8 +224,8 @@
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(2, 132, 199, 0.08);
-  border: 1px solid rgba(2, 132, 199, 0.2);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kod-accent-cyan) 20%, transparent);
   color: var(--kod-accent-cyan);
   margin-left: 4px;
   text-transform: uppercase;
@@ -210,7 +236,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(241, 245, 249, 0.8);
+  background: color-mix(in srgb, var(--kod-bg-surface) 80%, transparent);
   border: 1px solid var(--kod-border-hairline);
   padding: 0.25rem 0.5rem;
   border-radius: var(--kod-radius-full);
@@ -234,7 +260,7 @@
 
 .kod-nav-link:hover {
   color: var(--kod-text-primary);
-  background: rgba(0, 0, 0, 0.04);
+  background: color-mix(in srgb, var(--kod-text-primary) 5%, transparent);
 }
 
 .kod-nav-actions {
@@ -258,30 +284,30 @@
 .kod-btn-ghost:hover {
   color: var(--kod-text-primary);
   border-color: var(--kod-border-hairline);
-  background: rgba(0, 0, 0, 0.03);
+  background: color-mix(in srgb, var(--kod-text-primary) 4%, transparent);
 }
 
 .kod-btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #0284C7, #0369A1);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--kod-accent-cyan), var(--kod-accent-electric));
+  color: var(--color-primary-text);
   font-size: 0.875rem;
   font-weight: 600;
   padding: 0.6rem 1.25rem;
   border-radius: var(--kod-radius-md);
-  border: 1px solid rgba(2, 132, 199, 0.3);
-  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.2);
+  border: 1px solid var(--kod-border-cyan);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--kod-accent-cyan) 20%, transparent);
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   text-decoration: none;
 }
 
 .kod-btn-primary:hover {
-  background: linear-gradient(135deg, #0EA5E9, #0284C7);
-  border-color: rgba(2, 132, 199, 0.5);
-  box-shadow: 0 4px 18px rgba(2, 132, 199, 0.3);
+  background: linear-gradient(135deg, var(--kod-accent-electric), var(--kod-accent-cyan));
+  border-color: color-mix(in srgb, var(--kod-accent-cyan) 50%, transparent);
+  box-shadow: 0 4px 18px var(--kod-border-cyan);
   transform: translateY(-1px);
 }
 
@@ -297,7 +323,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   color: var(--kod-text-primary);
   font-size: 0.875rem;
   font-weight: 500;
@@ -331,7 +357,7 @@
   position: fixed;
   inset: 0;
   z-index: 150;
-  background: rgba(255, 255, 255, 0.97);
+  background: color-mix(in srgb, var(--kod-bg-base) 97%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   display: flex;
@@ -408,8 +434,8 @@
   gap: 0.6rem;
   padding: 0.35rem 0.95rem;
   border-radius: var(--kod-radius-full);
-  background: rgba(56, 189, 248, 0.08);
-  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: var(--color-info-soft);
+  border: 1px solid var(--color-info-border);
   color: var(--kod-accent-cyan);
   font-size: 0.72rem;
   font-weight: 700;
@@ -450,13 +476,13 @@
 }
 
 .kod-headline-gradient {
-  background: linear-gradient(135deg, #0F172A 20%, #334155 100%);
+  background: linear-gradient(135deg, var(--kod-text-primary) 20%, var(--kod-text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .kod-headline-accent {
-  background: linear-gradient(135deg, #0284C7 0%, #4F46E5 100%);
+  background: linear-gradient(135deg, var(--kod-accent-cyan) 0%, var(--kod-accent-violet) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -501,12 +527,12 @@
 }
 
 .kod-hero-dashboard-frame {
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-lg);
   box-shadow: 
     0 20px 50px -10px rgba(15, 23, 42, 0.1),
-    0 0 35px -5px rgba(2, 132, 199, 0.08),
+    0 0 35px -5px color-mix(in srgb, var(--kod-accent-cyan) 8%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   overflow: hidden;
   position: relative;
@@ -520,7 +546,7 @@
   justify-content: space-between;
   padding: 0.85rem 1.25rem;
   border-bottom: 1px solid var(--kod-border-hairline);
-  background: #F8FAFC;
+  background: var(--kod-bg-secondary);
 }
 
 .kod-window-controls {
@@ -545,7 +571,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.9rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-sm);
   font-family: var(--font-mono);
@@ -570,10 +596,10 @@
   font-size: 0.7rem;
   color: var(--kod-accent-emerald);
   font-family: var(--font-mono);
-  background: rgba(5, 150, 105, 0.08);
+  background: color-mix(in srgb, var(--kod-accent-emerald) 8%, transparent);
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
-  border: 1px solid rgba(5, 150, 105, 0.25);
+  border: 1px solid color-mix(in srgb, var(--kod-accent-emerald) 25%, transparent);
   font-weight: 600;
 }
 
@@ -593,7 +619,7 @@
   flex-wrap: wrap;
   gap: 1.25rem;
   padding: 1.25rem;
-  background: #F8FAFC;
+  background: var(--kod-bg-secondary);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-md);
 }
@@ -608,15 +634,15 @@
   width: 52px;
   height: 52px;
   border-radius: var(--kod-radius-md);
-  background: linear-gradient(135deg, #0284C7, #4F46E5);
+  background: linear-gradient(135deg, var(--kod-accent-cyan), var(--kod-accent-violet));
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 1.25rem;
-  color: #FFFFFF;
+  color: var(--color-primary-text);
   border: 2px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--kod-accent-cyan) 25%, transparent);
 }
 
 .kod-dev-names h3 {
@@ -653,17 +679,22 @@
   font-family: var(--font-mono);
   padding: 0.35rem 0.7rem;
   border-radius: var(--kod-radius-sm);
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   color: var(--kod-text-secondary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.kod-platform-pill.live {
-  border-color: rgba(2, 132, 199, 0.4);
+.kod-platform-pill.active {
+  border-color: var(--kod-border-cyan);
   color: var(--kod-accent-cyan);
-  background: rgba(2, 132, 199, 0.06);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 8%, var(--kod-bg-card));
   font-weight: 600;
+}
+
+.kod-platform-sample-row {
+  background: var(--kod-bg-card);
+  color: var(--kod-text-primary);
 }
 
 /* Dashboard Metric Cards Grid */
@@ -675,7 +706,7 @@
 
 .kod-dash-metric-card {
   padding: 1.15rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-md);
   display: flex;
@@ -687,7 +718,7 @@
 
 .kod-dash-metric-card:hover {
   border-color: var(--kod-accent-cyan);
-  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--kod-accent-cyan) 12%, transparent);
   transform: translateY(-1px);
 }
 
@@ -725,7 +756,7 @@
 
 .kod-dash-panel {
   padding: 1.25rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-md);
   display: flex;
@@ -792,7 +823,7 @@
 .kod-diff-bar-track {
   width: 100%;
   height: 6px;
-  background: #E2E8F0;
+  background: var(--kod-bg-elevated);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -825,14 +856,14 @@
 .kod-heat-cell {
   aspect-ratio: 1;
   border-radius: 2px;
-  background: #E2E8F0;
+  background: var(--kod-bg-elevated);
   transition: all 0.2s ease;
 }
 
-.kod-heat-cell.c1 { background: #BAE6FD; }
-.kod-heat-cell.c2 { background: #38BDF8; }
-.kod-heat-cell.c3 { background: #0284C7; }
-.kod-heat-cell.c4 { background: #0369A1; box-shadow: 0 0 4px rgba(3, 105, 161, 0.4); }
+.kod-heat-cell.c1 { background: color-mix(in srgb, var(--kod-accent-cyan) 20%, var(--kod-bg-card)); }
+.kod-heat-cell.c2 { background: color-mix(in srgb, var(--kod-accent-cyan) 45%, var(--kod-bg-card)); }
+.kod-heat-cell.c3 { background: var(--kod-accent-cyan); }
+.kod-heat-cell.c4 { background: var(--kod-accent-electric); }
 
 /* ==========================================================================
    TRUST / CAPABILITY STRIP
@@ -882,15 +913,15 @@
   color: var(--kod-text-secondary);
   padding: 0.25rem 0.65rem;
   border-radius: 4px;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .kod-trust-badge.verified {
   color: var(--kod-accent-cyan);
-  border-color: rgba(2, 132, 199, 0.35);
-  background: rgba(2, 132, 199, 0.06);
+  border-color: var(--kod-border-cyan);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 6%, transparent);
   font-weight: 600;
 }
 
@@ -955,7 +986,7 @@
 
 .kod-fragment-card {
   padding: 1.75rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-lg);
   display: flex;
@@ -1012,7 +1043,7 @@
 
 .kod-fragment-merge-banner {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, rgba(2, 132, 199, 0.06), rgba(79, 70, 229, 0.06));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--kod-accent-cyan) 6%, transparent), rgba(79, 70, 229, 0.06));
   border: 1px solid var(--kod-border-cyan);
   border-radius: var(--kod-radius-lg);
   display: flex;
@@ -1020,7 +1051,7 @@
   justify-content: space-between;
   gap: 1.5rem;
   flex-wrap: wrap;
-  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.06);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--kod-accent-cyan) 6%, transparent);
 }
 
 .kod-merge-content {
@@ -1033,8 +1064,8 @@
   width: 44px;
   height: 44px;
   border-radius: var(--kod-radius-md);
-  background: rgba(2, 132, 199, 0.1);
-  border: 1px solid rgba(2, 132, 199, 0.3);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 10%, transparent);
+  border: 1px solid var(--kod-border-cyan);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1071,7 +1102,7 @@
   gap: 0.6rem;
   padding: 0.65rem 1.4rem;
   border-radius: var(--kod-radius-md);
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   color: var(--kod-text-secondary);
   font-size: 0.875rem;
@@ -1084,18 +1115,18 @@
 .kod-tab-btn:hover {
   color: var(--kod-text-primary);
   border-color: var(--kod-border-hover);
-  background: #F8FAFC;
+  background: var(--kod-bg-secondary);
 }
 
 .kod-tab-btn.active {
-  background: #0284C7;
-  border-color: #0284C7;
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
+  background: var(--kod-accent-cyan);
+  border-color: var(--kod-accent-cyan);
+  color: var(--color-primary-text);
+  box-shadow: 0 4px 14px var(--kod-border-cyan);
 }
 
 .kod-showcase-display {
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-xl);
   padding: 2.5rem;
@@ -1138,8 +1169,8 @@
   width: 36px;
   height: 36px;
   border-radius: var(--kod-radius-sm);
-  background: rgba(2, 132, 199, 0.1);
-  border: 1px solid rgba(2, 132, 199, 0.25);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kod-accent-cyan) 25%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1162,7 +1193,7 @@
 }
 
 .kod-analytics-terminal {
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-lg);
   padding: 1.75rem;
@@ -1185,7 +1216,7 @@
 
 .kod-how-step-card {
   padding: 2.25rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-lg);
   display: flex;
@@ -1238,7 +1269,7 @@
 }
 
 .kod-id-card-outer {
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-xl);
   padding: 2.5rem;
@@ -1277,15 +1308,15 @@
   width: 68px;
   height: 68px;
   border-radius: var(--kod-radius-md);
-  background: linear-gradient(135deg, #0284C7, #6366F1);
+  background: linear-gradient(135deg, var(--kod-accent-cyan), var(--kod-accent-violet));
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
   font-weight: 800;
-  color: #FFFFFF;
+  color: var(--color-primary-text);
   border: 2px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--kod-accent-cyan) 25%, transparent);
 }
 
 .kod-id-meta h3 {
@@ -1313,8 +1344,8 @@
   font-family: var(--font-mono);
   padding: 0.25rem 0.55rem;
   border-radius: 4px;
-  background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  background: var(--kod-bg-surface);
+  border: 1px solid var(--kod-border-subtle);
   color: var(--kod-text-secondary);
 }
 
@@ -1356,7 +1387,7 @@
    ========================================================================== */
 
 .kod-command-canvas {
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-xl);
   padding: 2rem;
@@ -1393,12 +1424,12 @@
 
 .kod-cmd-item:hover {
   color: var(--kod-text-primary);
-  background: #F1F5F9;
+  background: var(--kod-bg-surface);
 }
 
 .kod-cmd-item.active {
-  background: rgba(2, 132, 199, 0.08);
-  border-color: rgba(2, 132, 199, 0.3);
+  background: color-mix(in srgb, var(--kod-accent-cyan) 8%, transparent);
+  border-color: var(--kod-border-cyan);
   color: var(--kod-accent-cyan);
 }
 
@@ -1466,7 +1497,7 @@
 
 .kod-usecase-card {
   padding: 2.5rem;
-  background: #FFFFFF;
+  background: var(--kod-bg-card);
   border: 1px solid var(--kod-border-subtle);
   border-radius: var(--kod-radius-lg);
   display: flex;
@@ -1483,9 +1514,9 @@
 }
 
 .kod-usecase-card.featured {
-  background: linear-gradient(135deg, #F0F9FF 0%, #EEF2FF 100%);
-  border-color: rgba(2, 132, 199, 0.3);
-  box-shadow: 0 8px 24px -4px rgba(2, 132, 199, 0.12);
+  background: color-mix(in srgb, var(--kod-bg-card) 88%, var(--kod-accent-cyan) 12%);
+  border-color: var(--kod-border-cyan);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--kod-accent-cyan) 12%, transparent);
 }
 
 .kod-usecase-card.fullwidth {
@@ -1546,7 +1577,7 @@
   width: 500px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--kod-accent-cyan) 25%, transparent) 0%, rgba(99, 102, 241, 0.1) 50%, transparent 70%);
   filter: blur(40px);
   pointer-events: none;
 }
@@ -1633,8 +1664,8 @@
   color: var(--kod-accent-emerald);
   padding: 0.3rem 0.65rem;
   border-radius: 4px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: color-mix(in srgb, var(--kod-accent-emerald) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--kod-accent-emerald) 20%, transparent);
   width: fit-content;
 }
 
@@ -1734,14 +1765,20 @@
 }
 
 @media (max-width: 640px) {
-  .kod-nav {
-    padding: 1rem 1.25rem;
-  }
+  .kod-nav { padding: .75rem .875rem; }
+  .kod-nav-logo { gap: .5rem; font-size: 1.05rem; }
+  .kod-logo-badge { display: none; }
+  .kod-nav-actions { gap: .45rem; }
+  .kod-nav-actions > .kod-btn-ghost { display: none; }
+  .kod-nav-actions > .kod-btn-primary { padding: .5rem .7rem; font-size: .76rem; }
+  .kod-theme-toggle { width: 38px; height: 38px; }
+  .kod-nav-mobile-toggle { padding: .45rem; }
 
   .kod-dashboard-topbar { flex-wrap: wrap; gap: .5rem; padding: .75rem; }
   .kod-dashboard-url-pill { flex: 1 1 8rem; min-width: 0; justify-content: center; }
   .kod-dashboard-url-pill > span { min-width: 0; overflow-wrap: anywhere; }
   .kod-dashboard-status-tag { flex: 1 1 100%; justify-content: center; text-align: center; }
+
   .kod-hero {
     padding: 7rem 1rem 3.5rem;
   }

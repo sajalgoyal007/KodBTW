@@ -74,7 +74,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
-                backgroundColor: isDestructive ? 'rgba(239, 68, 68, 0.15)' : 'rgba(235, 115, 18, 0.15)',
+                backgroundColor: isDestructive ? 'var(--color-error-soft)' : 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -114,7 +114,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             className="btn"
             style={{
               backgroundColor: isDestructive ? 'var(--color-error)' : 'var(--color-primary)',
-              color: '#ffffff',
+              color: isDestructive ? '#ffffff' : 'var(--color-primary-text)',
             }}
             onClick={onConfirm}
             disabled={isLoading}

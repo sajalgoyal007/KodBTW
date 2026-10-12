@@ -12,6 +12,7 @@ import { CodingProfilesPage } from './pages/CodingProfilesPage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
+import { ThemeToggle } from './components/common/ThemeToggle';
 
 export const App: React.FC = () => {
   return (
@@ -20,14 +21,14 @@ export const App: React.FC = () => {
       <Route path="/" element={<LandingPage />} />
 
       {/* Public developer profile route */}
-      <Route path="/u/:username" element={<PublicProfilePage />} />
+      <Route path="/u/:username" element={<><ThemeToggle className="route-theme-toggle" /><PublicProfilePage /></>} />
 
       {/* Guest-only routes */}
       <Route
         path="/login"
         element={
           <PublicOnlyRoute>
-            <LoginPage />
+            <><ThemeToggle className="route-theme-toggle" /><LoginPage /></>
           </PublicOnlyRoute>
         }
       />
@@ -35,7 +36,7 @@ export const App: React.FC = () => {
         path="/register"
         element={
           <PublicOnlyRoute>
-            <RegisterPage />
+            <><ThemeToggle className="route-theme-toggle" /><RegisterPage /></>
           </PublicOnlyRoute>
         }
       />

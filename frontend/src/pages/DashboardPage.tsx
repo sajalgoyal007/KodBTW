@@ -7,294 +7,160 @@ import { DifficultyBreakdown } from '../components/dashboard/DifficultyBreakdown
 import { PlatformCard } from '../components/dashboard/PlatformCard';
 import { PlatformShare } from '../components/dashboard/PlatformShare';
 import { ContestSummary } from '../components/dashboard/ContestSummary';
-import {
-  RefreshCw,
-  Flame,
-  Trophy,
-  CheckCircle2,
-  Layers,
-  AlertCircle,
-  PlusCircle,
-} from 'lucide-react';
+import { getDashboardDisplayState, hasAvailablePlatformStats, hasPartialPlatformStats } from '../utils/dashboardPresentation';
+import { AlertCircle, CheckCircle2, Flame, Layers, PlusCircle, RefreshCw, Trophy } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const { stats, analytics, accounts, loading, error, refetch, refreshAccount, refreshingAccountId, refreshFeedback } = useDashboard();
+  const { stats, analytics, accounts, accountsLoaded, accountsLoadError, loading, error, refetch, refreshAccount, refreshingAccountId, refreshFeedback } = useDashboard();
 
   const overview = stats?.overview;
-  const platforms = stats?.platforms || [];
-  const isEmpty = !loading && !error && (!overview || overview.connectedPlatformsCount === 0 || platforms.length === 0);
+  const platforms = stats?.platforms ?? [];
+  const hasAvailableStats = platforms.some(hasAvailablePlatformStats);
+  const hasConnectedAccounts = accounts.length > 0 || (overview?.connectedPlatformsCount ?? 0) > 0;
+  const displayState = getDashboardDisplayState({
+    loading,
+    error,
+    hasStatsResponse: stats !== null,
+    hasAvailableStats,
+    hasConnectedAccounts,
+    accountsLoaded,
+    accountsLoadError,
+  });
+  const accountByPlatform = new Map<string, (typeof accounts)[number]>(accounts.map((account) => [account.platform, account]));
+  const partialStats = hasPartialPlatformStats(platforms, Math.max(overview?.connectedPlatformsCount ?? 0, accounts.length));
+
+  const platformCards = platforms.map((platform) => {
+    const account = accountByPlatform.get(platform.platform);
+    const feedback = refreshFeedback && refreshFeedback.accountId === account?.id
+      ? { success: refreshFeedback.success, message: refreshFeedback.message }
+      : null;
+    return (
+      <PlatformCard
+        key={`${platform.platform}-${platform.username}`}
+        platform={platform}
+        account={account}
+        refreshing={account?.id === refreshingAccountId}
+        refreshDisabled={refreshingAccountId !== null}
+        feedback={feedback}
+        onRefresh={(accountId) => { void refreshAccount(accountId); }}
+      />
+    );
+  });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="dashboard-page">
       <AppNavbar />
-
-      {/* Main Container */}
-      <main
-        style={{
-          flex: 1,
-          maxWidth: '1280px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '2rem 1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem',
-        }}
-      >
-        {/* Loading State: Skeletons */}
+      <main className="dashboard-main" aria-label="Dashboard" aria-busy={loading}>
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            {/* Top metric skeletons */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                gap: '1rem',
-              }}
-            >
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="card skeleton" style={{ height: '110px' }} />
-              ))}
+          <div className="dashboard-loading" role="status" aria-live="polite">
+            <span className="sr-only">Loading your dashboard</span>
+            <div className="dashboard-skeleton-metrics" aria-hidden="true">
+              {[1, 2, 3, 4, 5].map((item) => <div key={item} className="card skeleton" />)}
             </div>
-
-            {/* Middle analytics skeletons */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-                gap: '1.5rem',
-              }}
-            >
-              <div className="card skeleton" style={{ height: '240px' }} />
-              <div className="card skeleton" style={{ height: '240px' }} />
+            <div className="dashboard-skeleton-panels" aria-hidden="true">
+              <div className="card skeleton" />
+              <div className="card skeleton" />
             </div>
-
-            {/* Bottom cards skeletons */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '1.5rem',
-              }}
-            >
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card skeleton" style={{ height: '260px' }} />
-              ))}
+            <div className="dashboard-skeleton-platforms" aria-hidden="true">
+              {[1, 2, 3].map((item) => <div key={item} className="card skeleton" />)}
             </div>
           </div>
         )}
 
-        {/* Error State */}
-        {!loading && error && !stats && (
-          <div
-            className="card"
-            style={{
-              padding: '2.5rem',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1rem',
-              borderColor: 'rgba(239, 68, 68, 0.4)',
-              backgroundColor: 'rgba(239, 68, 68, 0.05)',
-            }}
-          >
-            <div
-              style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-error)',
-              }}
-            >
-              <AlertCircle size={28} />
-            </div>
+        {displayState === 'error' && (
+          <section className="card dashboard-state dashboard-state-error" role="alert">
+            <span className="dashboard-state-icon"><AlertCircle size={25} aria-hidden="true" /></span>
             <div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.375rem' }}>
-                Unable to Load Dashboard
-              </h3>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', maxWidth: '480px' }}>
-                {error}
-              </p>
+              <h1>Unable to load your dashboard</h1>
+              <p>{error}</p>
             </div>
-            <button
-              onClick={() => refetch()}
-              className="btn btn-primary"
-              style={{ marginTop: '0.5rem' }}
-            >
-              <RefreshCw size={16} /> Retry
-            </button>
-          </div>
+            <button onClick={() => void refetch()} className="btn btn-primary"><RefreshCw size={16} aria-hidden="true" /> Retry</button>
+          </section>
         )}
 
-        {/* Empty State */}
-        {isEmpty && (
-          <div
-            className="card"
-            style={{
-              padding: '4rem 2rem',
-              textAlign: 'center',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '1.25rem',
-              maxWidth: '560px',
-              margin: '3rem auto',
-            }}
-          >
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'rgba(235, 115, 18, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-primary)',
-              }}
-            >
-              <Layers size={28} />
-            </div>
+        {!loading && error && displayState !== 'error' && (
+          <div className="inline-notice" role="status"><AlertCircle size={16} aria-hidden="true" />{error}<button className="btn btn-secondary" onClick={() => void refetch()}>Retry</button></div>
+        )}
+
+        {displayState === 'no-accounts' && (
+          <section className="card dashboard-state dashboard-state-empty">
+            <span className="dashboard-state-icon"><Layers size={27} aria-hidden="true" /></span>
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                No coding platforms connected yet
-              </h2>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.5 }}>
-                Connect your LeetCode, Codeforces, or other competitive profiles to sync your solved problems, contest ratings, and streaks into one unified dashboard.
-              </p>
+              <h1>No coding profiles yet</h1>
+              <p>Connect a platform profile to bring your coding progress together. Only statistics the source provides will appear here.</p>
             </div>
-            <button
-              className="btn btn-primary"
-              style={{ padding: '0.75rem 1.5rem', fontSize: '0.9375rem' }}
-              onClick={() => navigate('/coding-profiles')}
-            >
-              <PlusCircle size={18} /> Connect Account
-            </button>
-          </div>
+            <button className="btn btn-primary" onClick={() => navigate('/coding-profiles')}><PlusCircle size={18} aria-hidden="true" /> Connect a profile</button>
+          </section>
         )}
 
-        {/* Data Loaded Successfully */}
-        {!loading && error && stats && (
-          <div className="inline-notice" role="status"><AlertCircle size={16} />{error}<button className="btn btn-secondary" onClick={() => refetch()}>Retry</button></div>
+        {displayState === 'accounts-unconfirmed' && !loading && (
+          <section className="card dashboard-state" role="status">
+            <span className="dashboard-state-icon"><Layers size={25} aria-hidden="true" /></span>
+            <div><h1>{error ? 'Your profile list could not be confirmed' : 'Checking your connected profiles'}</h1><p>{error ?? 'Your profile list has not finished loading yet.'}</p></div>
+            <button className="btn btn-secondary" onClick={() => void refetch()}><RefreshCw size={16} aria-hidden="true" /> Retry</button>
+          </section>
         )}
 
-        {!loading && !isEmpty && overview && (
+        {displayState === 'connected-unavailable' && (
+          <section className="card dashboard-state dashboard-state-unavailable" role="status">
+            <span className="dashboard-state-icon"><AlertCircle size={25} aria-hidden="true" /></span>
+            <div>
+              <h1>Profiles connected; statistics unavailable</h1>
+              <p>Your connected accounts are still here. One or more sources may not provide live statistics yet, or the first sync has not completed. No missing metric is treated as zero.</p>
+            </div>
+            <div className="dashboard-state-actions">
+              <button className="btn btn-secondary" onClick={() => void refetch()}><RefreshCw size={16} aria-hidden="true" /> Reload dashboard</button>
+              <button className="btn btn-ghost" onClick={() => navigate('/coding-profiles')}>Manage profiles</button>
+            </div>
+          </section>
+        )}
+
+        {!loading && displayState === 'ready' && overview && (
           <>
-            {/* Overview Metric Row */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
-                  Your coding overview
-                </h2>
-                <div className="badge badge-muted">
-                  <CheckCircle2 size={12} color="var(--color-success)" />
-                  <span>{overview.connectedPlatformsCount} connected profile{overview.connectedPlatformsCount !== 1 ? 's' : ''}</span>
+            <section className="dashboard-section" aria-labelledby="dashboard-overview-title">
+              <div className="dashboard-section-heading">
+                <div>
+                  <h1 id="dashboard-overview-title">Your coding overview</h1>
+                  <p>A clear view of the progress your connected platforms report.</p>
                 </div>
+                <span className="badge badge-muted"><CheckCircle2 size={13} aria-hidden="true" />{overview.connectedPlatformsCount} connected profile{overview.connectedPlatformsCount !== 1 ? 's' : ''}</span>
               </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-                  gap: '1rem',
-                }}
-              >
-                <MetricCard
-                  title="Total Platform Solves"
-                  value={overview.totalProblemsSolved}
-                  subtitle="Sum across connected platforms; the same problem may be counted more than once."
-                  icon={<CheckCircle2 size={20} />}
-                  accentColor="var(--color-primary)"
-                />
-                <MetricCard
-                  title="Contest Participation Count"
-                  value={overview.contestsParticipated}
-                  subtitle="Reported participation across connected platforms"
-                  icon={<Trophy size={20} />}
-                  accentColor="#3b82f6"
-                />
-                <MetricCard
-                  title="Current Streak"
-                  value={overview.currentStreak !== null ? `${overview.currentStreak} days` : null}
-                  subtitle="Active daily solving streak"
-                  icon={<Flame size={20} />}
-                  accentColor="var(--color-primary)"
-                />
-                <MetricCard
-                  title="Longest Streak"
-                  value={overview.longestStreak !== null ? `${overview.longestStreak} days` : null}
-                  subtitle="All-time personal record"
-                  icon={<Flame size={20} />}
-                  accentColor="var(--color-warning)"
-                />
-                <MetricCard
-                  title="Platforms"
-                  value={overview.connectedPlatformsCount}
-                  subtitle="Active connected sources"
-                  icon={<Layers size={20} />}
-                  accentColor="var(--color-success)"
-                />
+              <div className="dashboard-metrics-grid">
+                <MetricCard title="Total platform solves" value={overview.totalProblemsSolved} subtitle="The same problem may count on more than one platform." icon={<CheckCircle2 size={20} />} accentColor="var(--color-primary)" />
+                <MetricCard title="Contest participations" value={overview.contestsParticipated} subtitle="Reported across connected platforms" icon={<Trophy size={20} />} accentColor="var(--color-chart-2)" />
+                <MetricCard title="Current streak" value={overview.currentStreak !== null ? `${overview.currentStreak} days` : null} subtitle="Active daily solving streak" icon={<Flame size={20} />} accentColor="var(--color-primary)" />
+                <MetricCard title="Longest streak" value={overview.longestStreak !== null ? `${overview.longestStreak} days` : null} subtitle="All-time personal record" icon={<Flame size={20} />} accentColor="var(--color-warning)" />
+                <MetricCard title="Platforms" value={overview.connectedPlatformsCount} subtitle="Connected coding profiles" icon={<Layers size={20} />} accentColor="var(--color-success)" />
               </div>
-            </div>
+            </section>
 
-            {/* Analytics Section: Difficulty & Platform Share */}
+            {partialStats && <p className="dashboard-data-note">A dash means a platform has not supplied that metric; it does not mean zero. Totals include only values the connected sources reported.</p>}
+
             {analytics && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
-                  gap: '1.5rem',
-                }}
-              >
-                <DifficultyBreakdown difficulty={analytics.difficulty} />
-                <PlatformShare comparisons={analytics.platformComparison || []} />
-              </div>
+              <section className="dashboard-analytics-grid" aria-label="Progress breakdowns">
+                <DifficultyBreakdown difficulty={analytics.difficulty} connectedPlatformCount={accounts.length || overview.connectedPlatformsCount} />
+                <PlatformShare comparisons={analytics.platformComparison ?? []} />
+              </section>
             )}
 
-            {/* Contest Analytics Summary */}
-            {analytics?.contests && (
-              <div>
-                <ContestSummary contests={analytics.contests} />
-              </div>
-            )}
+            {analytics?.contests && <ContestSummary contests={analytics.contests} />}
 
-            {/* Connected Platform Cards Grid */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600 }}>Connected Platform Profiles</h3>
-                <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-                  {platforms.length} account{platforms.length > 1 ? 's' : ''}
-                </span>
+            <section className="dashboard-section" aria-labelledby="dashboard-platforms-title">
+              <div className="dashboard-section-heading">
+                <div><h2 id="dashboard-platforms-title">Connected platform profiles</h2><p>Each card shows what that platform has actually reported.</p></div>
+                <span className="dashboard-count">{platforms.length} account{platforms.length === 1 ? '' : 's'}</span>
               </div>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                  gap: '1.25rem',
-                }}
-              >
-                {platforms.map((p) => (
-                  <PlatformCard
-                    key={`${p.platform}-${p.username}`}
-                    platform={p}
-                    account={accounts.find((account) => account.platform === p.platform)}
-                    refreshing={accounts.find((account) => account.platform === p.platform)?.id === refreshingAccountId}
-                    feedback={refreshFeedback && refreshFeedback.accountId === accounts.find((account) => account.platform === p.platform)?.id
-                      ? { success: refreshFeedback.success, message: refreshFeedback.message }
-                      : null}
-                    onRefresh={(accountId) => { void refreshAccount(accountId); }}
-                  />
-                ))}
-              </div>
-            </div>
+              <div className="dashboard-platform-grid">{platformCards}</div>
+            </section>
           </>
+        )}
+
+        {!loading && displayState === 'connected-unavailable' && platforms.length > 0 && (
+          <section className="dashboard-section" aria-labelledby="dashboard-platforms-title">
+            <div className="dashboard-section-heading"><div><h2 id="dashboard-platforms-title">Connected platform profiles</h2><p>These accounts are connected; metrics will appear when a source provides them.</p></div></div>
+            <div className="dashboard-platform-grid">{platformCards}</div>
+          </section>
         )}
       </main>
     </div>

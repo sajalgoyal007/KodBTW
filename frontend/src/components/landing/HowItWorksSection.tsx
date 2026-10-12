@@ -8,7 +8,7 @@ export const HowItWorksSection: React.FC = () => {
         <span className="kod-section-eyebrow">THE ARCHITECTURE</span>
         <h2 className="kod-section-title">From coding activity to professional signal.</h2>
         <p className="kod-section-subtitle">
-          Three precise stages that transform scattered problem-solving logs into an authoritative developer intelligence profile.
+          Three clear stages that bring scattered problem-solving records into one shareable developer profile.
         </p>
       </div>
 
@@ -21,11 +21,11 @@ export const HowItWorksSection: React.FC = () => {
           </div>
           <h3 className="kod-step-title">Connect</h3>
           <p className="kod-step-desc">
-            Securely link your active coding platform handles. We verify ownership and establish live communication adapters with supported platforms like LeetCode and Codeforces.
+            Add your coding platform handles once. KodBTW retrieves statistics from supported sources when available; adding a handle does not verify ownership.
           </p>
           <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--kod-accent-cyan)', fontFamily: 'var(--font-mono)' }}>
             <Zap size={13} />
-            <span>5 Ecosystems Supported</span>
+            <span>5 Platform Accounts</span>
           </div>
         </div>
 

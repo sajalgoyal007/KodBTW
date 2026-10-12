@@ -6,7 +6,7 @@ import { PlatformStatsModal } from '../components/platform/PlatformStatsModal';
 import { ConfirmModal } from '../components/common/ConfirmModal';
 import { PlatformAccountResponse, PlatformAccountRequest } from '../types/platform';
 import { PlatformType } from '../types/platform';
-import { getPlatformAvailabilityLabel } from '../utils/platformStatsSource';
+import { getDashboardRefreshFeedback, getPlatformAvailabilityLabel } from '../utils/platformStatsSource';
 import {
   PlusCircle,
   ExternalLink,
@@ -26,6 +26,18 @@ const SUPPORTED_PLATFORMS = [
   { platform: 'GEEKSFORGEEKS', label: 'GeeksforGeeks' },
   { platform: 'HACKERRANK', label: 'HackerRank' },
 ] as const;
+
+const getPlatformDisplayName = (platform: string) =>
+  SUPPORTED_PLATFORMS.find((item) => item.platform === platform)?.label ?? 'Coding platform';
+
+const getSyncStatusLabel = (status: PlatformAccountResponse['syncStatus']) => {
+  switch (status) {
+    case 'NEVER_SYNCED': return 'Not synced yet';
+    case 'RUNNING': return 'Sync in progress';
+    case 'SUCCEEDED': return 'Sync completed';
+    case 'FAILED': return 'Last attempt failed';
+  }
+};
 
 export const CodingProfilesPage: React.FC = () => {
   const {
@@ -50,7 +62,7 @@ export const CodingProfilesPage: React.FC = () => {
   const [deletingAccount, setDeletingAccount] = useState<PlatformAccountResponse | null>(null);
   const [initialSyncing, setInitialSyncing] = useState(false);
   const [refreshingAccountId, setRefreshingAccountId] = useState<number | null>(null);
-  const [connectFeedback, setConnectFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [connectFeedback, setConnectFeedback] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
 
   const existingPlatforms = accounts.map((a) => a.platform);
 
@@ -86,12 +98,14 @@ export const CodingProfilesPage: React.FC = () => {
   };
 
   const handleOpenCreate = (platform: PlatformType | null = null) => {
+    setConnectFeedback(null);
     setEditingAccount(null);
     setPreferredPlatform(platform);
     setIsAccountModalOpen(true);
   };
 
   const handleOpenEdit = (acc: PlatformAccountResponse) => {
+    setConnectFeedback(null);
     setEditingAccount(acc);
     setIsAccountModalOpen(true);
   };
@@ -99,13 +113,14 @@ export const CodingProfilesPage: React.FC = () => {
   const handleSubmitAccount = async (data: PlatformAccountRequest) => {
     if (editingAccount) {
       await updateAccount(editingAccount.id, data);
+      setConnectFeedback({ type: 'success', message: `${getPlatformDisplayName(editingAccount.platform)} account updated.` });
     } else {
       setConnectFeedback(null);
       const account = await createAccount(data);
       if (account.sourceStatus === 'SOURCE_PENDING') {
         setConnectFeedback({
-          type: 'success',
-          message: `${account.platform} connected. Live statistics are currently unavailable.`,
+          type: 'warning',
+          message: `${getPlatformDisplayName(account.platform)} connected. Live statistics are currently unavailable.`,
         });
         return;
       }
@@ -124,28 +139,16 @@ export const CodingProfilesPage: React.FC = () => {
     setRefreshingAccountId(account.id);
     try {
       const result = await syncAccount(account.id);
-      if (result.syncStatus.status === 'SUCCEEDED') {
-        setConnectFeedback({
-          type: result.currentStats.source === 'MOCK' ? 'error' : 'success',
-          message: result.currentStats.source === 'MOCK'
-            ? `${account.platform} does not have verified live statistics available. No statistics are shown.`
-            : result.cooldownApplied
-              ? `${account.platform} was synced recently. Showing the saved stats.`
-              : justConnected
-                ? `${account.platform} connected and stats refreshed.`
-                : `${account.platform} stats refreshed.`,
-        });
-      } else {
-        setConnectFeedback({
-          type: 'error',
-          message: `${justConnected ? `${account.platform} connected, but ` : ''}stats could not be refreshed. ${result.syncStatus.failureMessage || 'Try again shortly.'}`,
-        });
-      }
+      const feedback = getDashboardRefreshFeedback(result);
+      setConnectFeedback({
+        type: feedback.success ? 'success' : result.syncStatus.status === 'FAILED' ? 'error' : 'warning',
+        message: `${justConnected ? `${getPlatformDisplayName(account.platform)} connected. ` : ''}${feedback.message}`,
+      });
     } catch {
       // A failed refresh must not make an already-created account look unsaved.
       setConnectFeedback({
         type: 'error',
-        message: `${justConnected ? `${account.platform} connected, but ` : ''}stats could not be refreshed. Try again shortly.`,
+        message: `${justConnected ? `${getPlatformDisplayName(account.platform)} connected, but ` : ''}stats could not be refreshed. Try again shortly.`,
       });
     } finally {
       setRefreshingAccountId(null);
@@ -156,9 +159,10 @@ export const CodingProfilesPage: React.FC = () => {
     if (!deletingAccount) return;
     try {
       await deleteAccount(deletingAccount.id);
+      setConnectFeedback({ type: 'success', message: `${getPlatformDisplayName(deletingAccount.platform)} account disconnected.` });
       setDeletingAccount(null);
-    } catch (err) {
-      // Handled in hook or alert
+    } catch {
+      setConnectFeedback({ type: 'error', message: 'We could not disconnect this account. Please try again.' });
     }
   };
 
@@ -172,7 +176,7 @@ export const CodingProfilesPage: React.FC = () => {
           maxWidth: '1280px',
           width: '100%',
           margin: '0 auto',
-          padding: '2rem 1.5rem',
+          padding: 'clamp(1rem, 3vw, 2rem) clamp(1rem, 3vw, 1.5rem)',
           display: 'flex',
           flexDirection: 'column',
           gap: '2rem',
@@ -191,7 +195,7 @@ export const CodingProfilesPage: React.FC = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div className="badge badge-muted">
-              <span>{accounts.length} / 5 Platforms Connected</span>
+              <span>{accounts.length} / {SUPPORTED_PLATFORMS.length} Platforms Connected</span>
             </div>
 
             <button
@@ -207,11 +211,11 @@ export const CodingProfilesPage: React.FC = () => {
         </div>
 
         {/* Loading Skeletons */}
-        {loading && (
+        {loading && accounts.length === 0 && (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
               gap: '1.5rem',
             }}
           >
@@ -222,10 +226,10 @@ export const CodingProfilesPage: React.FC = () => {
         )}
 
         {/* Global Error */}
-        {!loading && error && (
-          <div className="alert alert-error">
+        {error && (
+          <div className="alert alert-error" role="alert">
             <AlertCircle size={18} />
-            <span style={{ flex: 1 }}>{error}</span>
+            <span style={{ flex: 1 }}>{error}{accounts.length > 0 ? ' Your saved account list is still shown below.' : ''}</span>
             <button onClick={() => fetchAccounts()} className="btn btn-ghost" style={{ padding: '0.25rem 0.5rem' }}>
               <RefreshCw size={14} /> Retry
             </button>
@@ -233,7 +237,7 @@ export const CodingProfilesPage: React.FC = () => {
         )}
 
         {connectFeedback && (
-          <div className={`alert alert-${connectFeedback.type}`} role="status">
+          <div className={`alert alert-${connectFeedback.type}`} role={connectFeedback.type === 'error' ? 'alert' : 'status'} aria-live={connectFeedback.type === 'error' ? 'assertive' : 'polite'}>
             {connectFeedback.message}
           </div>
         )}
@@ -258,7 +262,7 @@ export const CodingProfilesPage: React.FC = () => {
                 width: '56px',
                 height: '56px',
                 borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'rgba(235, 115, 18, 0.1)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -272,7 +276,7 @@ export const CodingProfilesPage: React.FC = () => {
                 No coding platforms connected yet
               </h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.5 }}>
-                Link your LeetCode, Codeforces, CodeChef, GeeksforGeeks, or HackerRank accounts to sync problems, ratings, and streaks into your unified dashboard.
+                Link a supported coding profile. Live statistics depend on each platform's available data source and may not be available for every platform.
               </p>
             </div>
             <button
@@ -285,18 +289,18 @@ export const CodingProfilesPage: React.FC = () => {
           </div>
         )}
 
-        {!loading && !error && (
+        {(!loading || accounts.length > 0) && !error && (
           <section aria-label="Supported coding platforms">
             <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Supported Platforms</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.75rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: '0.75rem' }}>
               {SUPPORTED_PLATFORMS.map(({ platform, label }) => {
                 const linked = accounts.find((account) => account.platform === platform);
                 const availabilityLabel = getPlatformAvailabilityLabel(platform, linked);
                 return (
-                  <div key={platform} className="card" style={{ padding: '1rem', borderTop: `3px solid ${getPlatformBrandColor(platform)}` }}>
+                  <div key={platform} className="card platform-summary-card" style={{ padding: '1rem', borderTop: `3px solid ${getPlatformBrandColor(platform)}` }}>
                     <div style={{ fontWeight: 700 }}>{label}</div>
                     <div style={{ marginTop: '0.35rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
-                      {linked ? `Connected · @${linked.username}` : 'Not connected'}
+                      {linked ? <span className="platform-account-identity">Connected · @{linked.username}</span> : 'Not connected'}
                     </div>
                     <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
                       {availabilityLabel}
@@ -306,6 +310,7 @@ export const CodingProfilesPage: React.FC = () => {
                       className="btn btn-secondary"
                       style={{ marginTop: '0.75rem', width: '100%', padding: '0.4rem 0.6rem', fontSize: '0.75rem' }}
                       onClick={() => linked ? setStatsModalAccount(linked) : handleOpenCreate(platform)}
+                      aria-label={linked ? `View ${label} account stats` : `Connect ${label}`}
                     >
                       {linked ? 'View account stats' : 'Connect'}
                     </button>
@@ -317,11 +322,11 @@ export const CodingProfilesPage: React.FC = () => {
         )}
 
         {/* Account Cards Grid */}
-        {!loading && !error && accounts.length > 0 && (
+        {accounts.length > 0 && (
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
               gap: '1.5rem',
             }}
           >
@@ -330,7 +335,7 @@ export const CodingProfilesPage: React.FC = () => {
               return (
                 <div
                   key={acc.id}
-                  className="card"
+                  className="card platform-account-card"
                   style={{
                     position: 'relative',
                     overflow: 'hidden',
@@ -343,12 +348,12 @@ export const CodingProfilesPage: React.FC = () => {
 
                   <div>
                     {/* Header: Platform & Verification */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{acc.platform}</h3>
+                    <div className="platform-account-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div className="platform-account-heading">
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: 700, overflowWrap: 'anywhere' }}>{getPlatformDisplayName(acc.platform)}</h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem' }}>
                           <span className="mono" style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-                            @{acc.username}
+                            <span className="platform-account-identity">@{acc.username}</span>
                           </span>
                           {acc.profileUrl && (
                             <a
@@ -357,6 +362,7 @@ export const CodingProfilesPage: React.FC = () => {
                               rel="noopener noreferrer"
                               style={{ color: 'var(--color-text-muted)', display: 'inline-flex', alignItems: 'center' }}
                               title="External Profile"
+                              aria-label={`Open ${acc.platform} profile in a new tab`}
                             >
                               <ExternalLink size={12} />
                             </a>
@@ -364,7 +370,7 @@ export const CodingProfilesPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div>
+                      <div className="platform-account-verification">
                         <span className="badge badge-muted" title="Platform handle ownership has not been verified">
                           <Clock size={12} /> Self-reported · Unverified
                         </span>
@@ -373,6 +379,7 @@ export const CodingProfilesPage: React.FC = () => {
 
                     {/* Metadata */}
                     <div
+                      className="platform-account-metadata"
                       style={{
                         backgroundColor: 'var(--color-bg-base)',
                         padding: '0.75rem 1rem',
@@ -385,12 +392,12 @@ export const CodingProfilesPage: React.FC = () => {
                         marginBottom: '1.25rem',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="platform-account-meta-row">
                         <span style={{ color: 'var(--color-text-muted)' }}>Connected Since</span>
                         <span className="mono" style={{ color: 'var(--color-text-primary)' }}>{formatDate(acc.connectedAt)}</span>
                       </div>
                       {acc.profileUrl && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', overflow: 'hidden' }}>
+                        <div className="platform-account-meta-row">
                           <span style={{ color: 'var(--color-text-muted)' }}>Profile URL</span>
                           <span
                             className="mono"
@@ -406,17 +413,17 @@ export const CodingProfilesPage: React.FC = () => {
                           </span>
                         </div>
                       )}
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div className="platform-account-meta-row">
                         <span style={{ color: 'var(--color-text-muted)' }}>Statistics</span>
-                        <span className="mono" style={{ color: 'var(--color-text-primary)' }}>
-                          {acc.sourceStatus === 'SOURCE_PENDING' ? 'Connected — live statistics currently unavailable.' : acc.sourceStatus.replace('_', ' ')}
+                        <span className="platform-account-status" style={{ color: 'var(--color-text-primary)' }}>
+                          {getPlatformAvailabilityLabel(acc.platform, acc)}
                         </span>
                       </div>
                       {acc.sourceStatus !== 'SOURCE_PENDING' && (
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div className="platform-account-meta-row">
                           <span style={{ color: 'var(--color-text-muted)' }}>Sync Status</span>
                           <span className="mono" style={{ color: acc.syncStatus === 'FAILED' ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
-                            {acc.syncStatus.replace('_', ' ')}{acc.lastSuccessAt ? ` · ${formatDate(acc.lastSuccessAt)}` : ''}
+                            {getSyncStatusLabel(acc.syncStatus)}{acc.lastSuccessAt ? ` · Last successful sync ${formatDate(acc.lastSuccessAt)}` : ''}
                           </span>
                         </div>
                       )}
@@ -433,6 +440,7 @@ export const CodingProfilesPage: React.FC = () => {
                       borderTop: '1px solid var(--color-border-subtle)',
                       gap: '0.5rem',
                     }}
+                    className="platform-account-actions"
                   >
                     <button
                       onClick={() => setStatsModalAccount(acc)}
@@ -458,15 +466,17 @@ export const CodingProfilesPage: React.FC = () => {
                       className="btn btn-ghost"
                       style={{ padding: '0.4375rem 0.625rem', fontSize: '0.75rem' }}
                       title="Edit Account"
+                      aria-label={`Edit ${acc.platform} account`}
                     >
                       <Edit2 size={13} />
                     </button>
 
                     <button
-                      onClick={() => setDeletingAccount(acc)}
+                      onClick={() => { setConnectFeedback(null); setDeletingAccount(acc); }}
                       className="btn btn-ghost"
                       style={{ padding: '0.4375rem 0.625rem', fontSize: '0.75rem', color: 'var(--color-error)' }}
                       title="Disconnect Account"
+                      aria-label={`Disconnect ${acc.platform} account`}
                     >
                       <Trash2 size={13} />
                     </button>
@@ -508,7 +518,7 @@ export const CodingProfilesPage: React.FC = () => {
         isDestructive={true}
         isLoading={actionLoading}
         onConfirm={handleConfirmDelete}
-        onClose={() => setDeletingAccount(null)}
+        onClose={() => { if (!actionLoading) setDeletingAccount(null); }}
       />
     </div>
   );

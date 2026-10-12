@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../context/ThemeContext';
-import { Code2, LogOut, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal, Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
+import { Code2, LogOut, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal, Menu, X, ChevronDown } from 'lucide-react';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -14,7 +14,6 @@ const navItems = [
 
 export const AppNavbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
@@ -38,11 +37,9 @@ export const AppNavbar: React.FC = () => {
         </NavLink>)}
       </nav>
       <div className="header-actions">
-        <button className="icon-button theme-toggle" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
-          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+        <ThemeToggle />
         <div className="profile-menu-wrap">
-          <button className="profile-menu-trigger" onClick={() => setProfileOpen((open) => !open)} aria-expanded={profileOpen} aria-haspopup="menu">
+          <button className="profile-menu-trigger" onClick={() => setProfileOpen((open) => !open)} aria-label={`${profileOpen ? 'Close' : 'Open'} profile menu for ${user?.name || 'account'}`} aria-expanded={profileOpen} aria-haspopup="menu">
             <span className="avatar">{(user?.name || 'U').slice(0, 1).toUpperCase()}</span>
             <span className="profile-name">{user?.name}</span><ChevronDown size={14} />
           </button>

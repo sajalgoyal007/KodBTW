@@ -11,6 +11,7 @@ import { DashboardHistorySection } from '../components/analytics/DashboardHistor
 import { DashboardInsightsSection } from '../components/analytics/DashboardInsightsSection';
 import { ActivityContestIntelligenceSection } from '../components/analytics/ActivityContestIntelligenceSection';
 import { ContestSummary } from '../components/dashboard/ContestSummary';
+import { getAnalyticsMetricAvailability, getAnalyticsPageState } from '../utils/analyticsPresentation';
 import {
   RefreshCw,
   Layers,
@@ -26,33 +27,16 @@ export const AnalyticsPage: React.FC = () => {
   const difficulty = data?.difficulty;
   const platformComparison = data?.platformComparison || [];
   const contests = data?.contests || null;
-
-  const hasSolvedMetrics = platformComparison.some((platform) => platform.totalSolved !== null)
-    || (difficulty?.totalProblemsSolved !== null && difficulty?.totalProblemsSolved !== undefined);
-  const hasRatingMetrics = platformComparison.some((platform) => platform.rating !== null || platform.rank !== null);
-  const hasStreakMetrics = platformComparison.some((platform) => platform.currentStreak !== null || platform.longestStreak !== null);
-  const hasContestMetrics = !!contests && (contests.totalContests !== null || contests.platformBreakdown.some((platform) => platform.rating !== null || platform.contests !== null));
-  const isEmpty =
-    !loading &&
-    !error &&
-    (!data || (!hasSolvedMetrics && !hasRatingMetrics && !hasStreakMetrics && !hasContestMetrics));
+  const { hasProfiles, hasSolvedMetrics, hasRatingMetrics, hasStreakMetrics, hasContestMetrics } =
+    getAnalyticsMetricAvailability(platformComparison, difficulty, contests);
+  const hasMetrics = hasSolvedMetrics || hasRatingMetrics || hasStreakMetrics || hasContestMetrics;
+  const viewState = getAnalyticsPageState({ loading, error, hasData: data !== null, hasMetrics });
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="analytics-page">
       <AppNavbar />
 
-      <main
-        style={{
-          flex: 1,
-          maxWidth: '1280px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '2rem 1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '2rem',
-        }}
-      >
+      <main className="analytics-main">
         {/* Top Header */}
         <div
           style={{
@@ -64,14 +48,14 @@ export const AnalyticsPage: React.FC = () => {
           }}
         >
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+            <div className="analytics-title-row">
+              <h1>
                 Analytics & Insights
               </h1>
-              {!loading && !isEmpty && (
+              {data && (
                 <div className="badge badge-primary">
                   <TrendingUp size={12} />
-                  <span>{platformComparison.length} Active Platform{platformComparison.length > 1 ? 's' : ''}</span>
+                  <span>{platformComparison.length} Profile{platformComparison.length === 1 ? '' : 's'} compared</span>
                 </div>
               )}
             </div>
@@ -95,13 +79,13 @@ export const AnalyticsPage: React.FC = () => {
         </div>
 
         {/* Loading Skeletons */}
-        {loading && (
+        {viewState === 'loading' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
             {/* Row 1 Skeletons */}
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
                 gap: '1.5rem',
               }}
             >
@@ -116,7 +100,7 @@ export const AnalyticsPage: React.FC = () => {
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
                 gap: '1.5rem',
               }}
             >
@@ -130,7 +114,7 @@ export const AnalyticsPage: React.FC = () => {
         )}
 
         {/* Error State */}
-        {!loading && error && (
+        {viewState === 'error' && error && (
           <div
             className="card"
             style={{
@@ -140,8 +124,8 @@ export const AnalyticsPage: React.FC = () => {
               flexDirection: 'column',
               alignItems: 'center',
               gap: '1rem',
-              borderColor: 'rgba(239, 68, 68, 0.4)',
-              backgroundColor: 'rgba(239, 68, 68, 0.05)',
+              borderColor: 'var(--color-error-border)',
+              backgroundColor: 'var(--color-error-soft)',
             }}
           >
             <div
@@ -149,7 +133,7 @@ export const AnalyticsPage: React.FC = () => {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                backgroundColor: 'var(--color-error-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -177,7 +161,7 @@ export const AnalyticsPage: React.FC = () => {
         )}
 
         {/* Empty State */}
-        {isEmpty && (
+        {viewState === 'empty' && (
           <div
             className="card"
             style={{
@@ -196,7 +180,7 @@ export const AnalyticsPage: React.FC = () => {
                 width: '56px',
                 height: '56px',
                 borderRadius: 'var(--radius-lg)',
-                backgroundColor: 'rgba(235, 115, 18, 0.1)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -210,7 +194,9 @@ export const AnalyticsPage: React.FC = () => {
                 No Analytics Available
               </h2>
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', lineHeight: 1.5 }}>
-                Connect your competitive programming accounts to unlock deep difficulty breakdowns, platform shares, and cross-platform performance comparisons.
+                {hasProfiles
+                  ? 'Your connected profiles do not have comparable statistics available yet. Review their sync status in Coding Profiles and try again after a supported sync.'
+                  : 'Connect your competitive programming accounts to unlock difficulty breakdowns, platform shares, and cross-platform performance comparisons.'}
               </p>
             </div>
             <button
@@ -218,19 +204,28 @@ export const AnalyticsPage: React.FC = () => {
               className="btn btn-primary"
               style={{ padding: '0.75rem 1.5rem', fontSize: '0.9375rem' }}
             >
-              <PlusCircle size={18} /> Connect Platforms
+              <PlusCircle size={18} /> {hasProfiles ? 'View Coding Profiles' : 'Connect Platforms'}
             </button>
           </div>
         )}
 
         {/* Analytics Content */}
-        {!loading && !error && !isEmpty && data && (
+        {data && viewState !== 'empty' && viewState !== 'loading' && (
           <>
+            {viewState === 'refreshing' && (
+              <p className="analytics-data-notice" role="status" aria-live="polite">Updating analytics. Your last loaded results remain visible until the refresh finishes.</p>
+            )}
+            {viewState === 'stale-error' && error && (
+              <div className="analytics-data-notice analytics-data-notice--error" role="alert">
+                <span>{error} Showing the last loaded results.</span>
+                <button type="button" className="btn btn-secondary" onClick={() => void refetch()}>Retry</button>
+              </div>
+            )}
             {/* Row 1: Difficulty Distribution + Platform Problem Share */}
             {hasSolvedMetrics && <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
                 gap: '1.5rem',
               }}
             >
@@ -247,7 +242,7 @@ export const AnalyticsPage: React.FC = () => {
             {(hasContestMetrics || hasStreakMetrics) && <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
                 gap: '1.5rem',
               }}
             >

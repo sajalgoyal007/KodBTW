@@ -18,7 +18,7 @@ export const AnalyticsSection: React.FC = () => {
           <h2 className="kod-section-title">Your activity, turned into insight.</h2>
           <p className="kod-section-subtitle">
             Most dashboards invent arbitrary aggregate numbers. KodBTW delivers honest,
-            persisted telemetry derived directly from your official platform accounts.
+            persisted observations from connected platform data sources. Coverage and provenance vary by platform.
           </p>
 
           <div className="kod-feature-points">
@@ -62,6 +62,9 @@ export const AnalyticsSection: React.FC = () => {
 
         {/* Right Interactive Analytics Terminal */}
         <div className="kod-analytics-terminal">
+          <p className="kod-illustrative-note" role="note">
+            Interactive preview · sample values only, not live account data
+          </p>
           <div className="kod-panel-header">
             <div className="kod-panel-title">
               <Activity size={18} color="var(--kod-accent-cyan)" />
@@ -71,7 +74,8 @@ export const AnalyticsSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveMetric('rating')}
-                className={`kod-platform-pill ${activeMetric === 'rating' ? 'live' : ''}`}
+                aria-pressed={activeMetric === 'rating'}
+                className={`kod-platform-pill ${activeMetric === 'rating' ? 'active' : ''}`}
                 style={{ cursor: 'pointer' }}
               >
                 Rating
@@ -79,7 +83,8 @@ export const AnalyticsSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveMetric('solved')}
-                className={`kod-platform-pill ${activeMetric === 'solved' ? 'live' : ''}`}
+                aria-pressed={activeMetric === 'solved'}
+                className={`kod-platform-pill ${activeMetric === 'solved' ? 'active' : ''}`}
                 style={{ cursor: 'pointer' }}
               >
                 Solved
@@ -87,7 +92,8 @@ export const AnalyticsSection: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveMetric('streak')}
-                className={`kod-platform-pill ${activeMetric === 'streak' ? 'live' : ''}`}
+                aria-pressed={activeMetric === 'streak'}
+                className={`kod-platform-pill ${activeMetric === 'streak' ? 'active' : ''}`}
                 style={{ cursor: 'pointer' }}
               >
                 Streak
@@ -100,34 +106,34 @@ export const AnalyticsSection: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div className="kod-chart-container" style={{ height: '180px' }}>
                 <svg viewBox="0 0 500 140" preserveAspectRatio="none">
-                  <line x1="0" y1="20" x2="500" y2="20" stroke="rgba(255,255,255,0.05)" />
-                  <line x1="0" y1="60" x2="500" y2="60" stroke="rgba(255,255,255,0.05)" />
-                  <line x1="0" y1="100" x2="500" y2="100" stroke="rgba(255,255,255,0.05)" />
+                  <line x1="0" y1="20" x2="500" y2="20" stroke="var(--kod-border-hairline)" />
+                  <line x1="0" y1="60" x2="500" y2="60" stroke="var(--kod-border-hairline)" />
+                  <line x1="0" y1="100" x2="500" y2="100" stroke="var(--kod-border-hairline)" />
 
                   <path
                     d="M 10 120 Q 80 110, 140 90 T 260 70 T 380 40 T 490 25"
                     fill="none"
-                    stroke="#38BDF8"
+                    stroke="var(--kod-accent-cyan)"
                     strokeWidth="3"
                   />
-                  <circle cx="490" cy="25" r="5" fill="#38BDF8" stroke="#FFFFFF" strokeWidth="2" />
+                  <circle cx="490" cy="25" r="5" fill="var(--kod-accent-cyan)" stroke="var(--kod-bg-card)" strokeWidth="2" />
                 </svg>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                <div style={{ padding: '0.75rem', background: 'rgba(5,7,11,0.5)', borderRadius: '6px' }}>
+                <div style={{ padding: '0.75rem', background: 'var(--kod-bg-secondary)', borderRadius: '6px' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--kod-text-muted)' }}>CURRENT</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--kod-accent-cyan)' }}>
                     2,185
                   </div>
                 </div>
-                <div style={{ padding: '0.75rem', background: 'rgba(5,7,11,0.5)', borderRadius: '6px' }}>
+                <div style={{ padding: '0.75rem', background: 'var(--kod-bg-secondary)', borderRadius: '6px' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--kod-text-muted)' }}>TOP TIER</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
                     Top 1.8%
                   </div>
                 </div>
-                <div style={{ padding: '0.75rem', background: 'rgba(5,7,11,0.5)', borderRadius: '6px' }}>
+                <div style={{ padding: '0.75rem', background: 'var(--kod-bg-secondary)', borderRadius: '6px' }}>
                   <span style={{ fontSize: '0.7rem', color: 'var(--kod-text-muted)' }}>CONTESTS</span>
                   <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
                     54 Logged
@@ -169,7 +175,7 @@ export const AnalyticsSection: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ padding: '0.85rem', background: 'rgba(5,7,11,0.5)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--kod-text-secondary)' }}>
+              <div style={{ padding: '0.85rem', background: 'var(--kod-bg-secondary)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--kod-text-secondary)' }}>
                 Total Algorithmic Solves: <strong style={{ color: 'var(--kod-text-primary)' }}>1,482 Problems</strong> across connected LeetCode and Codeforces profiles.
               </div>
             </div>
@@ -178,14 +184,14 @@ export const AnalyticsSection: React.FC = () => {
           {activeMetric === 'streak' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div style={{ padding: '1.25rem', background: 'rgba(5,7,11,0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ padding: '1.25rem', background: 'var(--kod-bg-secondary)', borderRadius: '8px', textAlign: 'center' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kod-text-muted)' }}>CURRENT STREAK</span>
                   <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--kod-accent-amber)' }}>
                     42d
                   </div>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kod-text-secondary)' }}>Active daily momentum</span>
                 </div>
-                <div style={{ padding: '1.25rem', background: 'rgba(5,7,11,0.5)', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ padding: '1.25rem', background: 'var(--kod-bg-secondary)', borderRadius: '8px', textAlign: 'center' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--kod-text-muted)' }}>LONGEST RECORD</span>
                   <div style={{ fontSize: '2.5rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--kod-accent-cyan)' }}>
                     94d

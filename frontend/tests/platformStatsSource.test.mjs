@@ -15,7 +15,10 @@ assert.deepEqual(
 const {
   getDashboardRefreshFeedback,
   getPlatformAvailabilityLabel,
+  getPlatformStatsSourceBadgeClass,
+  getPlatformStatsSourceKind,
   getPlatformStatsSourceLabel,
+  getPlatformSyncSourceStatus,
   isVerifiedStatsSource,
 } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`,
@@ -28,7 +31,29 @@ test('recognizes CodeChef third-party stats without accepting mock sources', () 
   assert.equal(isVerifiedStatsSource('MOCK'), false);
   assert.equal(isVerifiedStatsSource('CODECHEF_MOCK'), false);
   assert.equal(isVerifiedStatsSource('SOURCE_PENDING'), false);
+  assert.equal(isVerifiedStatsSource('UNRELATED_REAL'), false);
   assert.equal(isVerifiedStatsSource(null), false);
+});
+
+test('source labels and badge styles distinguish live, third-party, mock, pending, and unknown sources', () => {
+  assert.equal(getPlatformStatsSourceKind('LEETCODE_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('CODEFORCES_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('CODECHEF_THIRD_PARTY'), 'third-party');
+  assert.equal(getPlatformStatsSourceKind('MOCK'), 'mock');
+  assert.equal(getPlatformStatsSourceKind('SOURCE_PENDING'), 'pending');
+  assert.equal(getPlatformStatsSourceKind('GEEKSFORGEEKS_THIRD_PARTY'), 'unknown');
+  assert.equal(getPlatformStatsSourceKind('UNRELATED_REAL'), 'unknown');
+
+  assert.equal(getPlatformStatsSourceLabel('LEETCODE_REAL'), 'Live Public Data');
+  assert.equal(getPlatformStatsSourceLabel('CODEFORCES_REAL'), 'Live Public Data');
+  assert.equal(getPlatformStatsSourceLabel('CODECHEF_THIRD_PARTY'), 'Third-party Live Data');
+  assert.equal(getPlatformStatsSourceLabel('MOCK'), 'Mock Sandbox');
+  assert.equal(getPlatformStatsSourceLabel('SOURCE_PENDING'), 'Live statistics unavailable');
+  assert.equal(getPlatformStatsSourceLabel('UNRELATED_REAL'), 'Source unknown');
+
+  assert.equal(getPlatformStatsSourceBadgeClass('LEETCODE_REAL'), 'badge-success');
+  assert.equal(getPlatformStatsSourceBadgeClass('CODECHEF_THIRD_PARTY'), 'badge-primary');
+  assert.equal(getPlatformStatsSourceBadgeClass('UNRELATED_REAL'), 'badge-muted');
 });
 
 test('CodeChef availability follows backend status and is not inferred from connection', () => {
@@ -47,7 +72,12 @@ test('dashboard source labels distinguish live, pending, mock, and unknown data'
   assert.equal(getPlatformStatsSourceLabel('UNSYNCED'), 'Not synced');
   assert.equal(getPlatformStatsSourceLabel('UNSYNCED', 'LIVE_SYNC_UNAVAILABLE'), 'Live sync unavailable');
   assert.equal(getPlatformStatsSourceLabel('MOCK'), 'Mock Sandbox');
-  assert.equal(getPlatformStatsSourceLabel('UNRECOGNIZED_SOURCE'), 'Statistics unavailable');
+  assert.equal(getPlatformStatsSourceLabel('UNRECOGNIZED_SOURCE'), 'Source unknown');
+  assert.equal(getPlatformAvailabilityLabel('UNKNOWN_PLATFORM'), 'Availability unknown');
+  assert.equal(getPlatformAvailabilityLabel('CODEFORCES'), 'Live statistics available');
+  assert.equal(getPlatformAvailabilityLabel('LEETCODE'), 'Live statistics available');
+  assert.equal(getPlatformAvailabilityLabel('GEEKSFORGEEKS'), 'Live statistics unavailable');
+  assert.equal(getPlatformAvailabilityLabel('HACKERRANK'), 'Live statistics unavailable');
 });
 
 test('dashboard refresh reports success only for succeeded syncs with verified populated stats', () => {
@@ -67,6 +97,33 @@ test('dashboard refresh reports success only for succeeded syncs with verified p
     currentStats,
     cooldownApplied: true,
   }), { success: true, message: 'Recently synced; showing saved stats.' });
+});
+
+test('account availability changes to synced only after a confirmed usable stats response', () => {
+  const successful = {
+    syncStatus: { status: 'SUCCEEDED', failureMessage: null },
+    currentStats: { source: 'CODECHEF_THIRD_PARTY', totalProblemsSolved: 656 },
+    cooldownApplied: false,
+  };
+  assert.equal(getPlatformSyncSourceStatus('REAL_AVAILABLE', successful), 'SYNCED');
+  assert.equal(getPlatformSyncSourceStatus('SOURCE_PENDING', successful), 'SOURCE_PENDING');
+
+  for (const currentStats of [
+    { source: 'SOURCE_PENDING', totalProblemsSolved: null },
+    { source: 'MOCK', totalProblemsSolved: 5 },
+    { source: 'UNSYNCED', totalProblemsSolved: null },
+  ]) {
+    assert.equal(getPlatformSyncSourceStatus('REAL_AVAILABLE', {
+      ...successful,
+      currentStats,
+    }), 'REAL_AVAILABLE');
+  }
+
+  assert.equal(getPlatformSyncSourceStatus('SYNCED', {
+    syncStatus: { status: 'FAILED', failureMessage: 'Unavailable.' },
+    currentStats: successful.currentStats,
+    cooldownApplied: false,
+  }), 'SYNC_FAILED');
 });
 
 test('never-synced or source-pending response is unavailable rather than successful', () => {

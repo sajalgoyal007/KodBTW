@@ -40,8 +40,9 @@ export const PlatformDifficultyTable: React.FC<PlatformDifficultyTableProps> = (
           No platform breakdown available
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div className="analytics-table-scroll" role="region" aria-label="Platform difficulty breakdown table" tabIndex={0}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <caption className="sr-only">Easy, medium, hard, and total solved counts for each platform</caption>
             <thead>
               <tr
                 style={{

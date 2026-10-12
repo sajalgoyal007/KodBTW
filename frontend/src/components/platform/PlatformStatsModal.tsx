@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { getStats } from '../../services/api/platformAccountApi';
 import { X, Calendar, Flame, Trophy, ExternalLink } from 'lucide-react';
-import { isVerifiedStatsSource } from '../../utils/platformStatsSource';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel, isVerifiedStatsSource } from '../../utils/platformStatsSource';
 
 interface PlatformStatsModalProps {
   isOpen: boolean;
@@ -57,46 +57,14 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
     }
   };
 
-  const getSourceBadge = (source: string | undefined) => {
-    if (source === 'SOURCE_PENDING') {
-      return <span className="badge badge-muted" style={{ fontSize: '0.6875rem' }}>Statistics unavailable</span>;
-    }
-    if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
-      return (
-        <span
-          className="badge"
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-success)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            fontSize: '0.6875rem',
-          }}
-        >
-          Live Public Data
-        </span>
-      );
-    }
-    if (source === 'CODECHEF_THIRD_PARTY') {
-      return (
-        <span className="badge" style={{ backgroundColor: 'rgba(235, 115, 18, 0.12)', color: 'var(--color-primary)', borderColor: 'rgba(235, 115, 18, 0.3)', fontSize: '0.6875rem' }}>
-          Third-party Live Data
-        </span>
-      );
-    }
-    return (
-      <span
-        className="badge"
-        style={{
-          backgroundColor: 'rgba(235, 115, 18, 0.12)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(235, 115, 18, 0.3)',
-          fontSize: '0.6875rem',
-        }}
-      >
-        Mock Sandbox
-      </span>
-    );
-  };
+  const getSourceBadge = (source: string | undefined) => (
+    <span
+      className={`badge ${getPlatformStatsSourceBadgeClass(source)}`}
+      style={{ fontSize: '0.6875rem' }}
+    >
+      {getPlatformStatsSourceLabel(source)}
+    </span>
+  );
 
   return (
     <div
@@ -219,10 +187,10 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               <div
                 style={{
                   flex: 1,
-                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  backgroundColor: 'var(--color-success-soft)',
                   padding: '0.625rem 0.75rem',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                  border: '1px solid var(--color-success-border)',
                   textAlign: 'center',
                 }}
               >
@@ -232,10 +200,10 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               <div
                 style={{
                   flex: 1,
-                  backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                  backgroundColor: 'var(--color-warning-soft)',
                   padding: '0.625rem 0.75rem',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(245, 158, 11, 0.2)',
+                  border: '1px solid var(--color-warning-border)',
                   textAlign: 'center',
                 }}
               >
@@ -245,10 +213,10 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               <div
                 style={{
                   flex: 1,
-                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  backgroundColor: 'var(--color-error-soft)',
                   padding: '0.625rem 0.75rem',
                   borderRadius: 'var(--radius-md)',
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  border: '1px solid var(--color-error-border)',
                   textAlign: 'center',
                 }}
               >

@@ -70,9 +70,9 @@ export const PublicProfilePage: React.FC = () => {
           borderRadius: '9999px',
           fontSize: '0.6875rem',
           fontWeight: 600,
-          background: isThirdParty ? 'rgba(235, 115, 18, 0.12)' : isReal ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+          background: isThirdParty ? 'var(--color-primary-soft)' : isReal ? 'var(--color-success-soft)' : 'var(--color-warning-soft)',
           color: isThirdParty ? 'var(--color-primary)' : isReal ? 'var(--color-success)' : 'var(--color-warning)',
-          border: `1px solid ${isThirdParty ? 'rgba(235, 115, 18, 0.25)' : isReal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+          border: `1px solid ${isThirdParty ? 'var(--color-primary-border)' : isReal ? 'var(--color-success-border)' : 'var(--color-warning-border)'}`,
         }}
       >
         {isReal ? <CheckCircle2 size={10} /> : null}
@@ -98,7 +98,7 @@ export const PublicProfilePage: React.FC = () => {
           style={{
             width: '40px',
             height: '40px',
-            border: '3px solid rgba(56, 189, 248, 0.2)',
+            border: '3px solid var(--color-primary-border)',
             borderTopColor: 'var(--color-primary, var(--color-primary))',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
@@ -143,7 +143,7 @@ export const PublicProfilePage: React.FC = () => {
             width: '64px',
             height: '64px',
             borderRadius: '50%',
-            background: 'rgba(239, 68, 68, 0.1)',
+            background: 'var(--color-error-soft)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -251,11 +251,11 @@ export const PublicProfilePage: React.FC = () => {
                 width: '28px',
                 height: '28px',
                 borderRadius: '6px',
-                background: 'linear-gradient(135deg, var(--color-primary, var(--color-primary)), #0284c7)',
+                background: 'var(--color-primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: 'var(--color-primary-text)',
               }}
             >
               <Code2 size={16} />
@@ -272,9 +272,9 @@ export const PublicProfilePage: React.FC = () => {
                 gap: '0.375rem',
                 padding: '0.5rem 0.875rem',
                 borderRadius: '8px',
-                background: 'rgba(56, 189, 248, 0.1)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                color: 'var(--color-primary, var(--color-primary))',
+                background: 'var(--color-info-soft)',
+                border: '1px solid var(--color-info-border)',
+                color: 'var(--color-info)',
                 fontSize: '0.8125rem',
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -324,18 +324,18 @@ export const PublicProfilePage: React.FC = () => {
       {isOwnProfile && (
         <div
           style={{
-            background: 'rgba(56, 189, 248, 0.08)',
-            borderBottom: '1px solid rgba(56, 189, 248, 0.2)',
+            background: 'var(--color-info-soft)',
+            borderBottom: '1px solid var(--color-info-border)',
             padding: '0.625rem 1.5rem',
             textAlign: 'center',
             fontSize: '0.8125rem',
-            color: 'var(--color-primary, var(--color-primary))',
+            color: 'var(--color-info)',
           }}
         >
           Viewing your public profile. Other developers see this exact page.{' '}
           <Link
             to="/profile"
-            style={{ color: '#fff', textDecoration: 'underline', fontWeight: 600, marginLeft: '0.375rem' }}
+            style={{ color: 'var(--color-info)', textDecoration: 'underline', fontWeight: 600, marginLeft: '0.375rem' }}
           >
             Edit Profile
           </Link>
@@ -374,14 +374,14 @@ export const PublicProfilePage: React.FC = () => {
                   borderRadius: '50%',
                   background: data.avatarUrl
                     ? `url(${data.avatarUrl}) center/cover no-repeat`
-                    : 'linear-gradient(135deg, #0284c7, var(--color-primary))',
+                    : 'var(--color-primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontSize: '2rem',
                   fontWeight: 700,
-                  color: '#ffffff',
-                  border: '3px solid rgba(56, 189, 248, 0.3)',
+                  color: 'var(--color-primary-text)',
+                  border: '3px solid var(--color-primary-border)',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                 }}
               >
@@ -770,7 +770,7 @@ export const PublicProfilePage: React.FC = () => {
               Difficulty Distribution
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '8px' }}>
+              <div style={{ background: 'var(--color-success-soft)', border: '1px solid var(--color-success-border)', padding: '1rem', borderRadius: '8px' }}>
                 <div style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: '0.8125rem' }}>Easy</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.easy?.count)}
@@ -779,7 +779,7 @@ export const PublicProfilePage: React.FC = () => {
                   {analytics.difficulty.easy?.percentage != null ? `${analytics.difficulty.easy.percentage}%` : '—'}
                 </div>
               </div>
-              <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '8px' }}>
+              <div style={{ background: 'var(--color-warning-soft)', border: '1px solid var(--color-warning-border)', padding: '1rem', borderRadius: '8px' }}>
                 <div style={{ color: 'var(--color-warning)', fontWeight: 600, fontSize: '0.8125rem' }}>Medium</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.medium?.count)}
@@ -788,7 +788,7 @@ export const PublicProfilePage: React.FC = () => {
                   {analytics.difficulty.medium?.percentage != null ? `${analytics.difficulty.medium.percentage}%` : '—'}
                 </div>
               </div>
-              <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '8px' }}>
+              <div style={{ background: 'var(--color-error-soft)', border: '1px solid var(--color-error-border)', padding: '1rem', borderRadius: '8px' }}>
                 <div style={{ color: 'var(--color-error)', fontWeight: 600, fontSize: '0.8125rem' }}>Hard</div>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--color-text, var(--color-text-primary))' }}>
                   {formatMetric(analytics.difficulty.hard?.count)}

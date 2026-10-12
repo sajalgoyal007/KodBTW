@@ -18,11 +18,11 @@ export const LandingFooter: React.FC = () => {
               </span>
             </Link>
             <p>
-              Unified developer intelligence and coding analytics. Bringing multi-platform competitive programming and problem-solving records into one authoritative profile.
+              Unified developer intelligence and coding analytics. Bringing available multi-platform competitive programming and problem-solving records into one profile.
             </p>
             <div className="kod-footer-status-pill">
               <span className="kod-pulse-dot" style={{ width: '6px', height: '6px' }} />
-              <span>All Systems Operational · v0.1.0</span>
+              <span>KodBTW · Unified coding profiles</span>
             </div>
           </div>
 
@@ -56,13 +56,13 @@ export const LandingFooter: React.FC = () => {
                 <span className="kod-footer-link" style={{ cursor: 'default' }}>Codeforces (Live)</span>
               </li>
               <li>
-                <span className="kod-footer-link" style={{ cursor: 'default' }}>CodeChef</span>
+                <span className="kod-footer-link" style={{ cursor: 'default' }}>CodeChef (Third-party stats)</span>
               </li>
               <li>
-                <span className="kod-footer-link" style={{ cursor: 'default' }}>GeeksForGeeks</span>
+                <span className="kod-footer-link" style={{ cursor: 'default' }}>GeeksForGeeks (Unavailable)</span>
               </li>
               <li>
-                <span className="kod-footer-link" style={{ cursor: 'default' }}>HackerRank</span>
+                <span className="kod-footer-link" style={{ cursor: 'default' }}>HackerRank (Unavailable)</span>
               </li>
             </ul>
           </div>

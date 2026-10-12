@@ -18,7 +18,7 @@ export const PublicProfileEmptyState: React.FC = () => {
           width: '56px',
           height: '56px',
           borderRadius: '50%',
-          background: 'rgba(56, 189, 248, 0.1)',
+          background: 'var(--color-primary-soft)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

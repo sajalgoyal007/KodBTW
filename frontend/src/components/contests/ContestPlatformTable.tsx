@@ -1,5 +1,6 @@
 import React from 'react';
 import { PlatformStats } from '../../types/dashboard';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel } from '../../utils/platformStatsSource';
 
 interface ContestPlatformTableProps {
   platforms: PlatformStats[];
@@ -9,36 +10,14 @@ export const ContestPlatformTable: React.FC<ContestPlatformTableProps> = ({ plat
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
 
-  const getSourceBadge = (source: string) => {
-    if (source === 'LEETCODE_REAL' || source === 'CODEFORCES_REAL') {
-      return (
-        <span
-          className="badge"
-          style={{
-            backgroundColor: 'rgba(16, 185, 129, 0.12)',
-            color: 'var(--color-success)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
-            fontSize: '0.6875rem',
-          }}
-        >
-          Verified Public API
-        </span>
-      );
-    }
-    return (
-      <span
-        className="badge"
-        style={{
-          backgroundColor: 'rgba(235, 115, 18, 0.12)',
-          color: 'var(--color-primary)',
-          borderColor: 'rgba(235, 115, 18, 0.3)',
-          fontSize: '0.6875rem',
-        }}
-      >
-        Mock Sandbox
-      </span>
-    );
-  };
+  const getSourceBadge = (source: string | null | undefined) => (
+    <span
+      className={`badge ${getPlatformStatsSourceBadgeClass(source)}`}
+      style={{ fontSize: '0.6875rem' }}
+    >
+      {getPlatformStatsSourceLabel(source)}
+    </span>
+  );
 
   const getPlatformBrandColor = (pName: string) => {
     switch (pName.toUpperCase()) {

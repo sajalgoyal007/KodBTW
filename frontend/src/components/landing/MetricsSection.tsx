@@ -7,7 +7,7 @@ export const MetricsSection: React.FC = () => {
         <span className="kod-section-eyebrow">APPLICATION INTEGRITY METRICS</span>
         <h2 className="kod-section-title">See the signal behind the work.</h2>
         <p className="kod-section-subtitle">
-          Real system capabilities grounded strictly in our backend architecture and database schema.
+          Platform connections and metric coverage vary by data source. Missing or unavailable metrics are not shown as zero.
         </p>
       </div>
 
@@ -18,7 +18,7 @@ export const MetricsSection: React.FC = () => {
           </div>
           <h3 className="kod-metric-big-title">Major Platforms</h3>
           <p className="kod-metric-big-desc">
-            Connect LeetCode, Codeforces, CodeChef, GeeksForGeeks, and HackerRank under one identity.
+            Add handles for five platforms under one identity. Live statistics depend on each platform's supported source and may be unavailable.
           </p>
         </div>
 
@@ -38,17 +38,17 @@ export const MetricsSection: React.FC = () => {
           </div>
           <h3 className="kod-metric-big-title">Difficulty Tiers</h3>
           <p className="kod-metric-big-desc">
-            Easy, Medium, and Hard problem classification normalized across connected platforms.
+            Easy, Medium, and Hard counts appear when a connected source provides those metrics.
           </p>
         </div>
 
         <div className="kod-metric-editorial-cell">
           <div className="kod-metric-big-num" style={{ color: 'var(--kod-accent-emerald)' }}>
-            100%
+            Snapshot
           </div>
-          <h3 className="kod-metric-big-title">Deterministic Data</h3>
+          <h3 className="kod-metric-big-title">Stored Observations</h3>
           <p className="kod-metric-big-desc">
-            Snapshot-persisted in MySQL with Flyway schema versioning. Zero fake metrics or simulated numbers.
+            Successful sync results can be stored as snapshots. Coverage depends on the source; unavailable metrics remain unavailable.
           </p>
         </div>
       </div>

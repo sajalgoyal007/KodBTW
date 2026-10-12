@@ -2,17 +2,19 @@ import React from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { ExternalLink, Calendar, Flame, Trophy, RefreshCw } from 'lucide-react';
 import { PlatformAccountResponse } from '../../types/platform';
-import { getPlatformStatsSourceLabel, isVerifiedStatsSource } from '../../utils/platformStatsSource';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel } from '../../utils/platformStatsSource';
+import { getPlatformSyncPresentation } from '../../utils/dashboardPresentation';
 
 interface PlatformCardProps {
   platform: PlatformStats;
   account?: PlatformAccountResponse;
   refreshing: boolean;
+  refreshDisabled?: boolean;
   feedback: { success: boolean; message: string } | null;
   onRefresh: (accountId: number) => void;
 }
 
-export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, refreshing, feedback, onRefresh }) => {
+export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, refreshing, refreshDisabled = false, feedback, onRefresh }) => {
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
   const isCodeforces = platform.platform.toUpperCase() === 'CODEFORCES';
@@ -21,29 +23,25 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
     if (!isoString) return '—';
     try {
       const d = new Date(isoString);
-      return isNaN(d.getTime()) ? isoString : d.toLocaleDateString(undefined, {
+      return isNaN(d.getTime()) ? 'Date unavailable' : d.toLocaleString(undefined, {
         month: 'short',
         day: 'numeric',
+        year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZoneName: 'short',
       });
     } catch {
-      return isoString;
+      return 'Date unavailable';
     }
   };
 
   const getSourceBadge = (source: string, account?: PlatformAccountResponse) => {
     const label = getPlatformStatsSourceLabel(source, account?.lastSyncErrorCategory);
-    const verified = isVerifiedStatsSource(source);
-    const thirdParty = source.toUpperCase() === 'CODECHEF_THIRD_PARTY';
-    const mock = source.toUpperCase() === 'MOCK';
     return (
       <span
-        className={`badge${verified || thirdParty || mock ? '' : ' badge-muted'}`}
+        className={`badge ${getPlatformStatsSourceBadgeClass(source)}`}
         style={{
-          backgroundColor: verified ? 'rgba(16, 185, 129, 0.12)' : thirdParty || mock ? 'rgba(235, 115, 18, 0.12)' : undefined,
-          color: verified ? 'var(--color-success)' : thirdParty || mock ? 'var(--color-primary)' : undefined,
-          borderColor: verified ? 'rgba(16, 185, 129, 0.3)' : thirdParty || mock ? 'rgba(235, 115, 18, 0.3)' : undefined,
           fontSize: '0.6875rem',
         }}
       >
@@ -70,10 +68,11 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
   };
 
   const brandColor = getPlatformBrandColor(platform.platform);
+  const syncPresentation = getPlatformSyncPresentation(account);
 
   return (
     <div
-      className="card"
+      className="card dashboard-platform-card"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -86,17 +85,17 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
 
       {/* Header */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', gap: '0.5rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h4 style={{ fontSize: '1.0625rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
+        <div className="dashboard-platform-header">
+          <div className="dashboard-platform-header-content">
+            <div className="dashboard-platform-heading">
+              <h4 className="dashboard-platform-name" style={{ fontSize: '1.0625rem', fontWeight: 700, letterSpacing: '-0.01em' }}>
                 {platform.platform}
               </h4>
               {getSourceBadge(platform.source, account)}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.25rem' }}>
-              <span className="mono" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
+            <div className="dashboard-platform-account">
+              <span className="mono dashboard-platform-username" style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
                 @{platform.username}
               </span>
               {platform.profileUrl && (
@@ -106,6 +105,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
                   rel="noopener noreferrer"
                   style={{ color: 'var(--color-text-muted)', display: 'inline-flex', alignItems: 'center' }}
                   title="View Profile"
+                  aria-label={`View ${platform.platform} profile (opens in a new tab)`}
                 >
                   <ExternalLink size={12} />
                 </a>
@@ -118,7 +118,7 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
             gap: '0.5rem',
             margin: '1rem 0',
             backgroundColor: 'var(--color-bg-base)',
@@ -128,20 +128,20 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
             textAlign: 'center',
           }}
         >
-          <div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Solved</div>
+          <div className="dashboard-platform-stat">
+            <div className="dashboard-platform-stat-label">Solved</div>
             <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
               {formatMetric(platform.totalProblemsSolved)}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Rating</div>
+          <div className="dashboard-platform-stat">
+            <div className="dashboard-platform-stat-label">Rating</div>
             <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
               {formatMetric(platform.rating)}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+          <div className="dashboard-platform-stat">
+            <div className="dashboard-platform-stat-label">
               {isCodeforces ? 'Max Rating' : 'Rank'}
             </div>
             <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
@@ -151,17 +151,17 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
         </div>
 
         {/* Sub-metrics: Difficulty pills */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.75rem' }}>
-          <div style={{ flex: 1, backgroundColor: 'rgba(16, 185, 129, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>E: </span>
+        <div className="dashboard-difficulty-pills" style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '1rem', fontSize: '0.75rem' }}>
+          <div style={{ flex: '1 1 4.5rem', minWidth: 0, backgroundColor: 'var(--color-success-soft)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-success-border)' }}>
+            <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Easy: </span>
             <span className="mono">{formatMetric(platform.easySolved)}</span>
           </div>
-          <div style={{ flex: 1, backgroundColor: 'rgba(245, 158, 11, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-            <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>M: </span>
+          <div style={{ flex: '1 1 4.5rem', minWidth: 0, backgroundColor: 'var(--color-warning-soft)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-warning-border)' }}>
+            <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>Medium: </span>
             <span className="mono">{formatMetric(platform.mediumSolved)}</span>
           </div>
-          <div style={{ flex: 1, backgroundColor: 'rgba(239, 68, 68, 0.08)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <span style={{ color: 'var(--color-error)', fontWeight: 600 }}>H: </span>
+          <div style={{ flex: '1 1 4.5rem', minWidth: 0, backgroundColor: 'var(--color-error-soft)', padding: '0.375rem 0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-error-border)' }}>
+            <span style={{ color: 'var(--color-error)', fontWeight: 600 }}>Hard: </span>
             <span className="mono">{formatMetric(platform.hardSolved)}</span>
           </div>
         </div>
@@ -201,34 +201,22 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
       </div>
 
       {/* Footer / Last Synced */}
-      <div
-        style={{
-          marginTop: '1.25rem',
-          paddingTop: '0.75rem',
-          borderTop: '1px solid var(--color-border-subtle)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          fontSize: '0.6875rem',
-          color: 'var(--color-text-muted)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: '1 1 160px', minWidth: 0 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-            <Calendar size={12} /> {account?.syncStatus?.replace('_', ' ') || 'Sync status'}
+      <div className="dashboard-platform-footer">
+        <div className="dashboard-platform-sync">
+          <span className={`dashboard-sync-label dashboard-sync-label--${syncPresentation.tone}`}>
+            <Calendar size={12} aria-hidden="true" /> {syncPresentation.label}
           </span>
-          <span className="mono">{account?.fresh ? 'Fresh · ' : 'Last successful: '}{formatDateTime(account?.lastSuccessAt ?? null)}</span>
-          {account?.lastSyncErrorMessage && <span role="status" style={{ color: 'var(--color-error)', maxWidth: '220px' }}>{account.lastSyncErrorMessage}</span>}
-          {feedback && <span role="status" style={{ color: feedback.success ? 'var(--color-success)' : 'var(--color-error)', maxWidth: '220px' }}>{feedback.message}</span>}
+          <span className="dashboard-sync-detail">{syncPresentation.detail}</span>
+          {account?.lastSuccessAt && <span className="dashboard-sync-date">Last successful: {formatDateTime(account.lastSuccessAt)}</span>}
+          {account?.lastSyncErrorMessage && <span role="status" className="dashboard-sync-error">{account.lastSyncErrorMessage}</span>}
+          {feedback && <span role={feedback.success ? 'status' : 'alert'} className={feedback.success ? 'dashboard-sync-feedback success' : 'dashboard-sync-feedback error'}>{feedback.message}</span>}
         </div>
         <button
           type="button"
-          className="btn btn-secondary"
-          disabled={!account || refreshing}
+          disabled={!account || refreshing || refreshDisabled}
           onClick={() => account && onRefresh(account.id)}
-          style={{ padding: '0.4rem 0.6rem', fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+          className="btn btn-secondary dashboard-refresh-button"
+          aria-label={`Refresh ${platform.platform} statistics`}
         >
           <RefreshCw size={13} className={refreshing ? 'spin' : ''} /> {refreshing ? 'Refreshing…' : 'Refresh Stats'}
         </button>

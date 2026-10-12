@@ -15,6 +15,10 @@ export const ProblemSection: React.FC = () => {
         </p>
       </div>
 
+      <p className="kod-illustrative-note" role="note">
+        The figures below are illustrative examples, not live platform statistics.
+      </p>
+
       {/* Interactive Toggle to show Fragmented vs Merged State */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.25rem' }}>
         <button
@@ -80,7 +84,7 @@ export const ProblemSection: React.FC = () => {
             </p>
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--kod-text-muted)', fontFamily: 'var(--font-mono)' }}>
-            STATUS: {isMerged ? 'Live adapter active' : 'Separate handle'}
+            STATUS: {isMerged ? 'Example profile includes this handle' : 'Separate handle'}
           </div>
         </div>
 
@@ -121,7 +125,7 @@ export const ProblemSection: React.FC = () => {
           <div className="kod-merge-text">
             <h4>The Solution: KodBTW Unified Intelligence Layer</h4>
             <p>
-              Connect your verified handles once. KodBTW fetches, reconciles, and displays your complete coding footprint in a single shareable profile.
+              Add your platform handles once. KodBTW displays the statistics available from each source in a single shareable profile.
             </p>
           </div>
         </div>

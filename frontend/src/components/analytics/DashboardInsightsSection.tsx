@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertCircle, ArrowDownRight, ArrowUpRight, CheckCircle2, Clock3, Info, Lightbulb, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useDashboardInsights } from '../../hooks/useDashboardInsights';
 import { InsightItem } from '../../types/insights';
+import { getRetainedDataViewState } from '../../utils/analyticsPresentation';
 
 const InsightCard: React.FC<{ insight: InsightItem }> = ({ insight }) => {
   const positive = insight.severity === 'POSITIVE';
@@ -40,6 +41,7 @@ export const DashboardInsightsSection: React.FC = () => {
   const availability = data?.dataAvailability;
   const sparse = !!availability && availability.snapshotCount > 0 && !availability.hasHistoricalComparison;
   const hasData = !!availability && availability.snapshotCount > 0;
+  const viewState = getRetainedDataViewState({ loading, error, hasData: data !== null });
 
   return (
     <section className="insights-section" aria-labelledby="insights-heading">
@@ -52,22 +54,25 @@ export const DashboardInsightsSection: React.FC = () => {
         {data && <span className="insights-freshness"><Clock3 size={14} /> Latest snapshot {availability?.latestSnapshotDate ?? 'unavailable'}</span>}
       </div>
 
-      {loading && <div className="card insights-state" aria-live="polite"><RefreshCw size={18} className="spinner" /> Building insights from saved data…</div>}
+      {viewState === 'loading' && <div className="card insights-state" aria-live="polite"><RefreshCw size={18} className="spinner" /> Building insights from saved data…</div>}
 
-      {!loading && error && (
+      {viewState === 'refreshing' && <p className="analytics-data-notice" role="status" aria-live="polite">Refreshing insights. Your last loaded results remain visible.</p>}
+
+      {(viewState === 'error' || viewState === 'stale-error') && error && (
         <div className="card insights-state error" role="alert"><AlertCircle size={20} /><span>{error}</span>
+          {viewState === 'stale-error' && <span> Showing the last loaded results.</span>}
           <button type="button" className="btn btn-secondary" onClick={refetch}>Retry</button>
         </div>
       )}
 
-      {!loading && !error && data && !hasData && (
+      {data && !hasData && viewState !== 'loading' && (
         <div className="card insights-state insights-empty">
           <div className="insights-empty-icon"><Info size={21} /></div>
           <div><h3>No verified snapshot data yet</h3><p>Insights will appear after a real LeetCode or Codeforces sync. Mock platform values are not used.</p></div>
         </div>
       )}
 
-      {!loading && !error && data && hasData && (
+      {data && hasData && viewState !== 'loading' && (
         <>
           <div className="card insights-summary">
             <div className="insights-summary-icon"><CheckCircle2 size={20} /></div>

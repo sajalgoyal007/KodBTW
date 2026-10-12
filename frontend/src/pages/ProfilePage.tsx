@@ -124,7 +124,7 @@ export const ProfilePage: React.FC = () => {
                 width: '64px',
                 height: '64px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(235, 115, 18, 0.1)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -186,7 +186,7 @@ export const ProfilePage: React.FC = () => {
                         width: '88px',
                         height: '88px',
                         borderRadius: '50%',
-                        backgroundColor: 'rgba(235, 115, 18, 0.15)',
+                        backgroundColor: 'var(--color-primary-soft)',
                         border: '2px solid var(--color-primary)',
                         display: 'flex',
                         alignItems: 'center',
@@ -227,7 +227,7 @@ export const ProfilePage: React.FC = () => {
                       )}
                       {profile?.college && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                          <GraduationCap size={14} style={{ color: '#3b82f6' }} />
+                          <GraduationCap size={14} style={{ color: 'var(--color-info)' }} />
                           <span>{profile.college}</span>
                         </div>
                       )}
@@ -356,7 +356,7 @@ export const ProfilePage: React.FC = () => {
                   value={overview?.contestsParticipated}
                   subtitle="Attended competitions"
                   icon={<Trophy size={20} />}
-                  accentColor="#3b82f6"
+                  accentColor="var(--color-chart-2)"
                 />
                 <MetricCard
                   title="Current Streak"

@@ -3,7 +3,7 @@ import { ShieldCheck, Activity, BarChart2, Layers } from 'lucide-react';
 
 export const TrustStrip: React.FC = () => {
   return (
-    <div className="kod-trust-strip" aria-label="Product Capabilities and Verification">
+    <div className="kod-trust-strip" aria-label="Product capabilities and platform coverage">
       <div className="kod-trust-container">
         {/* Core Capabilities */}
         <div className="kod-trust-item">
@@ -29,13 +29,13 @@ export const TrustStrip: React.FC = () => {
         {/* Supported Platform Sources */}
         <div className="kod-trust-platforms">
           <span style={{ fontSize: '0.72rem', color: 'var(--kod-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Sources:
+            Platform coverage:
           </span>
           <span className="kod-trust-badge verified">LeetCode · Live</span>
           <span className="kod-trust-badge verified">Codeforces · Live</span>
-          <span className="kod-trust-badge">CodeChef</span>
-          <span className="kod-trust-badge">GeeksForGeeks</span>
-          <span className="kod-trust-badge">HackerRank</span>
+          <span className="kod-trust-badge">CodeChef · Third-party stats</span>
+          <span className="kod-trust-badge">GeeksForGeeks · Unavailable</span>
+          <span className="kod-trust-badge">HackerRank · Unavailable</span>
         </div>
       </div>
     </div>

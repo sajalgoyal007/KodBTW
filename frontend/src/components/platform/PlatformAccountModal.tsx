@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlatformAccountResponse, PlatformAccountRequest, PlatformType } from '../../types/platform';
 import { ApiError } from '../../services/api/apiClient';
 import { X, Layers, AlertCircle } from 'lucide-react';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
+import { runSingleSubmission, validatePlatformAccountForm } from '../../utils/platformAccountForm';
 
 interface PlatformAccountModalProps {
   isOpen: boolean;
@@ -32,7 +33,6 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
   onSubmit,
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
-  useDialogAccessibility(isOpen, onClose, dialogRef);
   const isEdit = !!initialAccount;
 
   const [platform, setPlatform] = useState<PlatformType>('LEETCODE');
@@ -40,6 +40,10 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
   const [profileUrl, setProfileUrl] = useState<string>('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
+  const submittingRef = useRef(false);
+  const closeIfIdle = useCallback(() => {
+    if (!isLoading && !submittingRef.current) onClose();
+  }, [isLoading, onClose]);
 
   useEffect(() => {
     if (initialAccount) {
@@ -59,24 +63,28 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
     setGeneralError(null);
   }, [initialAccount, isOpen, existingPlatforms, preferredPlatform]);
 
+  useEffect(() => {
+    const firstInvalidField = ['platform', 'username', 'profileUrl']
+      .find((field) => fieldErrors[field]);
+    if (firstInvalidField) {
+      const fieldId = firstInvalidField === 'profileUrl'
+        ? 'platform-account-profile-url'
+        : `platform-account-${firstInvalidField}`;
+      document.getElementById(fieldId)?.focus();
+    }
+  }, [fieldErrors]);
+
+  useDialogAccessibility(isOpen, closeIfIdle, dialogRef);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading || submittingRef.current) return;
     setFieldErrors({});
     setGeneralError(null);
 
-    // Client-side quick check
-    const errors: Record<string, string> = {};
-    if (!username.trim()) {
-      errors.username = 'Username is required';
-    } else if (username.length > 100) {
-      errors.username = 'Username must not exceed 100 characters';
-    }
-
-    if (profileUrl && !profileUrl.startsWith('http://') && !profileUrl.startsWith('https://')) {
-      errors.profileUrl = 'Profile URL must be a valid HTTP or HTTPS URL';
-    }
+    const errors = validatePlatformAccountForm({ username, profileUrl });
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -84,23 +92,26 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
     }
 
     try {
-      await onSubmit({
-        platform,
-        username: username.trim(),
-        profileUrl: profileUrl.trim() || null,
+      const submitted = await runSingleSubmission(submittingRef, async () => {
+        await onSubmit({
+          platform,
+          username: username.trim(),
+          profileUrl: profileUrl.trim() || null,
+        });
       });
+      if (!submitted) return;
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.status === 409) {
-          setGeneralError(err.message || `You have already linked a ${platform} account`);
+          setGeneralError(`A ${platform} account is already connected.`);
         } else if (err.data?.details) {
           setFieldErrors(err.data.details);
         } else {
-          setGeneralError(err.message || 'Failed to save platform account');
+          setGeneralError('We could not save this platform account. Check the details and try again.');
         }
       } else {
-        setGeneralError(err?.message || 'An unexpected error occurred');
+        setGeneralError('We could not save this platform account. Check your connection and try again.');
       }
     }
   };
@@ -118,7 +129,7 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
         padding: '1rem',
         backdropFilter: 'blur(4px)',
       }}
-      onClick={onClose}
+      onClick={(event) => { if (event.target === event.currentTarget) closeIfIdle(); }}
     >
       <div
         className="card"
@@ -130,7 +141,9 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
         style={{
           width: '100%',
           maxWidth: '480px',
-          padding: '2rem',
+          maxHeight: 'calc(100dvh - 2rem)',
+          overflowY: 'auto',
+          padding: 'clamp(1rem, 5vw, 2rem)',
           backgroundColor: 'var(--color-bg-card)',
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--color-border-subtle)',
@@ -145,7 +158,7 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
                 width: '32px',
                 height: '32px',
                 borderRadius: 'var(--radius-md)',
-                backgroundColor: 'rgba(235, 115, 18, 0.12)',
+                backgroundColor: 'var(--color-primary-soft)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -159,7 +172,7 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
             </h3>
           </div>
           <button
-            onClick={onClose}
+            onClick={closeIfIdle}
             aria-label="Close dialog"
             disabled={isLoading}
             className="btn btn-ghost"
@@ -170,21 +183,24 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
         </div>
 
         {generalError && (
-          <div className="alert alert-error" style={{ marginBottom: '1.25rem' }}>
+          <div className="alert alert-error" role="alert" style={{ marginBottom: '1.25rem' }}>
             <AlertCircle size={16} />
             <span>{generalError}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-busy={isLoading}>
           {/* Platform Dropdown */}
           <div className="form-group">
-            <label className="form-label">Platform</label>
+            <label className="form-label" htmlFor="platform-account-platform">Platform</label>
             <select
+              id="platform-account-platform"
               className="form-input"
               value={platform}
               onChange={(e) => setPlatform(e.target.value as PlatformType)}
               disabled={isEdit || isLoading}
+              aria-invalid={Boolean(fieldErrors.platform)}
+              aria-describedby={fieldErrors.platform ? 'platform-account-platform-error' : undefined}
               style={{ cursor: isEdit ? 'not-allowed' : 'pointer' }}
             >
               {PLATFORM_OPTIONS.map((opt) => (
@@ -197,13 +213,14 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
                 </option>
               ))}
             </select>
-            {fieldErrors.platform && <div className="form-error">{fieldErrors.platform}</div>}
+            {fieldErrors.platform && <div id="platform-account-platform-error" className="form-error" role="alert">{fieldErrors.platform}</div>}
           </div>
 
           {/* Username */}
           <div className="form-group">
-            <label className="form-label">Handle / Username *</label>
+            <label className="form-label" htmlFor="platform-account-username">Handle / Username *</label>
             <input
+              id="platform-account-username"
               type="text"
               className="form-input"
               placeholder="e.g. tourist, neal_wu"
@@ -212,14 +229,17 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
               disabled={isLoading}
               maxLength={100}
               required
+              aria-invalid={Boolean(fieldErrors.username)}
+              aria-describedby={fieldErrors.username ? 'platform-account-username-error' : undefined}
             />
-            {fieldErrors.username && <div className="form-error">{fieldErrors.username}</div>}
+            {fieldErrors.username && <div id="platform-account-username-error" className="form-error" role="alert">{fieldErrors.username}</div>}
           </div>
 
           {/* Profile URL */}
           <div className="form-group">
-            <label className="form-label">Profile URL (optional)</label>
+            <label className="form-label" htmlFor="platform-account-profile-url">Profile URL (optional)</label>
             <input
+              id="platform-account-profile-url"
               type="url"
               className="form-input"
               placeholder="https://leetcode.com/u/username"
@@ -227,15 +247,17 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
               onChange={(e) => setProfileUrl(e.target.value)}
               disabled={isLoading}
               maxLength={500}
+              aria-invalid={Boolean(fieldErrors.profileUrl)}
+              aria-describedby={fieldErrors.profileUrl ? 'platform-account-profile-url-error' : undefined}
             />
-            {fieldErrors.profileUrl && <div className="form-error">{fieldErrors.profileUrl}</div>}
+            {fieldErrors.profileUrl && <div id="platform-account-profile-url-error" className="form-error" role="alert">{fieldErrors.profileUrl}</div>}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={onClose}
+              onClick={closeIfIdle}
               disabled={isLoading}
             >
               Cancel
@@ -245,7 +267,9 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
               className="btn btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? <span className="spinner" /> : isEdit ? 'Save Changes' : 'Connect Account'}
+              {isLoading || submittingRef.current
+                ? <><span className="spinner" aria-hidden="true" /><span>{isEdit ? 'Saving…' : 'Connecting…'}</span></>
+                : isEdit ? 'Save Changes' : 'Connect Account'}
             </button>
           </div>
         </form>

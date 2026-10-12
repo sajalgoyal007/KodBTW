@@ -52,8 +52,8 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
               width: '40px',
               height: '40px',
               borderRadius: 'var(--radius-md)',
-              backgroundColor: 'rgba(249, 115, 22, 0.1)',
-              border: '1px solid rgba(249, 115, 22, 0.2)',
+              backgroundColor: 'var(--color-primary-soft)',
+              border: '1px solid var(--color-primary-border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -77,9 +77,9 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
                 <span
                   className="badge"
                   style={{
-                    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                    backgroundColor: 'var(--color-warning-soft)',
                     color: 'var(--color-warning)',
-                    border: '1px solid rgba(234, 179, 8, 0.3)',
+                    border: '1px solid var(--color-warning-border)',
                     fontSize: '0.75rem',
                   }}
                 >
@@ -117,7 +117,7 @@ export const MyRankCard: React.FC<MyRankCardProps> = ({ myRank, loading }) => {
             backgroundColor: 'var(--color-bg-subtle)',
             borderRadius: 'var(--radius-md)',
             padding: '1rem',
-            border: isRanked ? '1px solid rgba(249, 115, 22, 0.3)' : '1px solid var(--color-border-subtle)',
+            border: isRanked ? '1px solid var(--color-primary-border)' : '1px solid var(--color-border-subtle)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '0.375rem' }}>

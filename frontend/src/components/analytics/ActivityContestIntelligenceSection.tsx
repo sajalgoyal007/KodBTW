@@ -1,9 +1,12 @@
 import React from 'react';
 import { Activity, AlertCircle, Clock3, RefreshCw, Trophy } from 'lucide-react';
 import { useActivityContestIntelligence } from '../../hooks/useActivityContestIntelligence';
+import { getRetainedDataViewState } from '../../utils/analyticsPresentation';
 
 export const ActivityContestIntelligenceSection: React.FC = () => {
   const { activity, contests, loading, error, refetch } = useActivityContestIntelligence();
+  const hasData = activity !== null && contests !== null;
+  const viewState = getRetainedDataViewState({ loading, error, hasData });
 
   return (
     <section className="activity-contest-section" aria-labelledby="activity-contest-heading">
@@ -15,13 +18,15 @@ export const ActivityContestIntelligenceSection: React.FC = () => {
         {contests?.lastUpdatedAt && <span className="activity-contest-freshness"><Clock3 size={14} />Updated {new Date(contests.lastUpdatedAt).toLocaleString()}</span>}
       </div>
 
-      {loading && <div className="card activity-contest-state" aria-live="polite"><RefreshCw size={18} className="spinner" /> Loading recorded activity and ratings…</div>}
+      {viewState === 'loading' && <div className="card activity-contest-state" aria-live="polite"><RefreshCw size={18} className="spinner" /> Loading recorded activity and ratings…</div>}
 
-      {!loading && error && <div className="card activity-contest-state error" role="alert">
-        <AlertCircle size={19} /><span>{error}</span><button type="button" className="btn btn-secondary" onClick={refetch}>Retry</button>
+      {viewState === 'refreshing' && <p className="analytics-data-notice" role="status" aria-live="polite">Updating activity and contest intelligence. Your last loaded results remain visible.</p>}
+
+      {(viewState === 'error' || viewState === 'stale-error') && error && <div className="card activity-contest-state error" role="alert">
+        <AlertCircle size={19} /><span>{error}{viewState === 'stale-error' ? ' Showing the last loaded results.' : ''}</span><button type="button" className="btn btn-secondary" onClick={refetch}>Retry</button>
       </div>}
 
-      {!loading && !error && activity && contests && (
+      {hasData && viewState !== 'loading' && (
         <div className="activity-contest-grid">
           <article className="card activity-contest-card">
             <div className="activity-contest-card-title"><Activity size={18} /><h3>Activity history</h3></div>

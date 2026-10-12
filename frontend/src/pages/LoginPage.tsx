@@ -59,37 +59,20 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem 1.5rem',
-      backgroundColor: 'var(--color-bg-base)',
-    }}>
-      <div style={{ width: '100%', maxWidth: '420px' }}>
+    <div className="auth-page">
+      <div className="auth-panel">
         {/* Branding */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--color-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--color-primary-text)',
-              fontWeight: 800,
-            }}>
+        <div className="auth-heading">
+          <Link to="/" className="auth-brand">
+            <div className="auth-brand-mark">
               <Code2 size={24} />
             </div>
-            <span style={{ fontWeight: 700, fontSize: '1.5rem', letterSpacing: '-0.02em' }}>
+            <span className="auth-wordmark">
               Kod<span style={{ color: 'var(--color-primary)' }}>BTW</span>
             </span>
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>Welcome back</h1>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
+          <h1>Welcome back</h1>
+          <p>
             Sign in to access your unified dashboard
           </p>
         </div>
@@ -97,7 +80,7 @@ export const LoginPage: React.FC = () => {
         {/* Login Card */}
         <div className="card">
           {error && (
-            <div className="alert alert-error">
+            <div className="alert alert-error" role="alert">
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
               <span>{error}</span>
             </div>
@@ -115,8 +98,10 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 disabled={isLoading}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               />
-              {fieldErrors.email && <span className="form-error">{fieldErrors.email}</span>}
+              {fieldErrors.email && <span id="login-email-error" className="form-error" role="alert">{fieldErrors.email}</span>}
             </div>
 
             <div className="form-group">
@@ -130,8 +115,10 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 disabled={isLoading}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
               />
-              {fieldErrors.password && <span className="form-error">{fieldErrors.password}</span>}
+              {fieldErrors.password && <span id="login-password-error" className="form-error" role="alert">{fieldErrors.password}</span>}
             </div>
 
             <button
@@ -154,12 +141,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Footer Link */}
-        <p style={{
-          textAlign: 'center',
-          marginTop: '1.5rem',
-          fontSize: '0.875rem',
-          color: 'var(--color-text-secondary)',
-        }}>
+        <p className="auth-footer">
           Don't have an account?{' '}
           <Link to="/register" style={{ color: 'var(--color-primary)', fontWeight: 500 }}>
             Create one free

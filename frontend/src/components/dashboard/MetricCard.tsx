@@ -19,7 +19,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
-      className="card"
+      className="card dashboard-metric-card"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -29,11 +29,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-        <span style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span className="dashboard-metric-label" style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {title}
         </span>
         {icon && (
-          <div style={{ color: accentColor || 'var(--color-text-muted)' }}>
+          <div className="dashboard-metric-icon" style={{ color: accentColor || 'var(--color-text-muted)' }}>
             {icon}
           </div>
         )}
@@ -41,7 +41,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
       <div>
         <div
-          className="mono"
+          className="mono dashboard-metric-value"
           style={{
             fontSize: '1.75rem',
             fontWeight: 700,
