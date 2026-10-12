@@ -2,8 +2,8 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SITE_ORIGIN = 'https://kodbtw.vercel.app';
-const HOME_TITLE = 'KodBTW — Unified Coding Profiles & Analytics';
-const HOME_DESCRIPTION = 'Track supported LeetCode and Codeforces stats, view available third-party CodeChef data, and share a public coding profile with persisted progress and analytics.';
+const HOME_TITLE = 'KodBTW | Coding Profiles and Progress Analytics';
+const HOME_DESCRIPTION = 'Bring live LeetCode and Codeforces statistics into one coding profile, follow persisted progress and analytics, and share your public KodBTW profile.';
 
 const privateRouteTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
