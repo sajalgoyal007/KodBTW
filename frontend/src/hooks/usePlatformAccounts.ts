@@ -4,6 +4,7 @@ import {
   PlatformAccountRequest,
 } from '../types/platform';
 import { PlatformStats } from '../types/dashboard';
+import { getPlatformSyncSourceStatus } from '../utils/platformStatsSource';
 import {
   getAll,
   create,
@@ -38,8 +39,8 @@ export function usePlatformAccounts(): UsePlatformAccountsResult {
     try {
       const data = await getAll();
       setAccounts(data);
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch platform accounts.');
+    } catch {
+      setError('We could not load your connected platforms. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -101,15 +102,7 @@ export function usePlatformAccounts(): UsePlatformAccountsResult {
     setAccounts((prev) => prev.map((account) => account.id === id
       ? {
           ...account,
-          sourceStatus: account.sourceStatus === 'SOURCE_PENDING'
-            ? 'SOURCE_PENDING'
-            : result.syncStatus.status === 'SUCCEEDED'
-              ? 'SYNCED'
-              : result.syncStatus.status === 'RUNNING'
-                ? 'SYNCING'
-                : result.syncStatus.status === 'FAILED'
-                  ? 'SYNC_FAILED'
-                  : 'REAL_AVAILABLE',
+          sourceStatus: getPlatformSyncSourceStatus(account.sourceStatus, result),
           syncStatus: result.syncStatus.status,
           lastAttemptAt: result.syncStatus.lastAttemptAt,
           lastSuccessAt: result.syncStatus.lastSuccessAt,

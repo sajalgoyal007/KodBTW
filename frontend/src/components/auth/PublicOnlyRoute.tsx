@@ -7,9 +7,9 @@ interface PublicOnlyRouteProps {
 }
 
 export const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, sessionUnavailable } = useAuth();
 
-  if (isLoading) {
+  if (isLoading && !sessionUnavailable) {
     return (
       <div style={{
         minHeight: '100vh',

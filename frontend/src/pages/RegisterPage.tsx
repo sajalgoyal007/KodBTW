@@ -3,6 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Code2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ApiError } from '../services/api/apiClient';
+import { BackendConnectionStatus } from '../components/auth/BackendConnectionStatus';
+import { useBackendPreflight } from '../hooks/useBackendPreflight';
+import {
+  formatAuthApiError,
+  formatRegistrationAutoLoginFailure,
+  RegistrationAutoLoginError,
+} from '../services/api/authErrors';
+import { SessionValidationNotice } from '../components/auth/SessionValidationNotice';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -12,7 +20,12 @@ export const RegisterPage: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register } = useAuth();
+  const { register, isLoading: isSessionLoading } = useAuth();
+  const {
+    status: backendStatus,
+    submitIfReady,
+    retry: retryBackendCheck,
+  } = useBackendPreflight();
   const navigate = useNavigate();
 
   const validate = (): boolean => {
@@ -47,14 +60,17 @@ export const RegisterPage: React.FC = () => {
     if (!validate()) {
       return;
     }
-
-    setIsLoading(true);
     try {
-      await register(name.trim(), email.trim(), password);
-      navigate('/dashboard', { replace: true });
+      await submitIfReady(async () => {
+        setIsLoading(true);
+        await register(name.trim(), email.trim(), password);
+        navigate('/dashboard', { replace: true });
+      });
     } catch (err) {
-      if (err instanceof ApiError) {
-        setError(err.data.message || err.message);
+      if (err instanceof RegistrationAutoLoginError) {
+        setError(formatRegistrationAutoLoginFailure());
+      } else if (err instanceof ApiError) {
+        setError(formatAuthApiError(err.status, 'registration'));
         if (err.data.details) {
           setFieldErrors(err.data.details);
         }
@@ -86,7 +102,9 @@ export const RegisterPage: React.FC = () => {
         </div>
 
         {/* Register Card */}
-        <div className="card">
+        <div className="card auth-card">
+          <SessionValidationNotice />
+          <BackendConnectionStatus status={backendStatus} onRetry={() => { void retryBackendCheck(); }} />
           {error && (
             <div className="alert alert-error" role="alert">
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -105,7 +123,7 @@ export const RegisterPage: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="name"
-                disabled={isLoading}
+                disabled={isLoading || isSessionLoading}
                 aria-invalid={Boolean(fieldErrors.name)}
                 aria-describedby={fieldErrors.name ? 'register-name-error' : undefined}
               />
@@ -122,7 +140,7 @@ export const RegisterPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                disabled={isLoading}
+                disabled={isLoading || isSessionLoading}
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
               />
@@ -139,7 +157,7 @@ export const RegisterPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
-                disabled={isLoading}
+                disabled={isLoading || isSessionLoading}
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
               />
@@ -148,9 +166,8 @@ export const RegisterPage: React.FC = () => {
 
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
-              disabled={isLoading}
+              className="btn btn-primary auth-submit"
+              disabled={isLoading || isSessionLoading || backendStatus !== 'reachable'}
             >
               {isLoading ? (
                 <>

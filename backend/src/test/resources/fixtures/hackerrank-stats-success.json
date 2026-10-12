@@ -1,0 +1,14 @@
+{
+  "status": "success",
+  "message": "retrieved",
+  "platform": "hackerrank",
+  "username": "sample_user",
+  "cached": false,
+  "data": {
+    "totalSolved": 8,
+    "practiceScore": 70,
+    "ranking": 527450,
+    "reputation": 0,
+    "submissionCalendar": {}
+  }
+}

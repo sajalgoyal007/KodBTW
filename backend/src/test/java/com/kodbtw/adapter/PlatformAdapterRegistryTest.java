@@ -2,6 +2,8 @@ package com.kodbtw.adapter;
 
 import com.kodbtw.adapter.impl.CodeChefAdapter;
 import com.kodbtw.adapter.codechef.CodeChefClient;
+import com.kodbtw.adapter.hackerrank.HackerRankClient;
+import com.kodbtw.adapter.geeksforgeeks.GeeksForGeeksClient;
 import com.kodbtw.adapter.impl.CodeforcesAdapter;
 import com.kodbtw.adapter.impl.GeeksForGeeksAdapter;
 import com.kodbtw.adapter.impl.HackerRankAdapter;
@@ -27,8 +29,8 @@ class PlatformAdapterRegistryTest {
                 new LeetCodeAdapter(username -> null),
                 new CodeChefAdapter((CodeChefClient) handle -> null),
                 new CodeforcesAdapter(handle -> null),
-                new GeeksForGeeksAdapter(),
-                new HackerRankAdapter()
+                new GeeksForGeeksAdapter((GeeksForGeeksClient) username -> null),
+                new HackerRankAdapter((HackerRankClient) username -> null)
         );
         registry = new PlatformAdapterRegistry(adapters);
     }

@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PublicProfileData } from '../types/publicProfile';
 import { publicProfileService } from '../services/publicProfileService';
 import { ApiError } from '../services/api/apiClient';
+import { createLatestRequestTracker } from '../utils/requestCoordination';
 
 interface UsePublicProfileResult {
   data: PublicProfileData | null;
@@ -16,9 +17,13 @@ export function usePublicProfile(username: string | undefined): UsePublicProfile
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState<boolean>(false);
+  const requestTrackerRef = useRef(createLatestRequestTracker());
 
   const fetchProfile = useCallback(async () => {
+    const requestVersion = requestTrackerRef.current.begin();
     if (!username) {
+      setData(null);
+      setError(null);
       setLoading(false);
       setNotFound(true);
       return;
@@ -29,21 +34,24 @@ export function usePublicProfile(username: string | undefined): UsePublicProfile
     setNotFound(false);
     try {
       const result = await publicProfileService.getPublicProfile(username);
+      if (!requestTrackerRef.current.isCurrent(requestVersion)) return;
       setData(result);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (!requestTrackerRef.current.isCurrent(requestVersion)) return;
       if (err instanceof ApiError && err.status === 404) {
         setNotFound(true);
       } else {
-        setError(err?.message || 'Failed to load developer profile');
+        setError(err instanceof ApiError ? err.message : 'Failed to load developer profile. Please try again.');
       }
       setData(null);
     } finally {
-      setLoading(false);
+      if (requestTrackerRef.current.isCurrent(requestVersion)) setLoading(false);
     }
   }, [username]);
 
   useEffect(() => {
     fetchProfile();
+    return () => requestTrackerRef.current.invalidate();
   }, [fetchProfile]);
 
   return {

@@ -185,6 +185,18 @@ class AuthControllerTest {
     }
 
     @Test
+    void loginAcceptsTheExplicit127LoopbackFrontendOrigin() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .header(HttpHeaders.ORIGIN, "http://127.0.0.1:5173")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://127.0.0.1:5173"))
+                .andExpect(jsonPath("$.error").value("Validation Failed"));
+    }
+
+    @Test
     void loginCorsPreflightAllowsTheCorrelationIdHeader() throws Exception {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/api/auth/login")
                         .header(HttpHeaders.ORIGIN, "http://localhost:5173")
@@ -195,6 +207,7 @@ class AuthControllerTest {
                         .header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
                                 org.hamcrest.Matchers.containsStringIgnoringCase("x-request-id")));
     }
+
     @Test
     void testLoginInvalidPassword() throws Exception {
         RegisterRequest registerReq = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");

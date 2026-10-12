@@ -89,15 +89,27 @@ class PlatformSyncServiceTest {
     }
 
     @Test void sourcePendingPlatformReturnsUnavailableStateWithoutAdapterOrPersistenceCalls() {
-        account.setPlatform(Platform.GEEKSFORGEEKS);
+        assertSourcePendingPlatformDoesNotReachAdapter(Platform.GEEKSFORGEEKS);
+    }
+
+    @Test void hackerRankSourcePendingDoesNotLookUpOrInvokeAdapter() {
+        assertSourcePendingPlatformDoesNotReachAdapter(Platform.HACKERRANK);
+    }
+
+    private void assertSourcePendingPlatformDoesNotReachAdapter(Platform platform) {
+        when(adapter.getPlatform()).thenReturn(platform);
+        PlatformAdapterRegistry registry = spy(new PlatformAdapterRegistry(List.of(adapter)));
+        service = new PlatformSyncService(accounts, registry, persistence, statsService);
+        account.setPlatform(platform);
         when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
-        PlatformStats pending = PlatformStats.builder().platform(Platform.GEEKSFORGEEKS).source("SOURCE_PENDING").build();
+        PlatformStats pending = PlatformStats.builder().platform(platform).source("SOURCE_PENDING").build();
         when(statsService.getStats(7L, 9L)).thenReturn(pending);
 
         var response = service.syncOwnedAccount(7L, 9L);
 
         assertEquals(SyncStatus.NEVER_SYNCED, response.syncStatus().status());
         assertEquals("SOURCE_PENDING", response.currentStats().getSource());
+        verify(registry, never()).getAdapter(platform);
         verify(adapter, never()).fetchStats(any());
         verify(persistence, never()).markStarted(anyLong(), anyLong());
         verify(persistence, never()).recordSuccess(anyLong(), any());

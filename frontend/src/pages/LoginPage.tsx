@@ -3,6 +3,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Code2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ApiError } from '../services/api/apiClient';
+import { BackendConnectionStatus } from '../components/auth/BackendConnectionStatus';
+import { useBackendPreflight } from '../hooks/useBackendPreflight';
+import { formatAuthApiError } from '../services/api/authErrors';
+import { SessionValidationNotice } from '../components/auth/SessionValidationNotice';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +15,12 @@ export const LoginPage: React.FC = () => {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuth();
+  const { login, isLoading: isSessionLoading } = useAuth();
+  const {
+    status: backendStatus,
+    submitIfReady,
+    retry: retryBackendCheck,
+  } = useBackendPreflight();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,14 +48,15 @@ export const LoginPage: React.FC = () => {
     if (!validate()) {
       return;
     }
-
-    setIsLoading(true);
     try {
-      await login(email.trim(), password);
-      navigate(from, { replace: true });
+      await submitIfReady(async () => {
+        setIsLoading(true);
+        await login(email.trim(), password);
+        navigate(from, { replace: true });
+      });
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.data.message || err.message);
+        setError(formatAuthApiError(err.status, 'login'));
         if (err.data.details) {
           setFieldErrors(err.data.details);
         }
@@ -78,7 +88,9 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Login Card */}
-        <div className="card">
+        <div className="card auth-card">
+          <SessionValidationNotice />
+          <BackendConnectionStatus status={backendStatus} onRetry={() => { void retryBackendCheck(); }} />
           {error && (
             <div className="alert alert-error" role="alert">
               <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -97,7 +109,7 @@ export const LoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                disabled={isLoading}
+                disabled={isLoading || isSessionLoading}
                 aria-invalid={Boolean(fieldErrors.email)}
                 aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
               />
@@ -114,7 +126,7 @@ export const LoginPage: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                disabled={isLoading}
+                disabled={isLoading || isSessionLoading}
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
               />
@@ -123,9 +135,8 @@ export const LoginPage: React.FC = () => {
 
             <button
               type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '0.5rem', padding: '0.75rem' }}
-              disabled={isLoading}
+              className="btn btn-primary auth-submit"
+              disabled={isLoading || isSessionLoading || backendStatus !== 'reachable'}
             >
               {isLoading ? (
                 <>

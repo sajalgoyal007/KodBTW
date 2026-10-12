@@ -1,14 +1,18 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { User } from '../types/auth';
 import { authApi } from '../services/api/authApi';
 import { TOKEN_STORAGE_KEY } from '../services/api/apiClient';
 import { AUTH_TIMEOUT_MESSAGES } from '../services/api/authTimeoutMessages';
+import { runPostRegistrationLogin } from '../services/api/authErrors';
+import { restoreSession } from '../services/api/sessionRestore';
 
 export interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  sessionUnavailable: boolean;
+  retrySession: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -20,50 +24,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [sessionUnavailable, setSessionUnavailable] = useState(false);
+  const validationAttempt = useRef(0);
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
+  const validateStoredSession = useCallback(async (signal?: AbortSignal): Promise<void> => {
+    const attempt = ++validationAttempt.current;
+    setIsLoading(true);
+    const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const result = await restoreSession(
+      storedToken,
+      (requestSignal) => authApi.getMe(requestSignal),
+      () => {
+        if (validationAttempt.current === attempt) {
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+        }
+      },
+      signal,
+    );
 
-      try {
-        const currentUser = await authApi.getMe();
-        setUser(currentUser);
-        setToken(storedToken);
-      } catch {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        setUser(null);
-        setToken(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (signal?.aborted || validationAttempt.current !== attempt || result.status === 'cancelled') return;
 
-    initializeAuth();
-
-    const handleUnauthorized = () => {
+    if (result.status === 'authenticated') {
+      setUser(result.user);
+      setToken(storedToken);
+      setSessionUnavailable(false);
+    } else if (result.status === 'unavailable') {
+      // Keep the saved token so a temporary timeout/network/server error does
+      // not silently destroy a potentially valid session. Protected routes
+      // remain blocked until validation succeeds.
+      setUser(null);
+      setToken(storedToken);
+      setSessionUnavailable(true);
+    } else {
       setUser(null);
       setToken(null);
+      setSessionUnavailable(false);
+    }
+
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void validateStoredSession(controller.signal);
+
+    const handleUnauthorized = () => {
+      validationAttempt.current += 1;
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      setUser(null);
+      setToken(null);
+      setSessionUnavailable(false);
+      setIsLoading(false);
     };
 
     window.addEventListener('auth:unauthorized', handleUnauthorized);
     return () => {
+      controller.abort();
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
     };
-  }, []);
+  }, [validateStoredSession]);
+
+  const retrySession = useCallback(() => validateStoredSession(), [validateStoredSession]);
 
   const loginWithTimeoutMessage = async (
     email: string,
     password: string,
     timeoutMessage?: string,
   ): Promise<void> => {
+    validationAttempt.current += 1;
     const response = await authApi.login({ email, password }, timeoutMessage);
     localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
     setToken(response.token);
     setUser(response.user);
+    setSessionUnavailable(false);
   };
 
   const login = async (email: string, password: string): Promise<void> => {
@@ -71,15 +104,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (name: string, email: string, password: string): Promise<void> => {
+    validationAttempt.current += 1;
     await authApi.register({ name, email, password });
     // Auto-login after successful registration
-    await loginWithTimeoutMessage(email, password, AUTH_TIMEOUT_MESSAGES.registrationAutoLogin);
+    await runPostRegistrationLogin(() =>
+      loginWithTimeoutMessage(email, password, AUTH_TIMEOUT_MESSAGES.registrationAutoLogin));
   };
 
   const logout = (): void => {
+    validationAttempt.current += 1;
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     setToken(null);
     setUser(null);
+    setSessionUnavailable(false);
   };
 
   const value: AuthContextType = {
@@ -87,6 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     token,
     isAuthenticated: !!token && !!user,
     isLoading,
+    sessionUnavailable,
+    retrySession,
     login,
     register,
     logout,

@@ -1,5 +1,9 @@
 # Platform data acquisition
 
+## Current working-tree implementation note — 12 October 2026
+
+GeeksforGeeks and HackerRank adapter/client prototype files are now present in the local working tree (some are untracked), in addition to the earlier acquisition research below. `Platform.hasLiveStatsSource()` still excludes both platforms, so `PlatformSyncService` returns before resolving these adapters; their statistics remain unavailable through normal account sync. This source presence does not change the authorization findings below or make the providers production-ready. The historical Phase 13D statements below describe the state and decision at that time.
+
 ## 10 October 2026 CodeChef third-party integration
 
 KodBTW now calls the unofficial third-party endpoint `GET https://codechef-stats.tashif.codes/profile/{handle}` through a backend-only `CodeChefClient`. The `CodeChefAdapter` labels persisted results `CODECHEF_THIRD_PARTY` and maps only `totalSolved`, `currentRating`, `highestRating`, and `globalRank`; difficulty counts, contests, and streaks remain null. Non-200/unsuccessful/unusable responses fail as provider errors, profile-not-found responses map to not-found, and sync failures do not fall back to mock metrics. This is not an official CodeChef API. No live account sync was performed during this verification.

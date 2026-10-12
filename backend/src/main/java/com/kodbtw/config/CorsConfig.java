@@ -12,7 +12,7 @@ import java.util.List;
 public class CorsConfig implements WebMvcConfigurer {
     private final List<String> allowedOrigins;
 
-    public CorsConfig(@Value("${app.cors.allowed-origins:http://localhost:5173}") String configuredOrigins) {
+    public CorsConfig(@Value("${app.cors.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}") String configuredOrigins) {
         this.allowedOrigins = parseAllowedOrigins(configuredOrigins);
     }
 

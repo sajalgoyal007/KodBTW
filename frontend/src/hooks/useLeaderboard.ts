@@ -6,6 +6,8 @@ import {
   LeaderboardDataFilter,
 } from '../types/leaderboard';
 import { getLeaderboard, getMyRank } from '../services/api/leaderboardApi';
+import { ApiError } from '../services/api/apiClient';
+import { createLatestRequestTracker } from '../utils/requestCoordination';
 
 export interface UseLeaderboardResult {
   leaderboard: LeaderboardResponse | null;
@@ -36,11 +38,10 @@ export function useLeaderboard(): UseLeaderboardResult {
   const [dataFilter, setDataFilter] = useState<LeaderboardDataFilter>('real');
   const [college, setCollege] = useState<string>('');
 
-  const isFetchingRef = useRef<boolean>(false);
+  const requestTrackerRef = useRef(createLatestRequestTracker());
 
   const fetchData = useCallback(async () => {
-    if (isFetchingRef.current) return;
-    isFetchingRef.current = true;
+    const requestVersion = requestTrackerRef.current.begin();
     setLoading(true);
     setError(null);
 
@@ -55,20 +56,22 @@ export function useLeaderboard(): UseLeaderboardResult {
         }),
         getMyRank().catch(() => null),
       ]);
+      if (!requestTrackerRef.current.isCurrent(requestVersion)) return;
       setLeaderboard(lbRes);
       if (myRankRes) {
         setMyRank(myRankRes);
       }
-    } catch (err: any) {
-      setError(err?.message || 'Failed to fetch leaderboard data.');
+    } catch (err: unknown) {
+      if (!requestTrackerRef.current.isCurrent(requestVersion)) return;
+      setError(err instanceof ApiError ? err.message : 'Failed to fetch leaderboard data.');
     } finally {
-      setLoading(false);
-      isFetchingRef.current = false;
+      if (requestTrackerRef.current.isCurrent(requestVersion)) setLoading(false);
     }
   }, [page, size, sort, dataFilter, college]);
 
   useEffect(() => {
     fetchData();
+    return () => requestTrackerRef.current.invalidate();
   }, [fetchData]);
 
   const handleSetSort = (newSort: LeaderboardSort) => {

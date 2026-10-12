@@ -37,9 +37,10 @@ export const authApi = {
     });
   },
 
-  getMe: (): Promise<User> => {
+  getMe: (signal?: AbortSignal): Promise<User> => {
     return apiClient<User>('/api/auth/me', {
       method: 'GET',
+      signal,
     });
   },
 };

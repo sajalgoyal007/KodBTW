@@ -1,26 +1,32 @@
-# KodBTW — Project Architecture & Roadmap
+# KodBTW architecture notes
 
-## 1. Overview
-KodBTW is a Java-based unified coding profile and analytics platform enabling students to connect multiple coding profiles (LeetCode, CodeChef, Codeforces, GeeksforGeeks, HackerRank) and view their statistics, progress, and rankings in one cohesive dashboard.
+This document describes the current repository implementation rather than the original phased roadmap. For the editable end-to-end diagram, see [`documentation/diagrams/architecture/SYSTEM_ARCHITECTURE.md`](../documentation/diagrams/architecture/SYSTEM_ARCHITECTURE.md).
 
-## 2. Core Tech Stack
-- **Backend:** Java 21 LTS, Spring Boot 3.3.x, Spring Data JPA / Hibernate, Spring Security, BCrypt, JWT, Maven
-- **Database & Migrations:** MySQL 8.x with Flyway migrations
-- **Frontend:** React, TypeScript, Vite, Vanilla CSS design system (Dark theme with vibrant orange accents based on Google Stitch designs)
+## Runtime structure
 
-## 3. Monorepo Organization
-- `backend/`: Spring Boot REST API application
-- `frontend/`: React + TypeScript frontend application
-- `docs/`: Architectural specifications, schema diagrams, and project documentation
+- **Frontend:** React 18, TypeScript, React Router, and Vite. The client serves public landing/profile routes and authenticated account/dashboard routes.
+- **API:** Java 21 and Spring Boot 3.3 REST controllers delegate to services. Spring Security is stateless; requests use signed JWT bearer tokens. BCrypt hashes passwords.
+- **Persistence:** Spring Data JPA repositories use MySQL. Flyway V1–V7 manage DDL; Hibernate validates the migrated schema.
+- **Platform data:** `PlatformAdapter` and `PlatformAdapterRegistry` provide the adapter boundary. LeetCode, Codeforces, and CodeChef are enabled by `Platform.hasLiveStatsSource()`. CodeChef uses an unofficial third-party provider and is labelled `CODECHEF_THIRD_PARTY`. GFG/HackerRank adapter/client prototypes present in the current local working tree are excluded from normal sync and remain unavailable.
+- **Analytics/history:** source-labelled snapshots are stored per user/platform/date; services create dashboard responses and the leaderboard cache is a denormalized projection.
+- **Contest calendar:** Codeforces is the default provider; a local fixture provider can be explicitly selected for UI testing.
 
-## 4. Phased Implementation Roadmap
-- **Phase 1:** Monorepo scaffolding and directory structure (Current)
-- **Phase 2:** Spring Boot + MySQL + Flyway database configuration
-- **Phase 3:** User entity, authentication, BCrypt, and JWT implementation
-- **Phase 4:** User profile management
-- **Phase 5:** PlatformAccount and seeded platform statistics
-- **Phase 6:** Dashboard analytics APIs
-- **Phase 7:** Frontend foundation and design system (Dark + Orange)
-- **Phase 8:** Incremental screen implementation (12 screens)
-- **Phase 9:** Frontend-backend integration
-- **Phase 10:** Public developer profiles and profile sharing, including unique public usernames, an unauthenticated sanitized profile API, profile sharing UI, and leaderboard links to public profiles
+## Request path
+
+The browser sends JSON requests to Spring controllers. Protected requests carry a JWT in the `Authorization` header. The JWT filter verifies signature/expiry and loads the subject user. Services enforce ownership before profile/account operations. Repositories load/persist entities. Public profile access uses a dedicated response DTO and a public API route; authenticated account data is not exposed through that route.
+
+On sync, `PlatformSyncService` verifies ownership, applies the live-source gate, lock/cooldown and Codeforces spacing, marks status, resolves an adapter, then persists a validated result or a classified failure. A failed refresh retains prior successful stats. See [platform data acquisition](platform-data-acquisition.md) for source provenance and authorization cautions.
+
+## Repository deployment artifacts
+
+The frontend includes a Vite build and Vercel SPA rewrite configuration. The backend has a multi-stage Java 21 Dockerfile running as a non-root user. MySQL and secrets are external runtime requirements. These artifacts do not prove current hosting account configuration or production deployment status.
+
+## Documentation map
+
+- [System architecture diagram](../documentation/diagrams/architecture/SYSTEM_ARCHITECTURE.md)
+- [Data flow, authentication, sync, deployment diagrams](../documentation/diagrams/system-design/README.md)
+- [UML diagrams](../documentation/diagrams/uml/README.md)
+- [Database schema and ER diagram](../documentation/diagrams/database/README.md)
+- [Platform integration diagram](../documentation/diagrams/platform-integration/README.md)
+- [Codeforces field mapping](CODEFORCES_INTEGRATION.md)
+- [Contest fixture mode](contest-calendar-fixture-mode.md)
