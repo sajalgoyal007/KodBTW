@@ -2,7 +2,7 @@
 
 ## Unified Coding Identity & Campus Coding Intelligence Platform
 
-KodBTW is a web application for connecting coding-platform profiles, reviewing available statistics and persisted progress, and sharing a public developer profile. The platform also provides account-scoped dashboards, analytics, leaderboard views, and a contest calendar. Source coverage and permissions differ by platform; see the integration status below before interpreting any metric.
+KodBTW brings coding-platform profiles, persisted statistics, dashboard analytics, historical progress, and public developer profiles into one application. It helps users understand their coding progress and can help strengthen their resumes. The platform also provides account-scoped dashboards, leaderboard views, and a contest calendar. Source coverage and permissions differ by platform; see the integration status below before interpreting any metric.
 
 > **Academic project context** — Project information below was supplied for this documentation task and has not been independently verified against college records. Confirm it before final academic submission.
 
