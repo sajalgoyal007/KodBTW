@@ -13,10 +13,13 @@ import { PublicProfilePage } from './pages/PublicProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 import { ThemeToggle } from './components/common/ThemeToggle';
+import { RouteMetadata } from './components/seo/RouteMetadata';
 
 export const App: React.FC = () => {
   return (
-    <Routes>
+    <>
+      <RouteMetadata />
+      <Routes>
       {/* Public landing route */}
       <Route path="/" element={<LandingPage />} />
 
@@ -93,7 +96,8 @@ export const App: React.FC = () => {
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   );
 };
 
