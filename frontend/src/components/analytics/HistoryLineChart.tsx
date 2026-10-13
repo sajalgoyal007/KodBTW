@@ -1,4 +1,12 @@
 import React from 'react';
+import {
+  getDatePositionRatio,
+  getHistoryDateMidpoint,
+  HistoryDateDomain,
+  isDateWithinHistoryDomain,
+  isValidHistoryDateDomain,
+  splitObservedSegments,
+} from '../../utils/historyChart';
 
 export interface HistoryChartPoint {
   date: string;
@@ -16,6 +24,7 @@ interface HistoryLineChartProps {
   description: string;
   series: HistoryChartSeries[];
   emptyMessage: string;
+  dateDomain: HistoryDateDomain;
 }
 
 const WIDTH = 760;
@@ -25,12 +34,20 @@ const RIGHT = 18;
 const TOP = 20;
 const BOTTOM = 42;
 
-export const HistoryLineChart: React.FC<HistoryLineChartProps> = ({ title, description, series, emptyMessage }) => {
-  const allDates = series.flatMap((line) => line.points.map((point) => point.date)).sort();
-  const allValues = series.flatMap((line) => line.points.map((point) => point.value).filter((value): value is number => value !== null));
-  const uniqueDates = [...new Set(allDates)];
+export const HistoryLineChart: React.FC<HistoryLineChartProps> = ({ title, description, series, emptyMessage, dateDomain }) => {
+  if (!isValidHistoryDateDomain(dateDomain)
+      || !series.every((line) => Array.isArray(line.points)
+        && line.points.every((point) => isDateWithinHistoryDomain(point?.date, dateDomain)))) {
+    return <section className="card history-chart-card" role="alert">
+      <div><h3>{title}</h3><div className="history-chart-empty">History dates are unavailable for this chart.</div></div>
+    </section>;
+  }
 
-  const formatDate = (value: string) => new Date(`${value}T00:00:00Z`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  const allValues = series.flatMap((line) => line.points.map((point) => point.value).filter((value): value is number => value !== null));
+
+  const formatDate = (value: string, includeYear = false) => new Date(`${value}T00:00:00Z`).toLocaleDateString(undefined, {
+    month: 'short', day: 'numeric', ...(includeYear ? { year: 'numeric' as const } : {}), timeZone: 'UTC',
+  });
   const hasValues = allValues.length > 0;
   const rawMin = hasValues ? Math.min(...allValues) : 0;
   const rawMax = hasValues ? Math.max(...allValues) : 1;
@@ -38,25 +55,11 @@ export const HistoryLineChart: React.FC<HistoryLineChartProps> = ({ title, descr
   const max = rawMin === rawMax ? rawMax + 1 : rawMax;
   const plotWidth = WIDTH - LEFT - RIGHT;
   const plotHeight = HEIGHT - TOP - BOTTOM;
-  const xFor = (date: string) => {
-    if (uniqueDates.length <= 1) return LEFT + plotWidth / 2;
-    const index = uniqueDates.indexOf(date);
-    return LEFT + (index / (uniqueDates.length - 1)) * plotWidth;
-  };
+  const includeAxisYear = dateDomain.startDate.slice(0, 4) !== dateDomain.endDate.slice(0, 4);
+  const xFor = (date: string) => LEFT + getDatePositionRatio(date, dateDomain)! * plotWidth;
   const yFor = (value: number) => TOP + ((max - value) / (max - min)) * plotHeight;
-
-  const makeSegments = (line: HistoryChartSeries) => {
-    const segments: HistoryChartPoint[][] = [];
-    let active: HistoryChartPoint[] = [];
-    line.points.forEach((point) => {
-      if (point.value === null) {
-        if (active.length) segments.push(active);
-        active = [];
-      } else active.push(point);
-    });
-    if (active.length) segments.push(active);
-    return segments;
-  };
+  const midpoint = getHistoryDateMidpoint(dateDomain);
+  const axisDates = [dateDomain.startDate, midpoint!, dateDomain.endDate];
 
   return (
     <section className="card history-chart-card">
@@ -80,9 +83,14 @@ export const HistoryLineChart: React.FC<HistoryLineChartProps> = ({ title, descr
                   </g>
                 );
               })}
+              {axisDates.map((date, index) => {
+                const x = xFor(date);
+                const anchor = index === 0 ? 'start' : index === axisDates.length - 1 ? 'end' : 'middle';
+                return <text key={`${date}-${index}`} x={x} y={HEIGHT - 12} textAnchor={anchor} className="history-axis-label">{formatDate(date, includeAxisYear)}</text>;
+              })}
               {series.map((line) => (
                 <g key={line.name}>
-                  {makeSegments(line).map((segment, index) => (
+                  {splitObservedSegments(line.points).map((segment, index) => (
                     <path
                       key={`${line.name}-${index}`}
                       d={segment.map((point, pointIndex) => `${pointIndex ? 'L' : 'M'} ${xFor(point.date)} ${yFor(point.value!)}`).join(' ')}
@@ -95,17 +103,11 @@ export const HistoryLineChart: React.FC<HistoryLineChartProps> = ({ title, descr
                   ))}
                   {line.points.filter((point) => point.value !== null).map((point) => (
                     <circle key={`${line.name}-${point.date}`} cx={xFor(point.date)} cy={yFor(point.value!)} r="4" fill={line.color}>
-                      <title>{`${line.name} · ${formatDate(point.date)} · ${point.value!.toLocaleString()}`}</title>
+                      <title>{`${line.name} · ${formatDate(point.date, true)} · ${point.value!.toLocaleString()}`}</title>
                     </circle>
                   ))}
                 </g>
               ))}
-              {uniqueDates.length > 0 && (
-                <>
-                  <text x={LEFT} y={HEIGHT - 12} textAnchor="start" className="history-axis-label">{formatDate(uniqueDates[0])}</text>
-                  <text x={WIDTH - RIGHT} y={HEIGHT - 12} textAnchor="end" className="history-axis-label">{formatDate(uniqueDates[uniqueDates.length - 1])}</text>
-                </>
-              )}
             </svg>
           </div>
           <div className="history-chart-legend">

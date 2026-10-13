@@ -4,6 +4,7 @@ import { useDashboardHistory } from '../../hooks/useDashboardHistory';
 import { HistoryRange } from '../../types/history';
 import { HistoryChartSeries, HistoryLineChart } from './HistoryLineChart';
 import { getHistoryViewState } from '../../utils/analyticsPresentation';
+import { getHistoryResponseDateError } from '../../utils/historyChart';
 
 const RANGES: { value: HistoryRange; label: string }[] = [
   { value: '7d', label: '7D' },
@@ -21,8 +22,13 @@ const DIFFICULTIES = [
 export const DashboardHistorySection: React.FC = () => {
   const [range, setRange] = useState<HistoryRange>('30d');
   const { data, loading, error, refetch } = useDashboardHistory(range);
-  const currentRangeData = data?.range === range ? data : null;
-  const viewState = getHistoryViewState({ loading, error, hasCurrentRangeData: currentRangeData !== null });
+  const responseDateError = data ? getHistoryResponseDateError(data, range) : null;
+  const currentRangeData = data && responseDateError === null ? data : null;
+  const dateDomain = currentRangeData
+    ? { startDate: currentRangeData.rangeStart, endDate: currentRangeData.rangeEnd }
+    : null;
+  const visibleError = error ?? (loading ? null : responseDateError);
+  const viewState = getHistoryViewState({ loading, error: visibleError, hasCurrentRangeData: currentRangeData !== null });
   const dateLabel = (value: string | null) => value
     ? new Date(value).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     : 'No sync timestamp';
@@ -76,9 +82,9 @@ export const DashboardHistorySection: React.FC = () => {
 
       {viewState === 'loading' && <div className="history-loading card" aria-live="polite"><RefreshCw size={18} className="spinner" /> Loading history…</div>}
 
-      {viewState === 'error' && error && (
+      {viewState === 'error' && visibleError && (
         <div className="history-message card error" role="alert">
-          <AlertCircle size={20} /><span>{error}</span>
+          <AlertCircle size={20} /><span>{visibleError}</span>
           <button type="button" className="btn btn-secondary" onClick={() => void refetch()}>Retry</button>
         </div>
       )}
@@ -102,10 +108,10 @@ export const DashboardHistorySection: React.FC = () => {
           {currentRangeData.snapshotDates.length === 1 && <p className="history-insufficient">One observation is available. Sync again on a later date to compare progress.</p>}
           <p className="history-data-note">Totals use only platforms and metrics recorded on each snapshot date. Missing observations are not counted as zero, and chart points represent recorded dates only.</p>
           <div className="history-chart-grid">
-            <HistoryLineChart title="Solved progression" description="Combined values observed on each snapshot date" series={totalSeries} emptyMessage="No total-solved values in this range." />
-            <HistoryLineChart title="Platform comparison" description="Real solved counts, shown only at each platform's recorded dates" series={platformSeries} emptyMessage="No platform totals available in this range." />
-            <HistoryLineChart title="Difficulty progression" description="Easy, medium, and hard totals where providers report them" series={difficultySeries} emptyMessage="Difficulty history is not available for these snapshots." />
-            {ratingAvailable && <HistoryLineChart title="Rating trend" description="Recorded rating observations; no rating is inferred between syncs" series={ratingSeries} emptyMessage="No ratings available in this range." />}
+            {dateDomain && <HistoryLineChart title="Solved progression" description="Combined values observed on each snapshot date" series={totalSeries} emptyMessage="No total-solved values in this range." dateDomain={dateDomain} />}
+            {dateDomain && <HistoryLineChart title="Platform comparison" description="Real solved counts, shown only at each platform's recorded dates" series={platformSeries} emptyMessage="No platform totals available in this range." dateDomain={dateDomain} />}
+            {dateDomain && <HistoryLineChart title="Difficulty progression" description="Easy, medium, and hard totals where providers report them" series={difficultySeries} emptyMessage="Difficulty history is not available for these snapshots." dateDomain={dateDomain} />}
+            {ratingAvailable && dateDomain && <HistoryLineChart title="Rating trend" description="Recorded rating observations; no rating is inferred between syncs" series={ratingSeries} emptyMessage="No ratings available in this range." dateDomain={dateDomain} />}
           </div>
         </>
       )}

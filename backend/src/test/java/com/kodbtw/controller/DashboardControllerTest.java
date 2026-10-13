@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -258,14 +260,24 @@ class DashboardControllerTest {
 
     @Test
     void getHistory_authenticatedDefaultsToThirtyDaysAndReturnsEmptyHistory() throws Exception {
-        mockMvc.perform(get("/api/dashboard/history")
+        MvcResult result = mockMvc.perform(get("/api/dashboard/history")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.range", is("30d")))
                 .andExpect(jsonPath("$.snapshotDates", hasSize(0)))
                 .andExpect(jsonPath("$.overallSolved", hasSize(0)))
                 .andExpect(jsonPath("$.platforms", hasSize(0)))
-                .andExpect(jsonPath("$.freshness.snapshotCount", is(0)));
+                .andExpect(jsonPath("$.freshness.snapshotCount", is(0)))
+                .andReturn();
+
+        var response = objectMapper.readTree(result.getResponse().getContentAsString());
+        String rangeStart = response.get("rangeStart").asText();
+        String rangeEnd = response.get("rangeEnd").asText();
+        assertTrue(rangeStart.matches("\\d{4}-\\d{2}-\\d{2}"));
+        assertTrue(rangeEnd.matches("\\d{4}-\\d{2}-\\d{2}"));
+        assertEquals(rangeStart, LocalDate.parse(rangeStart).toString());
+        assertEquals(rangeEnd, LocalDate.parse(rangeEnd).toString());
+        assertEquals(LocalDate.parse(rangeEnd).minusDays(29), LocalDate.parse(rangeStart));
     }
 
     @Test

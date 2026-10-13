@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 public class PlatformStatsService {
@@ -72,10 +71,7 @@ public class PlatformStatsService {
     }
 
     private boolean isRealSnapshot(PlatformStatSnapshot snapshot) {
-        if (snapshot == null || snapshot.getSource() == null) return false;
-        String source = snapshot.getSource().toUpperCase(Locale.ROOT);
-        return (source.endsWith("_REAL") && !source.contains("MOCK"))
-                || source.equals("CODECHEF_THIRD_PARTY");
+        return snapshot != null && PlatformStatsSourcePolicy.isEligibleRealSource(snapshot.getSource());
     }
 
     private String profileUrl(PlatformAccount account) {

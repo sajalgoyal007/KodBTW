@@ -3,10 +3,12 @@ package com.kodbtw.service;
 import com.kodbtw.dto.history.DashboardHistoryResponse;
 import com.kodbtw.entity.PlatformStatSnapshot;
 import com.kodbtw.repository.PlatformStatSnapshotRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -24,20 +26,30 @@ import static com.kodbtw.dto.history.DashboardHistoryResponse.PlatformHistorySer
 @Service
 public class DashboardHistoryService {
     private final PlatformStatSnapshotRepository snapshots;
+    private final Clock clock;
 
+    @Autowired
     public DashboardHistoryService(PlatformStatSnapshotRepository snapshots) {
+        this(snapshots, Clock.systemUTC());
+    }
+
+    public DashboardHistoryService(PlatformStatSnapshotRepository snapshots, Clock clock) {
         this.snapshots = snapshots;
+        this.clock = clock;
     }
 
     @Transactional(readOnly = true)
     public DashboardHistoryResponse getHistory(Long userId, String requestedRange) {
         HistoryRange range = HistoryRange.parse(requestedRange);
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(clock.withZone(ZoneOffset.UTC));
         LocalDate startDate = range.startDate(today);
 
-        List<PlatformStatSnapshot> rows = snapshots
+        List<PlatformStatSnapshot> rows = new ArrayList<>(snapshots
                 .findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                        userId, startDate, today, "_REAL");
+                        userId, startDate, today, "_REAL"));
+        rows.addAll(snapshots
+                .findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                        userId, startDate, today, "CODECHEF_THIRD_PARTY"));
 
         // Defensive source filtering keeps MOCK and any unexpected source out of real history.
         TreeMap<LocalDate, TreeMap<String, PlatformStatSnapshot>> byDate = new TreeMap<>();
@@ -58,12 +70,12 @@ public class DashboardHistoryService {
                 .map(entry -> toSeries(entry.getKey(), entry.getValue()))
                 .toList();
 
-        return new DashboardHistoryResponse(requestedRange, dates, overall, platformSeries,
+        return new DashboardHistoryResponse(requestedRange, startDate, today, dates, overall, platformSeries,
                 freshness(byDate, rows));
     }
 
     private static boolean isReal(PlatformStatSnapshot row) {
-        return row.getSource() != null && row.getSource().endsWith("_REAL");
+        return PlatformStatsSourcePolicy.isEligibleRealSource(row.getSource());
     }
 
     private static PlatformStatSnapshot laterObservation(PlatformStatSnapshot first, PlatformStatSnapshot second) {
@@ -132,7 +144,7 @@ public class DashboardHistoryService {
                 .filter(value -> value != null)
                 .max(Comparator.naturalOrder()).orElse(null);
         Long ageHours = latestUpdate == null ? null : Math.max(0, Duration.between(latestUpdate,
-                LocalDateTime.now(ZoneOffset.UTC)).toHours());
+                LocalDateTime.now(clock.withZone(ZoneOffset.UTC))).toHours());
         int count = (int) rows.stream().filter(DashboardHistoryService::isReal).count();
         return new HistoryFreshnessDto(count, latestDate, latestUpdate, ageHours);
     }

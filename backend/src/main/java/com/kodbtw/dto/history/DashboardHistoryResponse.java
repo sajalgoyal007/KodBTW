@@ -6,6 +6,8 @@ import java.util.List;
 
 public record DashboardHistoryResponse(
         String range,
+        LocalDate rangeStart,
+        LocalDate rangeEnd,
         List<LocalDate> snapshotDates,
         List<OverallHistoryPointDto> overallSolved,
         List<PlatformHistorySeriesDto> platforms,

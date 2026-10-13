@@ -40,6 +40,8 @@ export interface HistoryFreshness {
 
 export interface DashboardHistoryResponse {
   range: HistoryRange;
+  rangeStart: string;
+  rangeEnd: string;
   snapshotDates: string[];
   overallSolved: OverallHistoryPoint[];
   platforms: PlatformHistorySeries[];
