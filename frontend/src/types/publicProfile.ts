@@ -47,6 +47,7 @@ export interface PublicAnalytics {
 
 export interface PublicProfileData {
   username: string;
+  indexable: boolean;
   displayName: string | null;
   bio: string | null;
   avatarUrl: string | null;

@@ -11,6 +11,7 @@ export interface ProfileResponse {
   githubUrl: string | null;
   linkedinUrl: string | null;
   portfolioUrl: string | null;
+  indexable: boolean;
 }
 
 export interface ProfileRequest {
@@ -24,4 +25,5 @@ export interface ProfileRequest {
   githubUrl?: string | null;
   linkedinUrl?: string | null;
   portfolioUrl?: string | null;
+  indexable?: boolean;
 }

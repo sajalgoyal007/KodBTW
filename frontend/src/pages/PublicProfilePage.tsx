@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { usePublicProfile } from '../hooks/usePublicProfile';
 import { useAuth } from '../hooks/useAuth';
 import { ShareProfileModal } from '../components/profile/ShareProfileModal';
 import { isVerifiedStatsSource } from '../utils/platformStatsSource';
 import { PublicProfileEmptyState } from '../components/profile/PublicProfileEmptyState';
+import { publishPublicProfileSeo } from '../components/seo/publicProfileSeo';
 import {
   MapPin,
   GraduationCap,
@@ -27,6 +28,16 @@ export const PublicProfilePage: React.FC = () => {
   const { data, loading, error, notFound, refetch } = usePublicProfile(username);
   const { user, isAuthenticated } = useAuth();
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (data) {
+      publishPublicProfileSeo({
+        username: data.username,
+        displayName: data.displayName,
+        indexable: data.indexable,
+      });
+    }
+  }, [data]);
 
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';

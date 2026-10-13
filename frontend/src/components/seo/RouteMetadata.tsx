@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { PUBLIC_PROFILE_SEO_EVENT, PublicProfileSeoDetail } from './publicProfileSeo';
 
 const SITE_ORIGIN = 'https://kodbtw.vercel.app';
 const HOME_TITLE = 'KodBTW | Coding Profiles and Progress Analytics';
@@ -46,6 +47,32 @@ export function RouteMetadata(): null {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    const applyProfileMetadata = (event: Event) => {
+      const detail = (event as CustomEvent<PublicProfileSeoDetail>).detail;
+      if (!detail?.username) return;
+
+      const displayName = detail.displayName?.trim() || detail.username;
+      const title = `${displayName} | Public Coding Profile | KodBTW`;
+      const description = `View ${displayName}'s public coding profile on KodBTW, including available coding-platform statistics and progress.`;
+      const canonical = `${SITE_ORIGIN}/u/${encodeURIComponent(detail.username)}`;
+
+      document.title = title;
+      setMeta('name', 'description', description);
+      setMeta('name', 'robots', detail.indexable ? 'index,follow' : 'noindex,follow');
+      setMeta('property', 'og:title', title);
+      setMeta('property', 'og:description', description);
+      setMeta('property', 'og:url', canonical);
+      setMeta('property', 'og:type', 'profile');
+      setMeta('name', 'twitter:title', title);
+      setMeta('name', 'twitter:description', description);
+      setCanonical(canonical);
+    };
+
+    window.addEventListener(PUBLIC_PROFILE_SEO_EVENT, applyProfileMetadata);
+    return () => window.removeEventListener(PUBLIC_PROFILE_SEO_EVENT, applyProfileMetadata);
+  }, []);
+
+  useEffect(() => {
     const profileMatch = pathname.match(/^\/u\/([^/]+)\/?$/);
     const privateTitle = privateRouteTitles[pathname];
     const isPrivate = Boolean(privateTitle);
@@ -74,18 +101,19 @@ export function RouteMetadata(): null {
         // Keep the encoded path segment readable if it contains malformed escapes.
       }
       title = `${username} | Public Coding Profile | KodBTW`;
-      description = `View ${username}'s public coding profile on KodBTW, including available platform statistics and progress.`;
-      canonical = `${SITE_ORIGIN}/u/${encodeURIComponent(username)}`;
+      description = `View ${username}'s public coding profile on KodBTW, including available coding-platform statistics and progress.`;
+      canonical = null;
     }
 
     document.title = title;
     setMeta('name', 'description', description);
-    setMeta('name', 'robots', isPrivate || isAuth ? 'noindex,nofollow' : 'index,follow');
+    setMeta('name', 'robots', isPrivate || isAuth || profileMatch ? 'noindex,follow' : 'index,follow');
     setMeta('property', 'og:title', title);
     setMeta('property', 'og:description', description);
     setMeta('property', 'og:url', canonical ?? `${SITE_ORIGIN}${pathname}`);
     setMeta('name', 'twitter:title', title);
     setMeta('name', 'twitter:description', description);
+    setMeta('property', 'og:type', profileMatch ? 'profile' : 'website');
     setCanonical(canonical);
   }, [pathname]);
 

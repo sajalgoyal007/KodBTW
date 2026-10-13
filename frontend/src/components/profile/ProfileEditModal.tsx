@@ -31,6 +31,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [githubUrl, setGithubUrl] = useState<string>('');
   const [linkedinUrl, setLinkedinUrl] = useState<string>('');
   const [portfolioUrl, setPortfolioUrl] = useState<string>('');
+  const [indexable, setIndexable] = useState<boolean>(false);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       setGithubUrl(initialProfile.githubUrl || '');
       setLinkedinUrl(initialProfile.linkedinUrl || '');
       setPortfolioUrl(initialProfile.portfolioUrl || '');
+      setIndexable(initialProfile.indexable ?? false);
     } else {
       setUsername('');
       setDisplayName('');
@@ -58,6 +60,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       setGithubUrl('');
       setLinkedinUrl('');
       setPortfolioUrl('');
+      setIndexable(false);
     }
     setFieldErrors({});
     setGeneralError(null);
@@ -133,6 +136,7 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
       githubUrl: githubUrl.trim() || null,
       linkedinUrl: linkedinUrl.trim() || null,
       portfolioUrl: portfolioUrl.trim() || null,
+      indexable,
     };
 
     try {
@@ -376,6 +380,24 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
               maxLength={500}
             />
             {fieldErrors.portfolioUrl && <div className="form-error">{fieldErrors.portfolioUrl}</div>}
+          </div>
+
+          <div className="form-group">
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={indexable}
+                onChange={(event) => setIndexable(event.target.checked)}
+                disabled={isLoading}
+                style={{ marginTop: '0.2rem' }}
+              />
+              <span>
+                <strong>Allow search engines to index my public profile</strong>
+                <span style={{ display: 'block', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginTop: '0.2rem' }}>
+                  This adds your public profile URL to the sitemap. Your existing share link remains available when this is off.
+                </span>
+              </span>
+            </label>
           </div>
 
           {/* Form Actions */}
