@@ -14,6 +14,7 @@ public class ProfileResponse {
     private String githubUrl;
     private String linkedinUrl;
     private String portfolioUrl;
+    private boolean indexable;
 
     public ProfileResponse() {
     }
@@ -22,6 +23,14 @@ public class ProfileResponse {
                            String avatarUrl, String college, Integer graduationYear,
                            String location, String githubUrl, String linkedinUrl,
                            String portfolioUrl) {
+        this(id, userId, username, displayName, bio, avatarUrl, college, graduationYear,
+                location, githubUrl, linkedinUrl, portfolioUrl, false);
+    }
+
+    public ProfileResponse(Long id, Long userId, String username, String displayName, String bio,
+                           String avatarUrl, String college, Integer graduationYear,
+                           String location, String githubUrl, String linkedinUrl,
+                           String portfolioUrl, boolean indexable) {
         this.id = id;
         this.userId = userId;
         this.username = username;
@@ -34,6 +43,7 @@ public class ProfileResponse {
         this.githubUrl = githubUrl;
         this.linkedinUrl = linkedinUrl;
         this.portfolioUrl = portfolioUrl;
+        this.indexable = indexable;
     }
 
     public ProfileResponse(Long id, Long userId, String displayName, String bio,
@@ -67,4 +77,6 @@ public class ProfileResponse {
     public void setLinkedinUrl(String linkedinUrl) { this.linkedinUrl = linkedinUrl; }
     public String getPortfolioUrl() { return portfolioUrl; }
     public void setPortfolioUrl(String portfolioUrl) { this.portfolioUrl = portfolioUrl; }
+    public boolean isIndexable() { return indexable; }
+    public void setIndexable(boolean indexable) { this.indexable = indexable; }
 }

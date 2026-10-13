@@ -70,7 +70,7 @@ public class PublicProfileService {
                 analytics.getContests()
         );
 
-        return new PublicProfileResponse(
+        PublicProfileResponse response = new PublicProfileResponse(
                 profile.getUsername(),
                 profile.getDisplayName(),
                 profile.getBio(),
@@ -83,6 +83,8 @@ public class PublicProfileService {
                 platforms,
                 publicAnalytics
         );
+        response.setIndexable(profile.isIndexable());
+        return response;
     }
 
     private PublicOverviewDto mapOverview(DashboardOverview ov, List<PlatformStats> platforms) {

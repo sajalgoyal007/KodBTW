@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Exercises the real MySQL migration sequence against a disposable MySQL 8 container.
  * The database is migrated only through V6 and seeded before Spring starts; Spring then
- * applies V7 and validates the resulting schema against the application's JPA entities.
+ * applies V7 and V8 and validates the resulting schema against the application's JPA entities.
  */
 @SpringBootTest
 @Testcontainers
@@ -72,6 +72,9 @@ class FlywayV7MySqlMigrationTest {
             statement.executeUpdate("INSERT INTO users (id, name, email, password) VALUES "
                     + "(101, 'Migration Test', 'migration-test-101@example.invalid', 'not-a-login'), "
                     + "(102, 'Migration Test 2', 'migration-test-102@example.invalid', 'not-a-login')");
+
+            statement.executeUpdate("INSERT INTO profiles (user_id, username) VALUES "
+                    + "(101, 'migration-test-101')");
 
             statement.executeUpdate("INSERT INTO platform_stat_snapshots "
                     + "(user_id, platform, snapshot_date, total_solved, easy_solved, medium_solved, "
@@ -120,12 +123,18 @@ class FlywayV7MySqlMigrationTest {
 
         List<Map<String, Object>> applied = jdbc.queryForList(
                 "SELECT version, success FROM flyway_schema_history WHERE type = 'SQL' ORDER BY installed_rank");
-        assertThat(applied).hasSize(7);
+        assertThat(applied).hasSize(8);
         assertThat(applied).allSatisfy(row -> assertThat(row.get("success")).isEqualTo(true));
+        assertThat(jdbc.queryForObject(
+                "SELECT indexable FROM profiles WHERE user_id = 101", Boolean.class)).isFalse();
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
                         + "AND table_name = 'platform_stat_snapshots' AND column_name = 'max_rating' "
                         + "AND is_nullable = 'YES' AND data_type = 'int'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'profiles' AND column_name = 'indexable' "
+                        + "AND is_nullable = 'NO' AND data_type = 'tinyint'", Integer.class)).isEqualTo(1);
     }
 
     @Test

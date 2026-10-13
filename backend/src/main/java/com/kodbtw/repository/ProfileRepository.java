@@ -17,6 +17,8 @@ public interface ProfileRepository extends JpaRepository<Profile, Long> {
 
     Optional<Profile> findByUsername(String username);
 
+    List<Profile> findAllByIndexableTrueOrderByUsernameAsc();
+
     boolean existsByUsername(String username);
 
     boolean existsByUsernameAndUserIdNot(String username, Long userId);

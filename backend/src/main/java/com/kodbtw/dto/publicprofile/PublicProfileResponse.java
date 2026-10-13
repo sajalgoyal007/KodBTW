@@ -6,6 +6,7 @@ import java.util.List;
 public class PublicProfileResponse {
 
     private String username;
+    private boolean indexable;
     private String displayName;
     private String bio;
     private String avatarUrl;
@@ -40,6 +41,8 @@ public class PublicProfileResponse {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+    public boolean isIndexable() { return indexable; }
+    public void setIndexable(boolean indexable) { this.indexable = indexable; }
 
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }

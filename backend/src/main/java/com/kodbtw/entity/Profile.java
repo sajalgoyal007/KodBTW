@@ -56,6 +56,9 @@ public class Profile {
     @Column(name = "portfolio_url", length = 500)
     private String portfolioUrl;
 
+    @Column(name = "indexable", nullable = false)
+    private boolean indexable = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -170,6 +173,14 @@ public class Profile {
 
     public String getPortfolioUrl() {
         return portfolioUrl;
+    }
+
+    public boolean isIndexable() {
+        return indexable;
+    }
+
+    public void setIndexable(boolean indexable) {
+        this.indexable = indexable;
     }
 
     public void setPortfolioUrl(String portfolioUrl) {

@@ -45,6 +45,8 @@ public class ProfileRequest {
     @Size(max = 500)
     private String portfolioUrl;
 
+    private Boolean indexable;
+
     public ProfileRequest() {
     }
 
@@ -126,5 +128,13 @@ public class ProfileRequest {
 
     public void setPortfolioUrl(String portfolioUrl) {
         this.portfolioUrl = portfolioUrl;
+    }
+
+    public Boolean getIndexable() {
+        return indexable;
+    }
+
+    public void setIndexable(Boolean indexable) {
+        this.indexable = indexable;
     }
 }

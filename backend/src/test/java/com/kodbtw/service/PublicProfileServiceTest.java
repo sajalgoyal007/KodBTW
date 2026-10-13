@@ -57,6 +57,7 @@ class PublicProfileServiceTest {
         profile.setBio("Code enthusiast");
         profile.setCollege("Stanford");
         profile.setGithubUrl("https://github.com/alice");
+        profile.setIndexable(true);
 
         when(profileRepository.findByUsername("alicedev")).thenReturn(Optional.of(profile));
 
@@ -90,6 +91,7 @@ class PublicProfileServiceTest {
 
         assertNotNull(response);
         assertEquals("alicedev", response.getUsername());
+        assertTrue(response.isIndexable());
         assertEquals("Alice Developer", response.getDisplayName());
         assertEquals("Stanford", response.getCollege());
         assertEquals("https://github.com/alice", response.getSocialLinks().getGithubUrl());

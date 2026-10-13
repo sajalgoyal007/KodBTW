@@ -9,6 +9,7 @@ import com.kodbtw.dto.PlatformAccountRequest;
 import com.kodbtw.dto.ProfileRequest;
 import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.Platform;
+import com.kodbtw.entity.Profile;
 import com.kodbtw.entity.User;
 import com.kodbtw.repository.LeaderboardUserCacheRepository;
 import com.kodbtw.repository.PlatformAccountRepository;
@@ -217,6 +218,30 @@ class PublicProfileControllerTest {
         mockMvc.perform(get("/api/public/profiles/nonexistent_coder"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is("Not Found")));
+    }
+
+    @Test
+    void publicSitemapIsUnauthenticatedAndListsOnlyOptedInProfiles() throws Exception {
+        Profile optedOut = new Profile(testUser);
+        optedOut.setUsername("sitemap_private");
+        profileRepository.save(optedOut);
+
+        User secondUser = userRepository.save(new User("Public Sitemap User", "public-sitemap@example.com", "password-hash"));
+        Profile optedIn = new Profile(secondUser);
+        optedIn.setUsername("sitemap_public");
+        optedIn.setIndexable(true);
+        profileRepository.save(optedIn);
+
+        mockMvc.perform(get("/api/public/sitemap.xml"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .content().string(containsString("https://kodbtw.vercel.app/u/sitemap_public")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .content().string(not(containsString("sitemap_private"))))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .content().string(not(containsString("/dashboard"))));
     }
 
     @Test

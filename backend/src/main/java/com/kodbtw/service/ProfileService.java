@@ -111,6 +111,7 @@ public class ProfileService {
         if (request.getGithubUrl() != null) profile.setGithubUrl(emptyToNull(request.getGithubUrl()));
         if (request.getLinkedinUrl() != null) profile.setLinkedinUrl(emptyToNull(request.getLinkedinUrl()));
         if (request.getPortfolioUrl() != null) profile.setPortfolioUrl(emptyToNull(request.getPortfolioUrl()));
+        if (request.getIndexable() != null) profile.setIndexable(request.getIndexable());
     }
 
     private String emptyToNull(String value) {
@@ -130,7 +131,8 @@ public class ProfileService {
                 profile.getLocation(),
                 profile.getGithubUrl(),
                 profile.getLinkedinUrl(),
-                profile.getPortfolioUrl()
+                profile.getPortfolioUrl(),
+                profile.isIndexable()
         );
     }
 }
