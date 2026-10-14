@@ -72,7 +72,7 @@ Developers who use multiple coding platforms must visit each service separately 
 | Frontend | React 18, TypeScript 5.6, React Router 6 | Single-page user interface and routing |
 | Frontend tooling | Vite 5.4, npm | Development server and production asset build |
 | Backend | Java 21, Spring Boot 3.3, Spring Web | REST API and application services |
-| Persistence | Spring Data JPA / Hibernate | Entity persistence and repository access |
+| Persistence | Spring Data JPA / Hibernate | Entity persistence and repository access ||
 | Database | MySQL 8 | Application records and statistics snapshots |
 | Schema management | Flyway (migrations V1–V7) | Ordered database schema changes; Hibernate validates rather than creates the schema |
 | Authentication | Spring Security, BCrypt, JJWT 0.12 | Stateless bearer-token authentication and password hashing |
