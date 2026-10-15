@@ -5,13 +5,13 @@
 KodBTW brings coding-platform profiles, persisted statistics, dashboard analytics, historical progress, and public developer profiles into one application. It helps users understand their coding progress and can help strengthen their resumes. The platform also provides account-scoped dashboards, leaderboard views, and a contest calendar. Source coverage and permissions differ by platform; see the integration status below before interpreting any metric.
 
 > **Academic project context** — Project information below was supplied for this documentation task and has not been independently verified against college records. Confirm it before final academic submission.
-
+   
 | Field | Information |
 |---|---|
 | Project code | `PBL2627-CSE-C-064` |
 | Type / course | Website application / Project Based Learning (PBL), Java Projects, 5th Semester |
 | Department / specialisation | CSE-C / AI&DS / IT (confirm applicable specialisation) |
-| Institution | Arya College of Engineering & I.T., Jaipur, Rajasthan |
+| Institution | Arya College of Engineering & Information Technology, Jaipur, Rajasthan |
 | Academic year | 2026–27 |
 | Project guide | Er. Ram Babu Buri, Department of CSE |
 | Project duration | 6 July 2026 to 6 October 2026 |
