@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Code2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -11,6 +11,9 @@ import {
   RegistrationAutoLoginError,
 } from '../services/api/authErrors';
 import { SessionValidationNotice } from '../components/auth/SessionValidationNotice';
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
+import { formatGoogleAuthError } from '../services/api/authErrors';
+import { runGoogleAuthPageFlow } from '../services/api/googleAuthPageFlow';
 
 export const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
@@ -19,14 +22,34 @@ export const RegisterPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const googleAuthInProgress = useRef(false);
 
-  const { register, isLoading: isSessionLoading } = useAuth();
+  const { register, loginWithGoogle, isLoading: isSessionLoading } = useAuth();
   const {
     status: backendStatus,
     submitIfReady,
     retry: retryBackendCheck,
   } = useBackendPreflight();
   const navigate = useNavigate();
+
+  const handleGoogleCredential = useCallback(async (credential: string, challengeId: string) => {
+    await runGoogleAuthPageFlow({
+      credential,
+      challengeId,
+      destination: '/dashboard',
+      inProgress: googleAuthInProgress,
+      submitIfReady,
+      loginWithGoogle,
+      navigate,
+      setError,
+      setIsLoading,
+      formatError: (err) => err instanceof ApiError
+        ? formatGoogleAuthError(err.status, err.data.code)
+        : 'Google sign-in could not be completed. Please try again.',
+    });
+  }, [loginWithGoogle, navigate, submitIfReady]);
+
+  const handleGoogleError = useCallback((message: string) => setError(message), []);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -180,6 +203,12 @@ export const RegisterPage: React.FC = () => {
               )}
             </button>
           </form>
+          <div className="auth-divider" aria-hidden="true"><span>or continue with</span></div>
+          <GoogleSignInButton
+            disabled={isLoading || isSessionLoading || backendStatus !== 'reachable'}
+            onCredential={handleGoogleCredential}
+            onError={handleGoogleError}
+          />
         </div>
 
         {/* Footer Link */}

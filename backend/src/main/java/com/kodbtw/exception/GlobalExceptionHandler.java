@@ -18,6 +18,40 @@ public class GlobalExceptionHandler {
     private static final Logger log =
             LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(GoogleAuthConfigurationException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleAuthConfiguration(GoogleAuthConfigurationException ex) {
+        return googleError(HttpStatus.SERVICE_UNAVAILABLE, "GOOGLE_AUTH_NOT_CONFIGURED",
+                "Google sign-in is not configured. Contact the application administrator.");
+    }
+
+    @ExceptionHandler(GoogleIdentityVerificationException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleVerificationUnavailable(GoogleIdentityVerificationException ex) {
+        return googleError(HttpStatus.SERVICE_UNAVAILABLE, "GOOGLE_VERIFICATION_UNAVAILABLE",
+                "Google sign-in could not be verified right now. Please try again.");
+    }
+
+    @ExceptionHandler(InvalidGoogleCredentialException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidGoogleCredential(InvalidGoogleCredentialException ex) {
+        return googleError(HttpStatus.UNAUTHORIZED, "INVALID_GOOGLE_CREDENTIAL",
+                "Google sign-in could not be verified. Please try again.");
+    }
+
+    @ExceptionHandler(GoogleAccountExistsException.class)
+    public ResponseEntity<Map<String, String>> handleExistingGoogleAccount(GoogleAccountExistsException ex) {
+        return googleError(HttpStatus.CONFLICT, "GOOGLE_ACCOUNT_REQUIRES_EXISTING_SIGN_IN",
+                "An account already exists for this email. Sign in using your existing method; Google linking is not available yet.");
+    }
+
+    @ExceptionHandler(GoogleIdentityConflictException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleIdentityConflict(GoogleIdentityConflictException ex) {
+        return googleError(HttpStatus.CONFLICT, "GOOGLE_IDENTITY_CONFLICT",
+                "This Google sign-in conflicted with another account update. Please retry.");
+    }
+
+    private ResponseEntity<Map<String, String>> googleError(HttpStatus status, String code, String message) {
+        return ResponseEntity.status(status).body(Map.of("error", "Google Authentication Error", "code", code, "message", message));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleInvalidCredentials(
             InvalidCredentialsException ex) {

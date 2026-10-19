@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Exercises the real MySQL migration sequence against a disposable MySQL 8 container.
  * The database is migrated only through V6 and seeded before Spring starts; Spring then
- * applies V7 and V8 and validates the resulting schema against the application's JPA entities.
+ * applies V7 through V10 and validates the resulting schema against the application's JPA entities.
  */
 @SpringBootTest
 @Testcontainers
@@ -96,8 +96,22 @@ class FlywayV7MySqlMigrationTest {
     }
 
     @Test
-    void appliesV7PreservingRowsAndOnlySeparatingCodeforcesRealMaxRating() {
+    void appliesV7ThroughV10PreservingLegacyRowsAndCreatingGoogleAuthSchema() {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM platform_stat_snapshots", Integer.class)).isEqualTo(5);
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class)).isEqualTo(2);
+        Map<String, Object> legacyUser = jdbc.queryForMap(
+                "SELECT id, name, email, password FROM users WHERE id = 101");
+        assertThat(legacyUser).containsEntry("id", 101L)
+                .containsEntry("name", "Migration Test")
+                .containsEntry("email", "migration-test-101@example.invalid")
+                .containsEntry("password", "not-a-login");
+        Map<String, Object> secondLegacyUser = jdbc.queryForMap(
+                "SELECT id, name, email, password FROM users WHERE id = 102");
+        assertThat(secondLegacyUser).containsEntry("id", 102L)
+                .containsEntry("name", "Migration Test 2")
+                .containsEntry("email", "migration-test-102@example.invalid")
+                .containsEntry("password", "not-a-login");
 
         Map<String, Object> currentCodeforces = snapshot(101L, "CODEFORCES", SNAPSHOT_DAY);
         assertThat(currentCodeforces.get("platform_rank")).isNull();
@@ -123,7 +137,9 @@ class FlywayV7MySqlMigrationTest {
 
         List<Map<String, Object>> applied = jdbc.queryForList(
                 "SELECT version, success FROM flyway_schema_history WHERE type = 'SQL' ORDER BY installed_rank");
-        assertThat(applied).hasSize(8);
+        assertThat(applied).hasSize(10);
+        assertThat(applied).extracting(row -> row.get("version"))
+                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
         assertThat(applied).allSatisfy(row -> assertThat(row.get("success")).isEqualTo(true));
         assertThat(jdbc.queryForObject(
                 "SELECT indexable FROM profiles WHERE user_id = 101", Boolean.class)).isFalse();
@@ -135,6 +151,63 @@ class FlywayV7MySqlMigrationTest {
                 "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
                         + "AND table_name = 'profiles' AND column_name = 'indexable' "
                         + "AND is_nullable = 'NO' AND data_type = 'tinyint'", Integer.class)).isEqualTo(1);
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'users' AND column_name = 'password' "
+                        + "AND data_type = 'varchar' AND character_maximum_length = 255 AND is_nullable = 'YES'",
+                Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'user_auth_identities'", Integer.class)).isEqualTo(1);
+        assertColumn("user_auth_identities", "id", "bigint", "NO");
+        assertColumn("user_auth_identities", "user_id", "bigint", "NO");
+        assertColumn("user_auth_identities", "provider", "varchar", "NO");
+        assertColumn("user_auth_identities", "provider_subject", "varchar", "NO");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.key_column_usage WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'user_auth_identities' "
+                        + "AND constraint_name = 'fk_user_auth_identity_user' "
+                        + "AND column_name = 'user_id' AND referenced_table_name = 'users' "
+                        + "AND referenced_column_name = 'id'", Integer.class)).isEqualTo(1);
+        assertUniqueIndexColumns("user_auth_identities", "uk_user_auth_provider_subject",
+                List.of("provider", "provider_subject"));
+        assertUniqueIndexColumns("user_auth_identities", "uk_user_auth_user_provider",
+                List.of("user_id", "provider"));
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges'", Integer.class)).isEqualTo(1);
+        assertColumn("google_auth_challenges", "challenge_id", "varchar", "NO");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' AND column_name = 'challenge_id' "
+                        + "AND character_maximum_length = 36", Integer.class)).isEqualTo(1);
+        assertColumn("google_auth_challenges", "nonce_hash", "binary", "NO");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' AND column_name = 'nonce_hash' "
+                        + "AND character_maximum_length = 32", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' AND column_name = 'expires_at' "
+                        + "AND data_type = 'timestamp' AND datetime_precision = 6 AND is_nullable = 'NO'",
+                Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' AND column_name = 'created_at' "
+                        + "AND data_type = 'timestamp' AND datetime_precision = 6 AND is_nullable = 'NO'",
+                Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' AND index_name = 'PRIMARY' "
+                        + "AND column_name = 'challenge_id' AND non_unique = 0", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'google_auth_challenges' "
+                        + "AND index_name = 'idx_google_auth_challenges_expires_at' "
+                        + "AND column_name = 'expires_at' AND seq_in_index = 1 AND non_unique = 1",
+                Integer.class)).isEqualTo(1);
     }
 
     @Test
@@ -149,5 +222,21 @@ class FlywayV7MySqlMigrationTest {
     private Map<String, Object> snapshot(Long userId, String platform, LocalDate date) {
         return jdbc.queryForMap("SELECT total_solved, platform_rank, max_rating FROM platform_stat_snapshots "
                 + "WHERE user_id = ? AND platform = ? AND snapshot_date = ?", userId, platform, date);
+    }
+
+    private void assertColumn(String table, String column, String dataType, String nullable) {
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = ? AND column_name = ? AND data_type = ? AND is_nullable = ?",
+                Integer.class, table, column, dataType, nullable)).isEqualTo(1);
+    }
+
+    private void assertUniqueIndexColumns(String table, String index, List<String> columns) {
+        List<Map<String, Object>> actual = jdbc.queryForList(
+                "SELECT column_name FROM information_schema.statistics WHERE table_schema = DATABASE() "
+                        + "AND table_name = ? AND index_name = ? AND non_unique = 0 ORDER BY seq_in_index",
+                table, index);
+        assertThat(actual).extracting(row -> row.get("column_name"))
+                .containsExactlyElementsOf(columns);
     }
 }

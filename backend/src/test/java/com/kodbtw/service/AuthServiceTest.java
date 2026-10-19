@@ -6,6 +6,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.kodbtw.config.AuthRequestDiagnosticsFilter;
 import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.entity.User;
+import com.kodbtw.exception.InvalidCredentialsException;
 import com.kodbtw.repository.UserRepository;
 import com.kodbtw.security.JwtService;
 import org.junit.jupiter.api.Test;
@@ -16,12 +17,30 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AuthServiceTest {
+
+    @Test
+    void passwordLoginRejectsGoogleOnlyAccountWithoutCallingPasswordEncoder() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        JwtService jwtService = mock(JwtService.class);
+        User googleOnlyUser = new User("Google User", "google@example.com", null);
+        when(userRepository.findByEmail("google@example.com")).thenReturn(Optional.of(googleOnlyUser));
+
+        assertThrows(InvalidCredentialsException.class, () -> new AuthService(userRepository, passwordEncoder, jwtService)
+                .login(new LoginRequest("google@example.com", "any-password")));
+
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(jwtService, never()).generateToken(any());
+    }
 
     @Test
     void loginLogsStageDurationsWithoutCredentialsOrToken() {

@@ -14,6 +14,7 @@ export interface AuthContextType {
   sessionUnavailable: boolean;
   retrySession: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (credential: string, challengeId: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
 }
@@ -103,6 +104,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await loginWithTimeoutMessage(email, password);
   };
 
+  const loginWithGoogle = useCallback(async (credential: string, challengeId: string): Promise<void> => {
+    validationAttempt.current += 1;
+      const response = await authApi.googleLogin({ credential, challengeId });
+    localStorage.setItem(TOKEN_STORAGE_KEY, response.token);
+    setToken(response.token);
+    setUser(response.user);
+    setSessionUnavailable(false);
+  }, []);
+
   const register = async (name: string, email: string, password: string): Promise<void> => {
     validationAttempt.current += 1;
     await authApi.register({ name, email, password });
@@ -127,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionUnavailable,
     retrySession,
     login,
+    loginWithGoogle,
     register,
     logout,
   };

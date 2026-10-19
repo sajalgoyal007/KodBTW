@@ -14,6 +14,17 @@ export interface LoginResponse {
   user: User;
 }
 
+export interface GoogleLoginRequest {
+  credential: string;
+  challengeId: string;
+}
+
+export interface GoogleAuthChallengeResponse {
+  challengeId: string;
+  nonce: string;
+  expiresAt: string;
+}
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -22,6 +33,7 @@ export interface RegisterRequest {
 
 export interface ApiErrorResponse {
   error?: string;
+  code?: string;
   message?: string;
   details?: Record<string, string>;
   status?: number;

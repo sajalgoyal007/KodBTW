@@ -40,7 +40,7 @@ public class AuthService {
         User user = userLookup
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
 
-        boolean passwordMatches = timedStage("password_verification",
+        boolean passwordMatches = user.getPassword() != null && timedStage("password_verification",
                 () -> passwordEncoder.matches(request.getPassword(), user.getPassword()));
         if (!passwordMatches) {
             throw new InvalidCredentialsException("Invalid email or password");

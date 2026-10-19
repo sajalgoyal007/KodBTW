@@ -31,3 +31,20 @@ export function formatAuthApiError(status: number, flow: 'login' | 'registration
   if (status >= 500) return 'KodBTW could not complete the request. Please try again later.';
   return 'The request could not be completed. Please try again.';
 }
+
+export function formatGoogleAuthError(status: number, code?: string): string {
+  switch (code) {
+    case 'GOOGLE_ACCOUNT_REQUIRES_EXISTING_SIGN_IN':
+      return 'An account already exists for this email. Sign in with your existing method; Google linking is not available yet.';
+    case 'GOOGLE_AUTH_NOT_CONFIGURED':
+      return 'Google sign-in is not configured on the server. Please use email and password.';
+    case 'GOOGLE_VERIFICATION_UNAVAILABLE':
+      return 'Google could not verify your sign-in right now. Please try again.';
+    case 'INVALID_GOOGLE_CREDENTIAL':
+      return 'Google sign-in could not be verified. Please try again.';
+    case 'GOOGLE_IDENTITY_CONFLICT':
+      return 'Another sign-in request updated this account. Please try again.';
+    default:
+      return formatAuthApiError(status, 'login');
+  }
+}

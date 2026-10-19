@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Code2, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -7,6 +7,9 @@ import { BackendConnectionStatus } from '../components/auth/BackendConnectionSta
 import { useBackendPreflight } from '../hooks/useBackendPreflight';
 import { formatAuthApiError } from '../services/api/authErrors';
 import { SessionValidationNotice } from '../components/auth/SessionValidationNotice';
+import { GoogleSignInButton } from '../components/auth/GoogleSignInButton';
+import { formatGoogleAuthError } from '../services/api/authErrors';
+import { runGoogleAuthPageFlow } from '../services/api/googleAuthPageFlow';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,8 +17,9 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const googleAuthInProgress = useRef(false);
 
-  const { login, isLoading: isSessionLoading } = useAuth();
+  const { login, loginWithGoogle, isLoading: isSessionLoading } = useAuth();
   const {
     status: backendStatus,
     submitIfReady,
@@ -25,6 +29,25 @@ export const LoginPage: React.FC = () => {
   const location = useLocation();
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+
+  const handleGoogleCredential = useCallback(async (credential: string, challengeId: string) => {
+    await runGoogleAuthPageFlow({
+      credential,
+      challengeId,
+      destination: from,
+      inProgress: googleAuthInProgress,
+      submitIfReady,
+      loginWithGoogle,
+      navigate,
+      setError,
+      setIsLoading,
+      formatError: (err) => err instanceof ApiError
+        ? formatGoogleAuthError(err.status, err.data.code)
+        : 'Google sign-in could not be completed. Please try again.',
+    });
+  }, [from, loginWithGoogle, navigate, submitIfReady]);
+
+  const handleGoogleError = useCallback((message: string) => setError(message), []);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
@@ -149,6 +172,12 @@ export const LoginPage: React.FC = () => {
               )}
             </button>
           </form>
+          <div className="auth-divider" aria-hidden="true"><span>or continue with</span></div>
+          <GoogleSignInButton
+            disabled={isLoading || isSessionLoading || backendStatus !== 'reachable'}
+            onCredential={handleGoogleCredential}
+            onError={handleGoogleError}
+          />
         </div>
 
         {/* Footer Link */}

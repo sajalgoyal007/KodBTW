@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
+import { GoogleAuthChallengeResponse, GoogleLoginRequest, LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
 import { AUTH_TIMEOUT_MESSAGES } from './authTimeoutMessages';
 
 const AUTH_REQUEST_TIMEOUT_MS = 75_000;
@@ -34,6 +34,26 @@ export const authApi = {
       auth: false,
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
       timeoutMessage: AUTH_TIMEOUT_MESSAGES.registration,
+    });
+  },
+
+  googleLogin: (data: GoogleLoginRequest): Promise<LoginResponse> => {
+    return apiClient<LoginResponse>('/api/auth/google', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      auth: false,
+      timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
+      timeoutMessage: AUTH_TIMEOUT_MESSAGES.login,
+    });
+  },
+
+  createGoogleChallenge: (): Promise<GoogleAuthChallengeResponse> => {
+    return apiClient<GoogleAuthChallengeResponse>('/api/auth/google/challenge', {
+      method: 'POST',
+      headers: authRequestHeaders(),
+      auth: false,
+      timeoutMessage: 'Google sign-in could not be prepared. Please try again.',
     });
   },
 

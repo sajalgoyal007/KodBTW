@@ -17,7 +17,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -28,14 +30,19 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = "app.google-auth.client-id=")
 class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -84,6 +91,30 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.name").value("Sajal Goyal"))
                 .andExpect(jsonPath("$.email").value("sajal@example.com"))
                 .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    void googleLoginFailsSafelyWhenServerClientIdIsNotConfigured() throws Exception {
+        mockMvc.perform(post("/api/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"credential\":\"not-a-real-token\",\"challengeId\":\"test-challenge\"}"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("GOOGLE_AUTH_NOT_CONFIGURED"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("not configured")));
+    }
+
+    @Test
+    void googleChallengeEndpointReturnsNoStoreChallengeWithoutAuthentication() throws Exception {
+        jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS google_auth_challenges ("
+                + "challenge_id VARCHAR(36) NOT NULL PRIMARY KEY, nonce_hash BINARY(32) NOT NULL, "
+                + "expires_at TIMESTAMP(6) NOT NULL, created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6))");
+
+        mockMvc.perform(post("/api/auth/google/challenge"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")))
+                .andExpect(jsonPath("$.challengeId").isNotEmpty())
+                .andExpect(jsonPath("$.nonce").isNotEmpty())
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty());
     }
 
     @Test
