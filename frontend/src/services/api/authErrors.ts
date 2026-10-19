@@ -35,7 +35,7 @@ export function formatAuthApiError(status: number, flow: 'login' | 'registration
 export function formatGoogleAuthError(status: number, code?: string): string {
   switch (code) {
     case 'GOOGLE_ACCOUNT_REQUIRES_EXISTING_SIGN_IN':
-      return 'An account already exists for this email. Sign in with your existing method; Google linking is not available yet.';
+      return 'An account already exists for this email. Sign in with your existing method, then connect Google from your profile.';
     case 'GOOGLE_AUTH_NOT_CONFIGURED':
       return 'Google sign-in is not configured on the server. Please use email and password.';
     case 'GOOGLE_VERIFICATION_UNAVAILABLE':
@@ -47,4 +47,15 @@ export function formatGoogleAuthError(status: number, code?: string): string {
     default:
       return formatAuthApiError(status, 'login');
   }
+}
+
+export function formatGoogleLinkError(status: number, code?: string): string {
+  if (code === 'GOOGLE_LINK_REAUTHENTICATION_REQUIRED') {
+    return 'That password could not be verified. Check it and try again.';
+  }
+  if (code === 'GOOGLE_IDENTITY_CONFLICT') {
+    return 'This Google account is already connected elsewhere, or this KodBTW account already has a different Google account.';
+  }
+  if (code === 'INVALID_GOOGLE_CREDENTIAL') return 'Google could not verify this account. Please try again.';
+  return formatAuthApiError(status, 'login');
 }

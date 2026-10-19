@@ -614,6 +614,26 @@ table tbody tr:hover { background: var(--color-bg-elevated); }
 .google-sign-in { display: flex; justify-content: center; width: 100%; min-height: 44px; }
 .google-sign-in > div { max-width: 100%; }
 .google-sign-in-unavailable, .google-sign-in-status { margin: .5rem 0 0; color: var(--color-text-muted); font-size: .8rem; text-align: center; }
+
+/* Account security settings */
+.google-account-card { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.google-account-heading { display: flex; align-items: flex-start; gap: .75rem; min-width: 0; }
+.google-account-heading h2 { color: var(--color-text-primary); font-size: 1.05rem; font-weight: 750; }
+.google-account-heading p { margin-top: .2rem; color: var(--color-text-secondary); font-size: .84rem; line-height: 1.5; }
+.google-account-icon { display: grid; place-items: center; flex: 0 0 2.25rem; height: 2.25rem; color: var(--color-primary); background: var(--color-primary-soft); border-radius: var(--radius-md); }
+.google-account-status, .google-account-connected { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; color: var(--color-text-secondary); font-size: .85rem; }
+.google-account-connected { color: var(--color-success); font-weight: 650; }
+.google-account-form { display: flex; flex-direction: column; gap: .75rem; max-width: 30rem; }
+.google-account-security-note { display: flex; align-items: flex-start; gap: .45rem; color: var(--color-text-secondary); font-size: .82rem; line-height: 1.5; }
+.google-account-security-note svg { flex: 0 0 auto; color: var(--color-primary); }
+.google-account-error { color: var(--color-error); font-size: .85rem; }
+.google-account-feedback { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; color: var(--color-error); font-size: .85rem; }
+.google-account-feedback .btn { min-height: 40px; }
+.google-account-form .google-sign-in { justify-content: flex-start; }
+@media (max-width: 480px) {
+  .google-account-card { padding: 1rem; }
+  .google-account-form > .btn { width: 100%; min-height: 44px; }
+}
 .auth-footer { margin-top: 1.25rem; color: var(--color-text-secondary); font-size: .875rem; text-align: center; }
 .auth-footer a { color: var(--color-primary); font-weight: 650; text-underline-offset: .2em; }
 .auth-footer a:hover { text-decoration: underline; }

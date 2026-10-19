@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { authApi } from '../../services/api/authApi';
+import type { GoogleAuthChallengeResponse } from '../../types/auth';
 
 interface GoogleCredentialResponse { credential?: string }
 interface GoogleIdentityServices {
@@ -13,6 +14,8 @@ declare global { interface Window { google?: GoogleIdentityServices } }
 
 interface GoogleSignInButtonProps {
   disabled: boolean;
+  challenge?: GoogleAuthChallengeResponse | null;
+  challengeRequest?: () => Promise<GoogleAuthChallengeResponse>;
   onCredential: (credential: string, challengeId: string) => void;
   onError: (message: string) => void;
 }
@@ -20,9 +23,14 @@ interface GoogleSignInButtonProps {
 const GOOGLE_SCRIPT_ID = 'google-identity-services';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
 
-export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled, onCredential, onError }) => {
+export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
+  disabled, challenge: providedChallenge, challengeRequest, onCredential, onError,
+}) => {
   const buttonRef = useRef<HTMLDivElement>(null);
-  const [challenge, setChallenge] = useState<{ challengeId: string; nonce: string; expiresAt: string } | null>(null);
+  const challengeRequestRef = useRef(challengeRequest ?? (() => authApi.createGoogleChallenge()));
+  challengeRequestRef.current = challengeRequest ?? (() => authApi.createGoogleChallenge());
+  const consumedProvidedChallenge = useRef<string | null>(null);
+  const [challenge, setChallenge] = useState<GoogleAuthChallengeResponse | null>(null);
   const [challengeState, setChallengeState] = useState<'loading' | 'ready' | 'error' | 'expired'>('loading');
   const [scriptFailed, setScriptFailed] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -36,7 +44,13 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled
     setScriptFailed(false);
     setScriptReady(false);
 
-    authApi.createGoogleChallenge()
+    const issuedChallenge = providedChallenge
+      && consumedProvidedChallenge.current !== providedChallenge.challengeId
+      ? Promise.resolve(providedChallenge)
+      : challengeRequestRef.current();
+    if (providedChallenge) consumedProvidedChallenge.current = providedChallenge.challengeId;
+
+    issuedChallenge
       .then((issued) => {
         if (active) {
           setChallenge(issued);
@@ -48,7 +62,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled
       });
 
     return () => { active = false; };
-  }, [disabled, retryKey]);
+  }, [disabled, retryKey, providedChallenge]);
 
   useEffect(() => {
     if (!challenge || challengeState !== 'ready' || disabled) return;
@@ -131,7 +145,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ disabled
   }
   if (challengeState === 'error' || challengeState === 'expired' || scriptFailed) {
     const message = challengeState === 'expired'
-      ? 'This sign-in attempt expired. Refresh to continue.'
+      ? 'This sign-in attempt expired. Retry to prepare a new secure attempt.'
       : 'Google sign-in could not be prepared. Check your connection and try again.';
     return <div className="google-sign-in-error" role="status">
       <span>{message}</span>

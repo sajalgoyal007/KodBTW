@@ -28,6 +28,24 @@ import static org.mockito.Mockito.when;
 class AuthServiceTest {
 
     @Test
+    void passwordReauthenticationRequiresAnExistingPasswordAndVerifiesIt() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        JwtService jwtService = mock(JwtService.class);
+        User user = new User("Existing", "existing@example.com", "encoded");
+        User googleOnly = new User("Google", "google@example.com", null);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(googleOnly));
+        when(passwordEncoder.matches("correct-password", "encoded")).thenReturn(true);
+        AuthService service = new AuthService(userRepository, passwordEncoder, jwtService);
+
+        assertTrue(service.verifyCurrentPassword(1L, "correct-password"));
+        assertFalse(service.verifyCurrentPassword(1L, "wrong-password"));
+        assertFalse(service.verifyCurrentPassword(2L, "any-password"));
+        assertFalse(service.verifyCurrentPassword(1L, " "));
+    }
+
+    @Test
     void passwordLoginRejectsGoogleOnlyAccountWithoutCallingPasswordEncoder() {
         UserRepository userRepository = mock(UserRepository.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);

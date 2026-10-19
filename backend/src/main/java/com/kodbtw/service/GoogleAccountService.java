@@ -3,6 +3,7 @@ package com.kodbtw.service;
 import com.kodbtw.entity.User;
 import com.kodbtw.entity.UserAuthIdentity;
 import com.kodbtw.exception.GoogleAccountExistsException;
+import com.kodbtw.exception.GoogleIdentityConflictException;
 import com.kodbtw.repository.UserAuthIdentityRepository;
 import com.kodbtw.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -39,5 +40,33 @@ public class GoogleAccountService {
     @Transactional(readOnly = true)
     public Optional<User> findLinkedUser(String subject) {
         return identities.findByProviderAndProviderSubject(PROVIDER, subject).map(UserAuthIdentity::getUser);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasGoogleIdentity(Long userId) {
+        return userId != null && identities.existsByUser_IdAndProvider(userId, PROVIDER);
+    }
+
+    @Transactional
+    public void linkGoogleIdentity(User user, VerifiedGoogleIdentity verified) {
+        if (user == null || user.getId() == null) throw new GoogleIdentityConflictException();
+
+        Optional<UserAuthIdentity> identityForSubject = identities.findByProviderAndProviderSubject(
+                PROVIDER, verified.subject());
+        if (identityForSubject.isPresent()) {
+            if (identityForSubject.get().getUser().getId().equals(user.getId())) return;
+            throw new GoogleIdentityConflictException();
+        }
+
+        if (identities.findByUser_IdAndProvider(user.getId(), PROVIDER).isPresent()) {
+            throw new GoogleIdentityConflictException();
+        }
+
+        try {
+            identities.saveAndFlush(new UserAuthIdentity(user, PROVIDER, verified.subject()));
+        } catch (DataIntegrityViolationException concurrentLink) {
+            // Database uniqueness constraints are the atomic guard against concurrent link attempts.
+            throw new GoogleIdentityConflictException();
+        }
     }
 }

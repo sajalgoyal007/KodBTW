@@ -52,6 +52,15 @@ public class AuthService {
         return new LoginResponse(token, userResponse);
     }
 
+    @Transactional(readOnly = true)
+    public boolean verifyCurrentPassword(Long userId, String currentPassword) {
+        if (userId == null || currentPassword == null || currentPassword.isBlank()) return false;
+        return userRepository.findById(userId)
+                .filter(user -> user.getPassword() != null)
+                .map(user -> passwordEncoder.matches(currentPassword, user.getPassword()))
+                .orElse(false);
+    }
+
     private <T> T timedStage(String stage, Supplier<T> operation) {
         String requestId = MDC.get(AuthRequestDiagnosticsFilter.REQUEST_ID_MDC_KEY);
         log.info("auth_stage_started request_id={} stage={}", requestId, stage);

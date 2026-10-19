@@ -25,6 +25,10 @@ export interface GoogleAuthChallengeResponse {
   expiresAt: string;
 }
 
+export interface GoogleIdentityStatusResponse {
+  connected: boolean;
+}
+
 export interface RegisterRequest {
   name: string;
   email: string;

@@ -6,4 +6,6 @@ import java.util.Optional;
 
 public interface UserAuthIdentityRepository extends JpaRepository<UserAuthIdentity, Long> {
     Optional<UserAuthIdentity> findByProviderAndProviderSubject(String provider, String providerSubject);
+    Optional<UserAuthIdentity> findByUser_IdAndProvider(Long userId, String provider);
+    boolean existsByUser_IdAndProvider(Long userId, String provider);
 }

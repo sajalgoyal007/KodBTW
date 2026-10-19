@@ -107,6 +107,7 @@ class AuthControllerTest {
     void googleChallengeEndpointReturnsNoStoreChallengeWithoutAuthentication() throws Exception {
         jdbcTemplate.execute("CREATE TABLE IF NOT EXISTS google_auth_challenges ("
                 + "challenge_id VARCHAR(36) NOT NULL PRIMARY KEY, nonce_hash BINARY(32) NOT NULL, "
+                + "operation VARCHAR(16) NOT NULL DEFAULT 'LOGIN', user_id BIGINT NULL, "
                 + "expires_at TIMESTAMP(6) NOT NULL, created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6))");
 
         mockMvc.perform(post("/api/auth/google/challenge"))
@@ -115,6 +116,59 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.challengeId").isNotEmpty())
                 .andExpect(jsonPath("$.nonce").isNotEmpty())
                 .andExpect(jsonPath("$.expiresAt").isNotEmpty());
+    }
+
+    @Test
+    void googleAccountLinkEndpointsRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/api/auth/google/identity"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/google/link/challenge")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"not-a-real-password\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/auth/google/link")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"credential\":\"not-a-real-token\",\"challengeId\":\"fixture\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void authenticatedGoogleLinkStatusAndChallengeRequireCurrentPassword() throws Exception {
+        String password = "account-link-password";
+        RegisterRequest registration = new RegisterRequest("Link Owner", "link-owner@example.com", password);
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registration)))
+                .andExpect(status().isCreated());
+
+        MvcResult login = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new LoginRequest("link-owner@example.com", password))))
+                .andExpect(status().isOk())
+                .andReturn();
+        String token = objectMapper.readTree(login.getResponse().getContentAsString()).get("token").asText();
+        String authorization = "Bearer " + token;
+
+        mockMvc.perform(get("/api/auth/google/identity").header(HttpHeaders.AUTHORIZATION, authorization))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")))
+                .andExpect(jsonPath("$.connected").value(false));
+
+        mockMvc.perform(post("/api/auth/google/link/challenge")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"currentPassword\":\"incorrect-password\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("GOOGLE_LINK_REAUTHENTICATION_REQUIRED"));
+
+        mockMvc.perform(post("/api/auth/google/link/challenge")
+                        .header(HttpHeaders.AUTHORIZATION, authorization)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.kodbtw.dto.GoogleLinkChallengeRequest(password))))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", org.hamcrest.Matchers.containsString("no-store")))
+                .andExpect(jsonPath("$.challengeId").isNotEmpty())
+                .andExpect(jsonPath("$.nonce").isNotEmpty());
     }
 
     @Test

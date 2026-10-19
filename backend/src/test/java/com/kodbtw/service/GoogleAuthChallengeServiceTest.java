@@ -32,7 +32,8 @@ class GoogleAuthChallengeServiceTest {
         jdbc = new JdbcTemplate(dataSource);
         jdbc.execute("CREATE TABLE google_auth_challenges ("
                 + "challenge_id VARCHAR(36) NOT NULL PRIMARY KEY, nonce_hash BINARY(32) NOT NULL, "
-                + "expires_at TIMESTAMP(6) NOT NULL, created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6))");
+                + "operation VARCHAR(16) NOT NULL, user_id BIGINT NULL, expires_at TIMESTAMP(6) NOT NULL, "
+                + "created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6))");
         service = serviceAt(now);
     }
 
@@ -87,6 +88,28 @@ class GoogleAuthChallengeServiceTest {
         } finally {
             executor.shutdownNow();
         }
+    }
+
+    @Test
+    void loginChallengeCannotBeConsumedForLinkingAndLinkChallengeIsBoundToItsUser() {
+        var login = service.issue();
+        var link = service.issueLink(51L);
+
+        assertFalse(service.consumeLink(login.challengeId(), login.nonce(), 51L));
+        assertFalse(service.consume(link.challengeId(), link.nonce()));
+        assertFalse(service.consumeLink(link.challengeId(), link.nonce(), 52L));
+        assertTrue(service.consumeLink(link.challengeId(), link.nonce(), 51L));
+        assertFalse(service.consumeLink(link.challengeId(), link.nonce(), 51L));
+    }
+
+    @Test
+    void linkChallengeExpiresAndCannotBeConsumedByUnknownUser() {
+        var issued = service.issueLink(73L);
+        GoogleAuthChallengeService afterExpiry = serviceAt(now.plus(GoogleAuthChallengeService.CHALLENGE_TTL).plusSeconds(1));
+
+        assertFalse(afterExpiry.consumeLink(issued.challengeId(), issued.nonce(), 73L));
+        assertFalse(service.consumeLink(UUID.randomUUID().toString(), issued.nonce(), 73L));
+        assertFalse(service.consumeLink(issued.challengeId(), issued.nonce(), null));
     }
 
     private GoogleAuthChallengeService serviceAt(Instant instant) {

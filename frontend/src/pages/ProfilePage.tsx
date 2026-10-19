@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { ProfileEditModal } from '../components/profile/ProfileEditModal';
 import { ShareProfileModal } from '../components/profile/ShareProfileModal';
+import { GoogleAccountConnection } from '../components/profile/GoogleAccountConnection';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { getStats } from '../services/api/dashboardApi';
 import { DashboardStatsResponse } from '../types/dashboard';
@@ -75,6 +76,7 @@ export const ProfilePage: React.FC = () => {
           gap: '2rem',
         }}
       >
+        <GoogleAccountConnection />
         {/* Loading state */}
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

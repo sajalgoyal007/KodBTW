@@ -4,12 +4,15 @@ import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.LoginResponse;
 import com.kodbtw.dto.GoogleLoginRequest;
 import com.kodbtw.dto.GoogleAuthChallengeResponse;
+import com.kodbtw.dto.GoogleIdentityStatusResponse;
+import com.kodbtw.dto.GoogleLinkChallengeRequest;
 import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.dto.UserResponse;
 import com.kodbtw.entity.User;
 import com.kodbtw.service.AuthService;
 import com.kodbtw.service.GoogleAuthService;
 import com.kodbtw.service.GoogleAuthChallengeService;
+import com.kodbtw.service.GoogleAccountLinkService;
 import com.kodbtw.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -30,13 +33,16 @@ public class AuthController {
     private final AuthService authService;
     private final GoogleAuthService googleAuthService;
     private final GoogleAuthChallengeService googleAuthChallengeService;
+    private final GoogleAccountLinkService googleAccountLinkService;
 
     public AuthController(UserService userService, AuthService authService, GoogleAuthService googleAuthService,
-                          GoogleAuthChallengeService googleAuthChallengeService) {
+                          GoogleAuthChallengeService googleAuthChallengeService,
+                          GoogleAccountLinkService googleAccountLinkService) {
         this.userService = userService;
         this.authService = authService;
         this.googleAuthService = googleAuthService;
         this.googleAuthChallengeService = googleAuthChallengeService;
+        this.googleAccountLinkService = googleAccountLinkService;
     }
 
     @PostMapping("/register")
@@ -61,6 +67,30 @@ public class AuthController {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .body(googleAuthChallengeService.issue());
+    }
+
+    @PostMapping("/google/link/challenge")
+    public ResponseEntity<GoogleAuthChallengeResponse> googleLinkChallenge(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody GoogleLinkChallengeRequest request) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(googleAccountLinkService.issueChallenge(currentUser, request.currentPassword()));
+    }
+
+    @PostMapping("/google/link")
+    public ResponseEntity<GoogleIdentityStatusResponse> linkGoogle(
+            @AuthenticationPrincipal User currentUser,
+            @Valid @RequestBody GoogleLoginRequest request) {
+        return ResponseEntity.ok(googleAccountLinkService.link(currentUser, request));
+    }
+
+    @GetMapping("/google/identity")
+    public ResponseEntity<GoogleIdentityStatusResponse> googleIdentityStatus(
+            @AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
+                .body(googleAccountLinkService.status(currentUser));
     }
 
     @GetMapping("/me")

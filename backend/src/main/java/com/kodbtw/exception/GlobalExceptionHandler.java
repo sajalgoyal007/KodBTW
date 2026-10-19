@@ -39,13 +39,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(GoogleAccountExistsException.class)
     public ResponseEntity<Map<String, String>> handleExistingGoogleAccount(GoogleAccountExistsException ex) {
         return googleError(HttpStatus.CONFLICT, "GOOGLE_ACCOUNT_REQUIRES_EXISTING_SIGN_IN",
-                "An account already exists for this email. Sign in using your existing method; Google linking is not available yet.");
+                "An account already exists for this email. Sign in using your existing method, then connect Google from your profile.");
     }
 
     @ExceptionHandler(GoogleIdentityConflictException.class)
     public ResponseEntity<Map<String, String>> handleGoogleIdentityConflict(GoogleIdentityConflictException ex) {
         return googleError(HttpStatus.CONFLICT, "GOOGLE_IDENTITY_CONFLICT",
                 "This Google sign-in conflicted with another account update. Please retry.");
+    }
+
+    @ExceptionHandler(GoogleLinkReauthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleGoogleLinkReauthentication(
+            GoogleLinkReauthenticationException ex) {
+        return googleError(HttpStatus.FORBIDDEN, "GOOGLE_LINK_REAUTHENTICATION_REQUIRED",
+                "That password could not be verified. Check it and try again.");
     }
 
     private ResponseEntity<Map<String, String>> googleError(HttpStatus status, String code, String message) {

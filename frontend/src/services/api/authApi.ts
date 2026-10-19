@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient';
-import { GoogleAuthChallengeResponse, GoogleLoginRequest, LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
+import { GoogleAuthChallengeResponse, GoogleIdentityStatusResponse, GoogleLoginRequest, LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
 import { AUTH_TIMEOUT_MESSAGES } from './authTimeoutMessages';
 
 const AUTH_REQUEST_TIMEOUT_MS = 75_000;
@@ -54,6 +54,32 @@ export const authApi = {
       headers: authRequestHeaders(),
       auth: false,
       timeoutMessage: 'Google sign-in could not be prepared. Please try again.',
+    });
+  },
+
+  createGoogleLinkChallenge: (currentPassword: string): Promise<GoogleAuthChallengeResponse> => {
+    return apiClient<GoogleAuthChallengeResponse>('/api/auth/google/link/challenge', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword }),
+      headers: authRequestHeaders(),
+      timeoutMessage: 'Google connection could not be prepared. Check your password and try again.',
+    });
+  },
+
+  linkGoogleIdentity: (data: GoogleLoginRequest): Promise<GoogleIdentityStatusResponse> => {
+    return apiClient<GoogleIdentityStatusResponse>('/api/auth/google/link', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
+      timeoutMessage: 'Google connection timed out. Please try again.',
+    });
+  },
+
+  getGoogleIdentityStatus: (signal?: AbortSignal): Promise<GoogleIdentityStatusResponse> => {
+    return apiClient<GoogleIdentityStatusResponse>('/api/auth/google/identity', {
+      method: 'GET',
+      signal,
     });
   },
 
