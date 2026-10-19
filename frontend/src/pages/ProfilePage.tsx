@@ -76,7 +76,6 @@ export const ProfilePage: React.FC = () => {
           gap: '2rem',
         }}
       >
-        <GoogleAccountConnection />
         {/* Loading state */}
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -155,8 +154,6 @@ export const ProfilePage: React.FC = () => {
 
         {/* Completed Profile Display */}
         {!loading && !error && !isInitialSetup && (
-          <>
-            {/* Top Profile Card */}
             <div className="card" style={{ padding: '2rem', position: 'relative' }}>
               <div
                 style={{
@@ -326,7 +323,12 @@ export const ProfilePage: React.FC = () => {
               )}
             </div>
 
-            {/* Coding Stats Highlight section */}
+        )}
+
+        <GoogleAccountConnection />
+
+        {/* Coding Stats Highlight section */}
+        {!loading && !error && !isInitialSetup && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
@@ -383,7 +385,6 @@ export const ProfilePage: React.FC = () => {
                 />
               </div>
             </div>
-          </>
         )}
       </main>
 

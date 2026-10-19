@@ -11,6 +11,13 @@ const { outputText, diagnostics } = ts.transpileModule(source, {
 assert.deepEqual(diagnostics.filter((item) => item.category === ts.DiagnosticCategory.Error), []);
 const moduleUrl = `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`;
 const { runGoogleAccountLinkFlow } = await import(moduleUrl);
+const connectionStateSource = await readFile(new URL('../src/components/profile/googleAccountConnectionState.ts', import.meta.url), 'utf8');
+const connectionStateModule = ts.transpileModule(connectionStateSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  reportDiagnostics: true,
+});
+assert.deepEqual(connectionStateModule.diagnostics.filter((item) => item.category === ts.DiagnosticCategory.Error), []);
+const { getGoogleAccountConnectionView } = await import(`data:text/javascript;base64,${Buffer.from(connectionStateModule.outputText).toString('base64')}`);
 
 test('successful account linking updates connection state and clears the password form', async () => {
   const calls = { link: [], linking: [], errors: [], connected: [], clear: 0 };
@@ -64,10 +71,24 @@ test('duplicate in-flight link callbacks submit only once', async () => {
   assert.equal(inProgress.current, false);
 });
 
-test('Profile wires an authenticated status, password challenge, and reusable Google button', async () => {
+test('connection status distinguishes loading, error, connected and not-connected states', () => {
+  assert.equal(getGoogleAccountConnectionView(true, null, null), 'loading');
+  assert.equal(getGoogleAccountConnectionView(false, 'status unavailable', null), 'error');
+  assert.equal(getGoogleAccountConnectionView(false, null, true), 'connected');
+  assert.equal(getGoogleAccountConnectionView(false, null, false), 'disconnected');
+});
+
+test('Profile renders Account Connections below the summary and above competitive stats', async () => {
   const profileSource = await readFile(new URL('../src/components/profile/GoogleAccountConnection.tsx', import.meta.url), 'utf8');
   const pageSource = await readFile(new URL('../src/pages/ProfilePage.tsx', import.meta.url), 'utf8');
   assert.match(pageSource, /<GoogleAccountConnection\s*\/>/);
+  const summaryPosition = pageSource.indexOf('/* Completed Profile Display */');
+  const connectionsPosition = pageSource.indexOf('<GoogleAccountConnection />');
+  const statsPosition = pageSource.indexOf('/* Coding Stats Highlight section */');
+  assert.ok(summaryPosition >= 0 && summaryPosition < connectionsPosition && connectionsPosition < statsPosition);
+  assert.match(profileSource, />Account Connections</);
+  assert.match(profileSource, /'Not connected'/);
+  assert.match(profileSource, /Connect Google Account/);
   assert.match(profileSource, /authApi\.getGoogleIdentityStatus/);
   assert.match(profileSource, /authApi\.createGoogleLinkChallenge\(currentPassword\)/);
   assert.match(profileSource, /authApi\.linkGoogleIdentity/);
