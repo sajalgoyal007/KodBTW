@@ -1,12 +1,14 @@
 # Application screenshots
 
-No genuine application screenshots were found in the repository during the documentation audit. The existing `frontend/public/kodbtw-social.png` is an Open Graph promotional image, not a screen capture, and is intentionally not shown as product evidence.
+The repository contains cropped screenshots supplied for the project README. Dashboard, analytics, contest, leaderboard, and profile captures show a specific point in time; they do not guarantee current live values or availability. The landing-page demo explicitly labels its values as illustrative sample data. The existing `frontend/public/kodbtw-social.png` is an Open Graph promotional image, not a screen capture.
 
-When reviewed screenshots are available, place them in this directory and add entries below. Remove tokens, email addresses, private profile details, and other sensitive data before publication.
+The README displays these images in expandable sections. Before adding additional screenshots, remove tokens, email addresses, private profile details, and other sensitive data.
 
 | Screen | Screenshot | Notes |
 |---|---|---|
-| Login | Not available | Capture a real running application screen before adding. |
-| Registration | Not available | Capture a real running application screen before adding. |
-| Dashboard / analytics | Not available | Use synthetic or consented account data and redact personal data. |
-| Public profile | Not available | Use a profile explicitly approved for public documentation. |
+| Landing page | [Hero and overview](landing-hero-and-overview.png); [product showcase](landing-product-showcase.png); [architecture and profile preview](landing-profile-and-product-modules.png) | Landing-page values are explicitly illustrative. |
+| Dashboard | [Dashboard capture](dashboard.png) | Snapshot values may be stale. |
+| Analytics | [Overview](analytics-overview.png); [comparisons](analytics-comparisons.png); [history](analytics-history.png) | Snapshot values may be stale. |
+| Contests | [Contest capture](contests.png) | Contest listings are time-sensitive. |
+| Leaderboard | [Leaderboard capture](leaderboard.png) | Names and rankings may change. |
+| Coding profiles | [Connected profiles](coding-profiles.png) | Platform handles are user-supplied. |
