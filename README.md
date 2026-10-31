@@ -19,6 +19,13 @@
 
 > **Data note:** each platform reports different fields and uses different rating scales. KodBTW keeps source and availability context visible; an unavailable value is not treated as zero. The landing-page preview uses sample data, and live platform coverage depends on the enabled adapter.
 
+### Evaluator demo access
+
+Temporary evaluator login (remove or rotate after grading):
+
+- **Email:** `sajalgoyal2007@gmail.com`
+- **Password:** `12345678`
+
 ---
 
 ## Contents
@@ -319,12 +326,12 @@ erDiagram
   USER {
     bigint id PK
     varchar email UK
-    varchar password_hash nullable
-    timestamp email_verified_at nullable
+    varchar password_hash "nullable"
+    timestamp email_verified_at "nullable"
   }
   PROFILE {
     bigint id PK
-    bigint user_id FK_UQ
+    bigint user_id FK "unique"
     varchar username UK
     varchar display_name
     text bio
@@ -348,13 +355,12 @@ erDiagram
     bigint user_id FK
     varchar platform
     date snapshot_date
-    varchar source
     int total_solved
     int rating
     varchar source
   }
   LEADERBOARD_USER_CACHE {
-    bigint user_id PK_FK
+    bigint user_id PK "also references USER"
     double weighted_score
     timestamp updated_at
   }
@@ -366,7 +372,7 @@ erDiagram
   }
   GOOGLE_AUTH_CHALLENGE {
     bigint id PK
-    bigint user_id FK_nullable
+    bigint user_id FK "nullable"
     varchar operation
     varchar nonce_hash
     timestamp expires_at
@@ -817,13 +823,6 @@ See `backend/src/main/java/com/kodbtw/controller/` for request and response deta
 | Architecture and UML | [Architecture](documentation/diagrams/architecture/SYSTEM_ARCHITECTURE.md) · [UML index](documentation/diagrams/uml/README.md) · [Database diagrams](documentation/diagrams/database/README.md) |
 | Platform integration notes | [Integration diagrams and status](documentation/diagrams/platform-integration/README.md) · [Data acquisition record](docs/platform-data-acquisition.md) |
 | Testing and validation | [Validation record](documentation/TESTING_AND_VALIDATION.md) |
-
-### Teacher demo access
-
-Temporary evaluator login (remove or rotate after grading):
-
-- **Email:** `sajalgoyal2007@gmail.com`
-- **Password:** `12345678`
 
 ## Limitations and future work
 
