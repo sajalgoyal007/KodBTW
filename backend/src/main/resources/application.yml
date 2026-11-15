@@ -34,6 +34,13 @@ spring:
 
 app:
   public-site-url: ${PUBLIC_SITE_URL:https://kodbtw.vercel.app}
+  clist:
+    username: ${CLIST_USERNAME:}
+    api-key: ${CLIST_API_KEY:}
+    base-url: ${CLIST_BASE_URL:https://clist.by/api/v4}
+  contests:
+    sync-cron: ${CONTEST_SYNC_CRON:0 0 */6 * * *}
+    sync-enabled: ${CONTEST_SYNC_ENABLED:true}
   google-auth:
     client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
   resend:

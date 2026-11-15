@@ -12,6 +12,7 @@ import {
   Layers,
   AlertCircle,
   PlusCircle,
+  CalendarDays,
 } from 'lucide-react';
 
 export const ContestsPage: React.FC = () => {
@@ -65,6 +66,15 @@ export const ContestsPage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              onClick={() => navigate('/contest-calendar')}
+              className="btn btn-secondary"
+              style={{ padding: '0.5rem 0.875rem', fontSize: '0.8125rem' }}
+              title="Open multi-platform contest calendar"
+            >
+              <CalendarDays size={14} />
+              <span>Contest Calendar</span>
+            </button>
             <button
               onClick={() => refetch()}
               disabled={loading}

@@ -10,6 +10,7 @@ const privateRouteTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/analytics': 'Analytics',
   '/contests': 'Contests',
+  '/contest-calendar': 'Contest Calendar',
   '/leaderboard': 'Leaderboard',
   '/profile': 'Account Profile',
   '/coding-profiles': 'Coding Profiles',

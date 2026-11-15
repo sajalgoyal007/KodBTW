@@ -6,6 +6,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ContestsPage } from './pages/ContestsPage';
+import { ContestCalendarPage } from './pages/ContestCalendarPage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CodingProfilesPage } from './pages/CodingProfilesPage';
@@ -75,6 +76,14 @@ export const App: React.FC = () => {
         element={
           <ProtectedRoute>
             <ContestsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/contest-calendar"
+        element={
+          <ProtectedRoute>
+            <ContestCalendarPage />
           </ProtectedRoute>
         }
       />

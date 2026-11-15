@@ -33,4 +33,11 @@ app:
   verification:
     token-validity: PT24H
     cooldown: PT1M
+  clist:
+    username: ""
+    api-key: ""
+    base-url: "https://clist.by/api/v4"
+  contests:
+    sync-cron: "0 0 */6 * * *"
+    sync-enabled: false
 

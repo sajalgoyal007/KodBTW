@@ -39,6 +39,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/google/link/challenge", "/api/auth/google/link")
                                 .authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/auth/google/identity").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/contests/calendar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/leaderboard/sync").hasAuthority("ADMIN")

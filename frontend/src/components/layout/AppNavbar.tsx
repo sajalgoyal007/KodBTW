@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Code2, LogOut, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal, Menu, X, ChevronDown } from 'lucide-react';
+import { Code2, LogOut, LayoutDashboard, BarChart2, Trophy, Terminal, UserCircle, Medal, Menu, X, ChevronDown, CalendarDays } from 'lucide-react';
 import { ThemeToggle } from '../common/ThemeToggle';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Analytics', path: '/analytics', icon: BarChart2 },
   { label: 'Contests', path: '/contests', icon: Trophy },
+  { label: 'Calendar', path: '/contest-calendar', icon: CalendarDays },
   { label: 'Leaderboard', path: '/leaderboard', icon: Medal },
   { label: 'Coding Profiles', path: '/coding-profiles', icon: Terminal },
 ];

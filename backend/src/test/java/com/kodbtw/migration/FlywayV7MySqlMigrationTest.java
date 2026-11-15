@@ -27,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Exercises the real MySQL migration sequence against a disposable MySQL 8 container.
  * The database is migrated through V6 and seeded with legacy rows, then through V11 so the
- * Google identity table exists for the backfill fixture. Spring then applies V12 and validates
- * the resulting schema against the application's JPA entities.
+ * Google identity table exists for the backfill fixture. Spring then applies V12 and V13 and
+ * validates the resulting schema against the application's JPA entities.
  */
 @SpringBootTest
 @Testcontainers
@@ -115,7 +115,7 @@ class FlywayV7MySqlMigrationTest {
     }
 
     @Test
-    void appliesV7ThroughV12PreservingLegacyRowsAndCreatingEmailVerificationSchema() {
+    void appliesV7ThroughV13PreservingLegacyRowsAndCreatingEmailVerificationSchema() {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM platform_stat_snapshots", Integer.class)).isEqualTo(5);
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class)).isEqualTo(2);
@@ -156,9 +156,9 @@ class FlywayV7MySqlMigrationTest {
 
         List<Map<String, Object>> applied = jdbc.queryForList(
                 "SELECT version, success FROM flyway_schema_history WHERE type = 'SQL' ORDER BY installed_rank");
-        assertThat(applied).hasSize(12);
+        assertThat(applied).hasSize(13);
         assertThat(applied).extracting(row -> row.get("version"))
-                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
+                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
         assertThat(applied).allSatisfy(row -> assertThat(row.get("success")).isEqualTo(true));
         assertThat(jdbc.queryForObject(
                 "SELECT indexable FROM profiles WHERE user_id = 101", Boolean.class)).isFalse();
@@ -301,6 +301,40 @@ class FlywayV7MySqlMigrationTest {
                 List.of("user_id", "created_at"));
         assertIndexColumns("email_verification_tokens", "idx_email_verification_tokens_expiry",
                 List.of("expires_at"));
+
+        // --- V13: multi-platform contest calendar storage ---
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'contest_events'", Integer.class)).isEqualTo(1);
+        assertColumn("contest_events", "id", "bigint", "NO");
+        assertColumn("contest_events", "external_id", "varchar", "NO");
+        assertColumn("contest_events", "platform", "varchar", "NO");
+        assertColumn("contest_events", "title", "varchar", "NO");
+        assertColumn("contest_events", "start_time_utc", "timestamp", "NO");
+        assertColumn("contest_events", "end_time_utc", "timestamp", "NO");
+        assertColumn("contest_events", "duration_seconds", "bigint", "NO");
+        assertColumn("contest_events", "contest_url", "varchar", "NO");
+        assertColumn("contest_events", "last_synced_at", "timestamp", "NO");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'contest_events' AND column_name = 'external_id' "
+                        + "AND character_maximum_length = 128", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'contest_events' AND column_name = 'platform' "
+                        + "AND character_maximum_length = 40", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'contest_events' AND column_name = 'title' "
+                        + "AND character_maximum_length = 500", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'contest_events' AND column_name = 'contest_url' "
+                        + "AND character_maximum_length = 1000", Integer.class)).isEqualTo(1);
+        assertUniqueIndexColumns("contest_events", "uk_contest_events_external_id",
+                List.of("external_id"));
+        assertIndexColumns("contest_events", "idx_contest_events_start_time_platform",
+                List.of("start_time_utc", "platform"));
     }
 
     @Test
