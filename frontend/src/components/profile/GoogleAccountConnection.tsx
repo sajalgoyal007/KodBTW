@@ -87,7 +87,7 @@ export const GoogleAccountConnection: React.FC = () => {
       <div className="profile-account-connections-heading">
         <div>
           <h2 id="account-connections-title">Account Connections</h2>
-          <p>Manage the sign-in methods connected to your KodBTW account.</p>
+          <p>Manage Google sign-in for KodBTW. This is separate from your coding platform profiles.</p>
         </div>
       </div>
 

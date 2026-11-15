@@ -6,6 +6,7 @@ import ch.qos.logback.core.read.ListAppender;
 import com.kodbtw.config.AuthRequestDiagnosticsFilter;
 import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.entity.User;
+import com.kodbtw.exception.EmailNotVerifiedException;
 import com.kodbtw.exception.InvalidCredentialsException;
 import com.kodbtw.repository.UserRepository;
 import com.kodbtw.security.JwtService;
@@ -67,6 +68,7 @@ class AuthServiceTest {
         JwtService jwtService = mock(JwtService.class);
         User user = new User("Private Name", "private@example.com", "encoded-password");
         user.setId(9L);
+        user.setEmailVerified(true);
         when(userRepository.findByEmail("private@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password-must-not-be-logged", "encoded-password")).thenReturn(true);
         when(jwtService.generateToken(any(User.class))).thenReturn("jwt-must-not-be-logged");
@@ -99,5 +101,20 @@ class AuthServiceTest {
             logger.detachAppender(appender);
             appender.stop();
         }
+    }
+
+    @Test
+    void loginRejectsUnverifiedAccountWithoutGeneratingToken() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        JwtService jwtService = mock(JwtService.class);
+        User unverified = new User("Unverified", "unverified@example.com", "encoded-password");
+        when(userRepository.findByEmail("unverified@example.com")).thenReturn(Optional.of(unverified));
+        when(passwordEncoder.matches("correct-password", "encoded-password")).thenReturn(true);
+
+        assertThrows(EmailNotVerifiedException.class, () -> new AuthService(userRepository, passwordEncoder, jwtService)
+                .login(new LoginRequest("unverified@example.com", "correct-password")));
+
+        verify(jwtService, never()).generateToken(any());
     }
 }

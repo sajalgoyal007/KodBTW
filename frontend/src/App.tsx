@@ -10,6 +10,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { CodingProfilesPage } from './pages/CodingProfilesPage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from './components/auth/PublicOnlyRoute';
 import { ThemeToggle } from './components/common/ThemeToggle';
@@ -40,6 +41,14 @@ export const App: React.FC = () => {
         element={
           <PublicOnlyRoute>
             <><ThemeToggle className="route-theme-toggle" /><RegisterPage /></>
+          </PublicOnlyRoute>
+        }
+      />
+      <Route
+        path="/verify-email"
+        element={
+          <PublicOnlyRoute>
+            <><ThemeToggle className="route-theme-toggle" /><VerifyEmailPage /></>
           </PublicOnlyRoute>
         }
       />

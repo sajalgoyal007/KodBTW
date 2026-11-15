@@ -3,7 +3,15 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import ts from 'typescript';
 
-const source = await readFile(new URL('../src/utils/platformStatsSource.ts', import.meta.url), 'utf8');
+const capabilitySource = await readFile(new URL('../src/config/platformCapabilities.ts', import.meta.url), 'utf8');
+const capabilityOutput = ts.transpileModule(capabilitySource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+  reportDiagnostics: true,
+});
+assert.deepEqual(capabilityOutput.diagnostics.filter((item) => item.category === ts.DiagnosticCategory.Error), []);
+const capabilityUrl = `data:text/javascript;base64,${Buffer.from(capabilityOutput.outputText).toString('base64')}`;
+const source = (await readFile(new URL('../src/utils/platformStatsSource.ts', import.meta.url), 'utf8'))
+  .replace("from '../config/platformCapabilities';", `from '${capabilityUrl}';`);
 const { outputText, diagnostics } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   reportDiagnostics: true,
@@ -18,6 +26,7 @@ const {
   getPlatformStatsSourceBadgeClass,
   getPlatformStatsSourceKind,
   getPlatformStatsSourceLabel,
+  getUnsupportedStatsMessage,
   getPlatformSyncSourceStatus,
   isVerifiedStatsSource,
 } = await import(
@@ -56,12 +65,22 @@ test('source labels and badge styles distinguish live, third-party, mock, pendin
   assert.equal(getPlatformStatsSourceBadgeClass('UNRELATED_REAL'), 'badge-muted');
 });
 
+test('Codeforces unsupported statistics are explained without affecting other platforms', () => {
+  assert.equal(
+    getUnsupportedStatsMessage('CODEFORCES'),
+    'The current Codeforces integration does not provide solved counts or difficulty breakdowns.',
+  );
+  assert.equal(getUnsupportedStatsMessage('codeforces'), getUnsupportedStatsMessage('CODEFORCES'));
+  assert.equal(getUnsupportedStatsMessage('LEETCODE'), null);
+  assert.equal(getUnsupportedStatsMessage(null), null);
+});
+
 test('CodeChef availability follows backend status and is not inferred from connection', () => {
-  assert.equal(getPlatformAvailabilityLabel('CODECHEF'), 'Connect an account to check availability');
-  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'SOURCE_PENDING' }), 'Live statistics unavailable');
-  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'REAL_AVAILABLE' }), 'Live statistics available');
+  assert.equal(getPlatformAvailabilityLabel('CODECHEF'), 'Third-party stats are integrated, but provider permission and reliability are unverified.');
+  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'SOURCE_PENDING' }), 'No successful sync yet. Third-party stats are integrated, but provider permission and reliability are unverified.');
+  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'REAL_AVAILABLE' }), 'Third-party stats are integrated, but provider permission and reliability are unverified.');
   assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'SYNC_FAILED' }), 'Last sync failed');
-  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'SYNCED' }), 'Live statistics synced');
+  assert.equal(getPlatformAvailabilityLabel('CODECHEF', { sourceStatus: 'SYNCED' }), 'Stats synced · Third-party stats are integrated, but provider permission and reliability are unverified.');
 });
 
 test('dashboard source labels distinguish live, pending, mock, and unknown data', () => {
@@ -73,11 +92,11 @@ test('dashboard source labels distinguish live, pending, mock, and unknown data'
   assert.equal(getPlatformStatsSourceLabel('UNSYNCED', 'LIVE_SYNC_UNAVAILABLE'), 'Live sync unavailable');
   assert.equal(getPlatformStatsSourceLabel('MOCK'), 'Mock Sandbox');
   assert.equal(getPlatformStatsSourceLabel('UNRECOGNIZED_SOURCE'), 'Source unknown');
-  assert.equal(getPlatformAvailabilityLabel('UNKNOWN_PLATFORM'), 'Availability unknown');
-  assert.equal(getPlatformAvailabilityLabel('CODEFORCES'), 'Live statistics available');
-  assert.equal(getPlatformAvailabilityLabel('LEETCODE'), 'Live statistics available');
-  assert.equal(getPlatformAvailabilityLabel('GEEKSFORGEEKS'), 'Live statistics unavailable');
-  assert.equal(getPlatformAvailabilityLabel('HACKERRANK'), 'Live statistics unavailable');
+  assert.equal(getPlatformAvailabilityLabel('UNKNOWN_PLATFORM'), 'Availability unknown; no platform integration is configured.');
+  assert.equal(getPlatformAvailabilityLabel('CODEFORCES'), 'Official API sync provides rating and max rating; solved counts and numeric global rank are unavailable.');
+  assert.equal(getPlatformAvailabilityLabel('LEETCODE'), 'Live stats use an undocumented public endpoint; its authorization and stability are unverified.');
+  assert.equal(getPlatformAvailabilityLabel('GEEKSFORGEEKS'), 'A handle can be saved, but live statistics and synchronization are unavailable.');
+  assert.equal(getPlatformAvailabilityLabel('HACKERRANK'), 'A handle can be saved, but live statistics and synchronization are unavailable.');
 });
 
 test('dashboard refresh reports success only for succeeded syncs with verified populated stats', () => {
@@ -137,10 +156,10 @@ test('never-synced or source-pending response is unavailable rather than success
   });
 });
 
-test('failed response preserves the backend failure message', () => {
+test('failed Codeforces response preserves the backend failure message', () => {
   assert.deepEqual(getDashboardRefreshFeedback({
     syncStatus: { status: 'FAILED', failureMessage: 'The platform temporarily limited requests. Try again later.' },
-    currentStats: { source: 'CODECHEF_THIRD_PARTY', totalProblemsSolved: 656 },
+    currentStats: { platform: 'CODEFORCES', source: 'CODEFORCES_REAL', rating: 1500 },
     cooldownApplied: false,
   }), {
     success: false,
@@ -158,4 +177,37 @@ test('mock, unavailable source, and missing metrics cannot produce refresh succe
   ]) {
     assert.equal(getDashboardRefreshFeedback({ syncStatus, currentStats, cooldownApplied: false }).success, false);
   }
+});
+
+test('successful Codeforces sync with no available stats is distinct from sync failure', () => {
+  const result = getDashboardRefreshFeedback({
+    syncStatus: { status: 'SUCCEEDED', failureMessage: null },
+    currentStats: {
+      platform: 'CODEFORCES',
+      source: 'CODEFORCES_REAL',
+      totalProblemsSolved: null,
+      rating: null,
+      maxRating: null,
+    },
+    cooldownApplied: false,
+  });
+
+  assert.equal(result.success, false);
+  assert.match(result.message, /^Sync completed,/);
+  assert.match(result.message, /solved counts or difficulty breakdowns/);
+  assert.doesNotMatch(result.message, /unrated/i);
+});
+
+test('successful Codeforces sync with rating remains successful despite unsupported solved metrics', () => {
+  assert.deepEqual(getDashboardRefreshFeedback({
+    syncStatus: { status: 'SUCCEEDED', failureMessage: null },
+    currentStats: {
+      platform: 'CODEFORCES',
+      source: 'CODEFORCES_REAL',
+      totalProblemsSolved: null,
+      rating: 1500,
+      maxRating: 1600,
+    },
+    cooldownApplied: false,
+  }), { success: true, message: 'Stats refreshed successfully.' });
 });

@@ -3,8 +3,14 @@ package com.kodbtw.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.RegisterRequest;
+import com.kodbtw.dto.ResendVerificationRequest;
+import com.kodbtw.dto.VerifyEmailRequest;
 import com.kodbtw.entity.User;
+import com.kodbtw.repository.EmailVerificationTokenRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.RecordingEmailService;
+import com.kodbtw.support.TestEmailConfig;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.context.TestPropertySource;
 
 import java.nio.charset.StandardCharsets;
@@ -35,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 @TestPropertySource(properties = "app.google-auth.client-id=")
 class AuthControllerTest {
 
@@ -49,6 +56,12 @@ class AuthControllerTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EmailVerificationTokenRepository emailVerificationTokenRepository;
+
+    @Autowired
+    private RecordingEmailService recordingEmailService;
 
     @Autowired
     private com.kodbtw.repository.ProfileRepository profileRepository;
@@ -74,7 +87,9 @@ class AuthControllerTest {
         leaderboardUserCacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
+        recordingEmailService.clear();
     }
 
     // --- Phase 3A: Registration Tests ---
@@ -90,7 +105,33 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.name").value("Sajal Goyal"))
                 .andExpect(jsonPath("$.email").value("sajal@example.com"))
+                .andExpect(jsonPath("$.verificationEmailSent").value(true))
+                .andExpect(jsonPath("$.token").doesNotExist())
                 .andExpect(jsonPath("$.password").doesNotExist());
+
+        assertThat(recordingEmailService.sent()).hasSize(1);
+        RecordingEmailService.SentEmail email = recordingEmailService.lastSent();
+        assertThat(email.to()).isEqualTo("sajal@example.com");
+        assertThat(email.name()).isEqualTo("Sajal Goyal");
+        assertThat(email.verificationUrl())
+                .startsWith("http://localhost:5173/verify-email?token=");
+    }
+
+    @Test
+    void testRegistrationReportsWhenVerificationEmailDeliveryFails() throws Exception {
+        recordingEmailService.failNextDelivery();
+        RegisterRequest request = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.verificationEmailSent").value(false))
+                .andExpect(jsonPath("$.message", containsString("could not deliver")));
+
+        assertThat(recordingEmailService.sent()).isEmpty();
+        assertThat(userRepository.findByEmail("sajal@example.com")).isPresent();
     }
 
     @Test
@@ -135,18 +176,8 @@ class AuthControllerTest {
     @Test
     void authenticatedGoogleLinkStatusAndChallengeRequireCurrentPassword() throws Exception {
         String password = "account-link-password";
-        RegisterRequest registration = new RegisterRequest("Link Owner", "link-owner@example.com", password);
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registration)))
-                .andExpect(status().isCreated());
-
-        MvcResult login = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new LoginRequest("link-owner@example.com", password))))
-                .andExpect(status().isOk())
-                .andReturn();
-        String token = objectMapper.readTree(login.getResponse().getContentAsString()).get("token").asText();
+        String token = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Link Owner", "link-owner@example.com", password).token();
         String authorization = "Bearer " + token;
 
         mockMvc.perform(get("/api/auth/google/identity").header(HttpHeaders.AUTHORIZATION, authorization))
@@ -187,6 +218,7 @@ class AuthControllerTest {
         assertThat(savedUser.getPassword()).isNotEqualTo(rawPassword);
         assertThat(savedUser.getPassword()).startsWith("$2a$");
         assertThat(passwordEncoder.matches(rawPassword, savedUser.getPassword())).isTrue();
+        assertThat(savedUser.isEmailVerified()).isFalse();
     }
 
     @Test
@@ -247,12 +279,9 @@ class AuthControllerTest {
 
     @Test
     void testSuccessfulLogin() throws Exception {
-        // Register user first
-        RegisterRequest registerReq = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerReq)))
-                .andExpect(status().isCreated());
+        AuthTestSupport.register(
+                mockMvc, objectMapper, userRepository, "Sajal Goyal", "sajal@example.com", "password123");
+        AuthTestSupport.markVerified(userRepository, "sajal@example.com");
 
         // Perform login
         LoginRequest loginReq = new LoginRequest("sajal@example.com", "password123");
@@ -267,6 +296,72 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.user.id").isNumber())
                 .andExpect(jsonPath("$.user.name").value("Sajal Goyal"))
                 .andExpect(jsonPath("$.user.email").value("sajal@example.com"));
+    }
+
+    @Test
+    void testLoginBeforeEmailVerificationReturns403WithCode() throws Exception {
+        AuthTestSupport.register(
+                mockMvc, objectMapper, userRepository, "Unverified User", "unverified@example.com", "password123");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("unverified@example.com", "password123"))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Forbidden"))
+                .andExpect(jsonPath("$.code").value("EMAIL_NOT_VERIFIED"))
+                .andExpect(jsonPath("$.token").doesNotExist());
+    }
+
+    @Test
+    void testVerifyEmailEnablesLoginAndTokenCannotBeReused() throws Exception {
+        AuthTestSupport.register(
+                mockMvc, objectMapper, userRepository, "Verify User", "verify-me@example.com", "password123");
+
+        RecordingEmailService.SentEmail sent = recordingEmailService.lastSent();
+        assertThat(sent).isNotNull();
+        String rawToken = sent.verificationUrl().substring(sent.verificationUrl().indexOf("token=") + "token=".length());
+
+        mockMvc.perform(post("/api/auth/verify-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new VerifyEmailRequest(rawToken))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("verify-me@example.com", "password123"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token", startsWith("eyJ")));
+
+        mockMvc.perform(post("/api/auth/verify-email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new VerifyEmailRequest(rawToken))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("TOKEN_ALREADY_USED"));
+    }
+
+    @Test
+    void testResendVerificationEnforcesCooldownAndHidesUnknownAccounts() throws Exception {
+        AuthTestSupport.register(
+                mockMvc, objectMapper, userRepository, "Cooldown User", "cooldown@example.com", "password123");
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ResendVerificationRequest("cooldown@example.com"))))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value("RESEND_COOLDOWN_ACTIVE"))
+                .andExpect(jsonPath("$.retryAfterSeconds").exists());
+
+        mockMvc.perform(post("/api/auth/resend-verification")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new ResendVerificationRequest("missing@example.com"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message", containsString("If an account exists")));
     }
 
     @Test
@@ -295,11 +390,8 @@ class AuthControllerTest {
 
     @Test
     void testLoginInvalidPassword() throws Exception {
-        RegisterRequest registerReq = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerReq)))
-                .andExpect(status().isCreated());
+        AuthTestSupport.register(
+                mockMvc, objectMapper, userRepository, "Sajal Goyal", "sajal@example.com", "password123");
 
         LoginRequest loginReq = new LoginRequest("sajal@example.com", "wrongpassword");
         mockMvc.perform(post("/api/auth/login")
@@ -323,21 +415,8 @@ class AuthControllerTest {
 
     @Test
     void testProtectedMeEndpointWithValidJwt() throws Exception {
-        RegisterRequest registerReq = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerReq)))
-                .andExpect(status().isCreated());
-
-        LoginRequest loginReq = new LoginRequest("sajal@example.com", "password123");
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginReq)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String responseJson = loginResult.getResponse().getContentAsString();
-        String token = objectMapper.readTree(responseJson).get("token").asText();
+        String token = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Sajal Goyal", "sajal@example.com", "password123").token();
 
         // Call protected /api/auth/me with valid JWT
         mockMvc.perform(get("/api/auth/me")

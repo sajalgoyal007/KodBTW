@@ -22,7 +22,7 @@ test('login and registration validation errors are linked to fields and announce
   assertFieldErrorAssociation(register, 'name', 'register-name-error');
   assertFieldErrorAssociation(register, 'email', 'register-email-error');
   assertFieldErrorAssociation(register, 'password', 'register-password-error');
-  assert.match(login, /className="alert alert-error" role="alert"/);
+  assert.match(login, /className=\{`alert \$\{emailNotVerified \? 'alert-warning' : 'alert-error'\}`\} role="alert"/);
   assert.match(register, /className="alert alert-error" role="alert"/);
 });
 

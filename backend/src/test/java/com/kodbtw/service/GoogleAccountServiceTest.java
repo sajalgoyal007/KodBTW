@@ -81,7 +81,26 @@ class GoogleAccountServiceTest {
 
         verify(identities).saveAndFlush(argThat(link -> link.getUser() == currentUser
                 && link.getProvider().equals("GOOGLE") && link.getProviderSubject().equals("google-sub-31")));
-        verifyNoInteractions(users);
+        // A freshly linked Google identity proves email ownership, so the account becomes verified.
+        assertTrue(currentUser.isEmailVerified());
+        assertNotNull(currentUser.getEmailVerifiedAt());
+        verify(users).save(currentUser);
+    }
+
+    @Test
+    void linkingGoogleIdentityKeepsAlreadyVerifiedUserUntouched() {
+        User currentUser = new User("Existing", "existing@example.com", "password-hash", true);
+        currentUser.setId(31L);
+        VerifiedGoogleIdentity identity = new VerifiedGoogleIdentity(
+                "google-sub-31", "different-email@example.com", "Google Name", "nonce");
+        when(identities.findByProviderAndProviderSubject("GOOGLE", "google-sub-31"))
+                .thenReturn(Optional.empty());
+        when(identities.findByUser_IdAndProvider(31L, "GOOGLE")).thenReturn(Optional.empty());
+
+        service.linkGoogleIdentity(currentUser, identity);
+
+        verify(identities).saveAndFlush(any(UserAuthIdentity.class));
+        verify(users, never()).save(any(User.class));
     }
 
     @Test

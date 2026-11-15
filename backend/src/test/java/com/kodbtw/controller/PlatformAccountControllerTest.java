@@ -1,18 +1,19 @@
 package com.kodbtw.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.PlatformAccountRequest;
-import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.Platform;
 import com.kodbtw.repository.PlatformAccountRepository;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.TestEmailConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 class PlatformAccountControllerTest {
 
     @Autowired
@@ -51,6 +53,9 @@ class PlatformAccountControllerTest {
     @Autowired
     private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
 
+    @Autowired
+    private com.kodbtw.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     @org.springframework.boot.test.mock.mockito.MockBean
     private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
 
@@ -69,26 +74,13 @@ class PlatformAccountControllerTest {
         leaderboardUserCacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
-        userToken = registerAndLogin("sajal@example.com", "password123");
-        otherUserToken = registerAndLogin("other@example.com", "password456");
-    }
-
-    private String registerAndLogin(String email, String password) throws Exception {
-        RegisterRequest register = new RegisterRequest("Test User", email, password);
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(register)));
-
-        LoginRequest login = new LoginRequest(email, password);
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString())
-                .get("token").asText();
+        userToken = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Test User", "sajal@example.com", "password123").token();
+        otherUserToken = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Test User", "other@example.com", "password456").token();
     }
 
     private PlatformAccountRequest makeRequest(Platform platform, String username, String url) {

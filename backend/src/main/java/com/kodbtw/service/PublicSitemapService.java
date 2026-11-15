@@ -11,6 +11,7 @@ import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 @Service
@@ -75,7 +76,10 @@ public class PublicSitemapService {
     private String normalizePublicSiteUrl(String configuredUrl) {
         try {
             URI uri = URI.create(configuredUrl == null ? "" : configuredUrl.trim());
-            if (!"https".equalsIgnoreCase(uri.getScheme())
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+            boolean secureOrigin = "https".equals(scheme);
+            boolean loopbackDevelopmentOrigin = "http".equals(scheme) && isLoopbackHost(uri.getHost());
+            if (!(secureOrigin || loopbackDevelopmentOrigin)
                     || uri.getHost() == null
                     || uri.getRawUserInfo() != null
                     || uri.getRawQuery() != null
@@ -83,9 +87,19 @@ public class PublicSitemapService {
                     || (uri.getRawPath() != null && !uri.getRawPath().isEmpty() && !"/".equals(uri.getRawPath()))) {
                 throw new IllegalArgumentException("Public site URL must be an HTTPS origin without credentials, path, query, or fragment");
             }
-            return "https://" + uri.getRawAuthority();
+            return scheme + "://" + uri.getRawAuthority();
         } catch (RuntimeException exception) {
             throw new IllegalArgumentException("Invalid public site URL configuration", exception);
         }
+    }
+
+    private boolean isLoopbackHost(String host) {
+        if (host == null) {
+            return false;
+        }
+        return "localhost".equalsIgnoreCase(host)
+                || "127.0.0.1".equals(host)
+                || "::1".equals(host)
+                || "[::1]".equals(host);
     }
 }

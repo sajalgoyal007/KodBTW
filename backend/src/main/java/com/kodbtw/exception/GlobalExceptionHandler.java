@@ -59,6 +59,61 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(Map.of("error", "Google Authentication Error", "code", code, "message", message));
     }
 
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<Map<String, String>> handleEmailNotVerified(EmailNotVerifiedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "error", "Forbidden",
+                "code", "EMAIL_NOT_VERIFIED",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidToken(InvalidTokenException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Bad Request",
+                "code", "INVALID_TOKEN",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<Map<String, String>> handleTokenExpired(TokenExpiredException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Bad Request",
+                "code", "TOKEN_EXPIRED",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(TokenAlreadyUsedException.class)
+    public ResponseEntity<Map<String, String>> handleTokenAlreadyUsed(TokenAlreadyUsedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "Bad Request",
+                "code", "TOKEN_ALREADY_USED",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(ResendCooldownException.class)
+    public ResponseEntity<Map<String, String>> handleResendCooldown(ResendCooldownException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                "error", "Too Many Requests",
+                "code", "RESEND_COOLDOWN_ACTIVE",
+                "message", ex.getMessage(),
+                "retryAfterSeconds", String.valueOf(ex.getRetryAfterSeconds())
+        ));
+    }
+
+    @ExceptionHandler(EmailDeliveryException.class)
+    public ResponseEntity<Map<String, String>> handleEmailDelivery(EmailDeliveryException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                "error", "Bad Gateway",
+                "code", "EMAIL_DELIVERY_FAILED",
+                "message", ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleInvalidCredentials(
             InvalidCredentialsException ex) {

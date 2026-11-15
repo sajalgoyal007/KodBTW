@@ -1,5 +1,18 @@
 import { apiClient } from './apiClient';
-import { GoogleAuthChallengeResponse, GoogleIdentityStatusResponse, GoogleLoginRequest, LoginRequest, LoginResponse, RegisterRequest, User } from '../../types/auth';
+import {
+  GoogleAuthChallengeResponse,
+  GoogleIdentityStatusResponse,
+  GoogleLoginRequest,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse,
+  User,
+  VerifyEmailRequest,
+  VerifyEmailResponse,
+} from '../../types/auth';
 import { AUTH_TIMEOUT_MESSAGES } from './authTimeoutMessages';
 
 const AUTH_REQUEST_TIMEOUT_MS = 75_000;
@@ -26,14 +39,36 @@ export const authApi = {
     });
   },
 
-  register: (data: RegisterRequest): Promise<User> => {
-    return apiClient<User>('/api/auth/register', {
+  register: (data: RegisterRequest): Promise<RegisterResponse> => {
+    return apiClient<RegisterResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: authRequestHeaders(),
       auth: false,
       timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
       timeoutMessage: AUTH_TIMEOUT_MESSAGES.registration,
+    });
+  },
+
+  verifyEmail: (data: VerifyEmailRequest): Promise<VerifyEmailResponse> => {
+    return apiClient<VerifyEmailResponse>('/api/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      auth: false,
+      timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
+      timeoutMessage: 'Verification request timed out. Please try again.',
+    });
+  },
+
+  resendVerification: (data: ResendVerificationRequest): Promise<ResendVerificationResponse> => {
+    return apiClient<ResendVerificationResponse>('/api/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: authRequestHeaders(),
+      auth: false,
+      timeoutMs: AUTH_REQUEST_TIMEOUT_MS,
+      timeoutMessage: 'Resend request timed out. Please try again.',
     });
   },
 

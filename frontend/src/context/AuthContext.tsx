@@ -2,8 +2,6 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { User } from '../types/auth';
 import { authApi } from '../services/api/authApi';
 import { TOKEN_STORAGE_KEY } from '../services/api/apiClient';
-import { AUTH_TIMEOUT_MESSAGES } from '../services/api/authTimeoutMessages';
-import { runPostRegistrationLogin } from '../services/api/authErrors';
 import { restoreSession } from '../services/api/sessionRestore';
 
 export interface AuthContextType {
@@ -15,7 +13,7 @@ export interface AuthContextType {
   retrySession: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string, challengeId: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<import('../types/auth').RegisterResponse>;
   logout: () => void;
 }
 
@@ -113,12 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSessionUnavailable(false);
   }, []);
 
-  const register = async (name: string, email: string, password: string): Promise<void> => {
+  const register = async (name: string, email: string, password: string): Promise<import('../types/auth').RegisterResponse> => {
     validationAttempt.current += 1;
-    await authApi.register({ name, email, password });
-    // Auto-login after successful registration
-    await runPostRegistrationLogin(() =>
-      loginWithTimeoutMessage(email, password, AUTH_TIMEOUT_MESSAGES.registrationAutoLogin));
+    return await authApi.register({ name, email, password });
   };
 
   const logout = (): void => {

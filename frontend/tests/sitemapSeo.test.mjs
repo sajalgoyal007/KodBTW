@@ -8,6 +8,7 @@ const seoEventSource = await readFile(new URL('../src/components/seo/publicProfi
 const profileEdit = await readFile(new URL('../src/components/profile/ProfileEditModal.tsx', import.meta.url), 'utf8');
 const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
 const robots = await readFile(new URL('../public/robots.txt', import.meta.url), 'utf8');
+const homepage = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 
 test('Vercel proxies the public sitemap to the Render backend before the SPA fallback', () => {
   const sitemapRewriteIndex = vercel.rewrites.findIndex((route) => route.source === '/sitemap.xml');
@@ -17,6 +18,20 @@ test('Vercel proxies the public sitemap to the Render backend before the SPA fal
   assert.equal(vercel.rewrites[sitemapRewriteIndex].destination, 'https://kodbtw-backend.onrender.com/api/public/sitemap.xml');
   assert.match(robots, /^Allow: \/$/m);
   assert.match(robots, /^Sitemap: https:\/\/kodbtw\.vercel\.app\/sitemap\.xml$/m);
+});
+
+test('homepage exposes consistent brand metadata and a no-JavaScript content fallback', () => {
+  const jsonLdMatch = homepage.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  assert.ok(jsonLdMatch, 'homepage should include WebSite JSON-LD');
+  const website = JSON.parse(jsonLdMatch[1]);
+  assert.equal(website['@type'], 'WebSite');
+  assert.equal(website.name, 'KodBTW');
+  assert.equal(website.alternateName, 'kodbtw.vercel.app');
+  assert.equal(website.url, 'https://kodbtw.vercel.app/');
+  assert.match(homepage, /<link rel="canonical" href="https:\/\/kodbtw\.vercel\.app\/"\s*\/>/);
+  assert.match(homepage, /<title>KodBTW \| Coding Profiles and Progress Analytics<\/title>/);
+  assert.match(homepage, /<noscript>[\s\S]*?<h1>KodBTW: Unified Coding Profiles and Progress Analytics<\/h1>/);
+  assert.match(homepage, /Public developer profiles can be shared at kodbtw\.vercel\.app\/u\/username/);
 });
 
 test('profile routes default to noindex until the API confirms owner opt-in', () => {

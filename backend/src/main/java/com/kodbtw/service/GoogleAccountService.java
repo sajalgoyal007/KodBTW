@@ -27,12 +27,21 @@ public class GoogleAccountService {
     @Transactional
     public User resolveOrCreate(VerifiedGoogleIdentity verified) {
         Optional<UserAuthIdentity> linked = identities.findByProviderAndProviderSubject(PROVIDER, verified.subject());
-        if (linked.isPresent()) return linked.get().getUser();
+        if (linked.isPresent()) {
+            User user = linked.get().getUser();
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+                user.setEmailVerifiedAt(java.time.LocalDateTime.now());
+                users.save(user);
+            }
+            return user;
+        }
 
         String email = verified.email().trim().toLowerCase(Locale.ROOT);
         if (users.findByEmail(email).isPresent()) throw new GoogleAccountExistsException();
 
-        User user = users.saveAndFlush(new User(verified.name(), email, null));
+        User newUser = new User(verified.name(), email, null, true);
+        User user = users.saveAndFlush(newUser);
         identities.saveAndFlush(new UserAuthIdentity(user, PROVIDER, verified.subject()));
         return user;
     }
@@ -64,6 +73,11 @@ public class GoogleAccountService {
 
         try {
             identities.saveAndFlush(new UserAuthIdentity(user, PROVIDER, verified.subject()));
+            if (!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+                user.setEmailVerifiedAt(java.time.LocalDateTime.now());
+                users.save(user);
+            }
         } catch (DataIntegrityViolationException concurrentLink) {
             // Database uniqueness constraints are the atomic guard against concurrent link attempts.
             throw new GoogleIdentityConflictException();

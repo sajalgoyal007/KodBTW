@@ -42,16 +42,35 @@ test('validates API responses and rejects malformed contest data', () => {
 });
 
 test('filters by platform and sorts start times without mutating the response', () => {
-  const all = filterAndSortContests(response.contests);
+  const all = filterAndSortContests(response.contests, 'ALL', 'ALL_UPCOMING', Date.parse('2026-10-11T13:00:00Z'));
   assert.deepEqual(all.map((contest) => contest.id), ['3', '1', '2']);
-  assert.deepEqual(filterAndSortContests(response.contests, 'CODEFORCES').map((contest) => contest.id), ['1', '2']);
+  assert.deepEqual(filterAndSortContests(response.contests, 'CODEFORCES', 'ALL_UPCOMING', Date.parse('2026-10-11T13:00:00Z')).map((contest) => contest.id), ['1', '2']);
   assert.equal(response.contests[0].id, '2');
 });
 
+test('time filters keep running contests, exclude ended events, sort, and remove duplicate IDs', () => {
+  const now = Date.parse('2026-10-11T13:00:00Z');
+  const events = [
+    { ...response.contests[0], id: 'ended', startTime: '2026-10-11T10:00:00Z', durationSeconds: 3600 },
+    { ...response.contests[0], id: 'running', name: 'Running', startTime: '2026-10-11T12:30:00Z', durationSeconds: 7200 },
+    response.contests[1],
+    { ...response.contests[1], name: 'Duplicate copy' },
+    response.contests[0],
+    { ...response.contests[0], id: 'far', startTime: '2026-11-20T12:00:00Z' },
+  ];
+
+  assert.deepEqual(filterAndSortContests(events, 'ALL', 'ALL_UPCOMING', now).map((item) => item.id), ['running', '1', '2', 'far']);
+  assert.deepEqual(filterAndSortContests(events, 'ALL', 'NEXT_7_DAYS', now).map((item) => item.id), ['running', '1', '2']);
+  assert.deepEqual(filterAndSortContests(events, 'ALL', 'NEXT_30_DAYS', now).map((item) => item.id), ['running', '1', '2']);
+  assert.equal(filterAndSortContests(events, 'ALL', 'ALL_UPCOMING', now).find((item) => item.id === '1').name, 'Earlier');
+});
+
 test('formats event start in local time with an explicit timezone label', () => {
-  const formatted = formatContestLocalTime('2026-10-12T12:00:00Z');
-  assert.ok(formatted.dateTime.length > 0);
-  assert.equal(formatted.timeZone, Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time');
+  const formatted = formatContestLocalTime('2026-10-12T12:00:00Z', 'Asia/Kolkata', 'en-US');
+  assert.match(formatted.dateTime, /Oct 12, 2026/);
+  assert.match(formatted.dateTime, /5:30 PM/);
+  assert.match(formatted.dateTime, /GMT\+5:30/);
+  assert.equal(formatted.timeZone, 'Asia/Kolkata');
   assert.equal(formatContestLocalTime('not-a-date').dateTime, 'Time unavailable');
 });
 

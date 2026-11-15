@@ -34,21 +34,36 @@ public class AuthController {
     private final GoogleAuthService googleAuthService;
     private final GoogleAuthChallengeService googleAuthChallengeService;
     private final GoogleAccountLinkService googleAccountLinkService;
+    private final com.kodbtw.service.EmailVerificationService emailVerificationService;
 
     public AuthController(UserService userService, AuthService authService, GoogleAuthService googleAuthService,
                           GoogleAuthChallengeService googleAuthChallengeService,
-                          GoogleAccountLinkService googleAccountLinkService) {
+                          GoogleAccountLinkService googleAccountLinkService,
+                          com.kodbtw.service.EmailVerificationService emailVerificationService) {
         this.userService = userService;
         this.authService = authService;
         this.googleAuthService = googleAuthService;
         this.googleAuthChallengeService = googleAuthChallengeService;
         this.googleAccountLinkService = googleAccountLinkService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse response = userService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<com.kodbtw.dto.VerifyEmailResponse> verifyEmail(
+            @Valid @RequestBody com.kodbtw.dto.VerifyEmailRequest request) {
+        return ResponseEntity.ok(emailVerificationService.verifyEmail(request.getToken()));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<com.kodbtw.dto.ResendVerificationResponse> resendVerification(
+            @Valid @RequestBody com.kodbtw.dto.ResendVerificationRequest request) {
+        return ResponseEntity.ok(emailVerificationService.resendVerification(request.getEmail()));
     }
 
     @PostMapping("/login")

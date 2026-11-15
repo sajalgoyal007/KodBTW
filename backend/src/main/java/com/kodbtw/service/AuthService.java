@@ -46,6 +46,10 @@ public class AuthService {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 
+        if (!user.isEmailVerified()) {
+            throw new com.kodbtw.exception.EmailNotVerifiedException("Please verify your email before logging in.");
+        }
+
         String token = timedStage("jwt_generation", () -> jwtService.generateToken(user));
         UserResponse userResponse = new UserResponse(user.getId(), user.getName(), user.getEmail());
 

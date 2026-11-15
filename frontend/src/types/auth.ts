@@ -41,4 +41,29 @@ export interface ApiErrorResponse {
   message?: string;
   details?: Record<string, string>;
   status?: number;
+  retryAfterSeconds?: string;
 }
+
+export interface RegisterResponse extends User {
+  verificationEmailSent?: boolean;
+  message?: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  success: boolean;
+  message: string;
+}
+

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { getStats } from '../../services/api/platformAccountApi';
 import { X, Calendar, Flame, Trophy, ExternalLink } from 'lucide-react';
-import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel, isVerifiedStatsSource } from '../../utils/platformStatsSource';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel, getUnsupportedStatsMessage, isVerifiedStatsSource } from '../../utils/platformStatsSource';
 
 interface PlatformStatsModalProps {
   isOpen: boolean;
@@ -37,6 +37,8 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
   }, [isOpen, accountId]);
 
   if (!isOpen) return null;
+
+  const unsupportedStatsMessage = getUnsupportedStatsMessage(stats?.platform);
 
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
@@ -161,9 +163,11 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Solved</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+                  {unsupportedStatsMessage ? 'Solved count' : 'Solved'}
+                </div>
                 <div className="mono" style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                  {formatMetric(stats.totalProblemsSolved)}
+                  {unsupportedStatsMessage ? 'Not provided' : formatMetric(stats.totalProblemsSolved)}
                 </div>
               </div>
               <div>
@@ -183,6 +187,15 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
             </div>
 
             {/* Difficulty Breakdown */}
+            {unsupportedStatsMessage ? (
+              <div
+                aria-label="Difficulty breakdown unavailable"
+                style={{ padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}
+              >
+                <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Difficulty breakdown unavailable</strong>
+                {unsupportedStatsMessage}
+              </div>
+            ) : (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
               <div
                 style={{
@@ -224,6 +237,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
                 <div className="mono" style={{ fontSize: '1.125rem', fontWeight: 700 }}>{formatMetric(stats.hardSolved)}</div>
               </div>
             </div>
+            )}
 
             {/* Contests & Streaks list */}
             <div

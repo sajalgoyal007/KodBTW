@@ -1,13 +1,13 @@
 package com.kodbtw.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kodbtw.dto.LoginRequest;
-import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.LeaderboardUserCache;
 import com.kodbtw.entity.User;
 import com.kodbtw.repository.LeaderboardUserCacheRepository;
 import com.kodbtw.repository.UserRepository;
 import com.kodbtw.service.LeaderboardSyncService;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.TestEmailConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,10 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +34,7 @@ import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 class LeaderboardControllerTest {
 
     @Autowired
@@ -61,6 +61,9 @@ class LeaderboardControllerTest {
     @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private com.kodbtw.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     /** Mocked to prevent MySQL-specific native SQL from running against H2 in tests. */
     @MockBean
     private LeaderboardSyncService leaderboardSyncService;
@@ -74,27 +77,16 @@ class LeaderboardControllerTest {
         cacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
         // Ensure sync is a no-op (avoids MySQL-specific upsert native query)
         Mockito.doNothing().when(leaderboardSyncService).syncAllUsers();
 
         String email = "leaderboard_test_" + System.currentTimeMillis() + "@example.com";
-        RegisterRequest registerRequest = new RegisterRequest("Leaderboard User", email, "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated());
-
-        LoginRequest loginRequest = new LoginRequest(email, "password123");
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String responseBody = loginResult.getResponse().getContentAsString();
-        userToken = objectMapper.readTree(responseBody).get("token").asText();
-        testUser = userRepository.findByEmail(email).orElseThrow();
+        AuthTestSupport.AuthSession session = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Leaderboard User", email, "password123");
+        userToken = session.token();
+        testUser = session.user();
 
         // Seed a sample cache row for testUser directly into the database
         jdbcTemplate.update("""

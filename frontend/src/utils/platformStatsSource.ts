@@ -1,19 +1,11 @@
 import type { PlatformAccountResponse } from '../types/platform';
 import type { PlatformSyncResponse } from '../services/api/platformAccountApi';
+import { getPlatformCapability, getStatsSourceKind } from '../config/platformCapabilities';
 
 export type PlatformStatsSourceKind = 'live' | 'third-party' | 'mock' | 'pending' | 'unknown';
 
-const LIVE_STATS_SOURCES = new Set(['LEETCODE_REAL', 'CODEFORCES_REAL']);
-const THIRD_PARTY_STATS_SOURCES = new Set(['CODECHEF_THIRD_PARTY']);
-
 export function getPlatformStatsSourceKind(source: string | null | undefined): PlatformStatsSourceKind {
-  const normalized = source?.trim().toUpperCase();
-  if (!normalized) return 'unknown';
-  if (LIVE_STATS_SOURCES.has(normalized)) return 'live';
-  if (THIRD_PARTY_STATS_SOURCES.has(normalized)) return 'third-party';
-  if (normalized === 'MOCK') return 'mock';
-  if (normalized === 'SOURCE_PENDING' || normalized === 'UNSYNCED') return 'pending';
-  return 'unknown';
+  return getStatsSourceKind(source);
 }
 
 /**
@@ -23,6 +15,12 @@ export function getPlatformStatsSourceKind(source: string | null | undefined): P
 export function isVerifiedStatsSource(source: string | null | undefined): boolean {
   const kind = getPlatformStatsSourceKind(source);
   return kind === 'live' || kind === 'third-party';
+}
+
+export function getUnsupportedStatsMessage(platform: string | null | undefined): string | null {
+  return platform?.toUpperCase() === 'CODEFORCES'
+    ? 'The current Codeforces integration does not provide solved counts or difficulty breakdowns.'
+    : null;
 }
 
 export function getPlatformStatsSourceLabel(
@@ -81,6 +79,15 @@ export function getDashboardRefreshFeedback(
     && isVerifiedStatsSource(currentStats.source)
     && currentStats.source.toUpperCase() !== 'MOCK';
 
+  if (syncStatus.status === 'SUCCEEDED'
+      && currentStats?.platform?.toUpperCase() === 'CODEFORCES'
+      && (!sourceAvailable || !hasMetric)) {
+    return {
+      success: false,
+      message: 'Sync completed, but no Codeforces statistics are currently available. The current integration does not provide solved counts or difficulty breakdowns.',
+    };
+  }
+
   if (syncStatus.status !== 'SUCCEEDED' || !sourceAvailable || !hasMetric) {
     return { success: false, message: 'Live statistics are unavailable; no successful sync was completed.' };
   }
@@ -105,23 +112,18 @@ export function getPlatformAvailabilityLabel(
   platform: string,
   account?: Pick<PlatformAccountResponse, 'sourceStatus'>,
 ): string {
+  const capability = getPlatformCapability(platform);
   if (account) {
     switch (account.sourceStatus) {
-      case 'SOURCE_PENDING': return 'Live statistics unavailable';
+      case 'SOURCE_PENDING': return capability?.synchronizationEnabled
+        ? `No successful sync yet. ${capability.availabilityMessage}`
+        : capability?.availabilityMessage ?? 'Live statistics unavailable.';
       case 'SYNCING': return 'Sync in progress';
-      case 'SYNCED': return 'Live statistics synced';
+      case 'SYNCED': return `Stats synced · ${capability?.availabilityMessage ?? 'Source details unavailable.'}`;
       case 'SYNC_FAILED': return 'Last sync failed';
-      case 'REAL_AVAILABLE': return 'Live statistics available';
+      case 'REAL_AVAILABLE': return capability?.availabilityMessage ?? 'Live statistics available';
       default: return 'Availability unknown';
     }
   }
-
-  switch (platform.toUpperCase()) {
-    case 'CODECHEF': return 'Connect an account to check availability';
-    case 'GEEKSFORGEEKS':
-    case 'HACKERRANK': return 'Live statistics unavailable';
-    case 'LEETCODE':
-    case 'CODEFORCES': return 'Live statistics available';
-    default: return 'Availability unknown';
-  }
+  return capability?.availabilityMessage ?? 'Availability unknown; no platform integration is configured.';
 }

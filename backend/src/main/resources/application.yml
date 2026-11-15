@@ -36,6 +36,13 @@ app:
   public-site-url: ${PUBLIC_SITE_URL:https://kodbtw.vercel.app}
   google-auth:
     client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
+  resend:
+    api-key: ${RESEND_API_KEY:}
+    from-email: ${RESEND_FROM_EMAIL:KodBTW <onboarding@resend.dev>}
+    base-url: ${RESEND_BASE_URL:https://api.resend.com}
+  verification:
+    token-validity: ${EMAIL_VERIFICATION_TOKEN_VALIDITY:PT24H}
+    cooldown: ${EMAIL_VERIFICATION_RESEND_COOLDOWN:PT1M}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
 

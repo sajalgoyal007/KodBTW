@@ -53,3 +53,8 @@ application-secret.yml
 # OS Generated
 .DS_Store
 Thumbs.db
+
+# Editor backups & local scratch output
+*.bak
+/output/
+/tmp/

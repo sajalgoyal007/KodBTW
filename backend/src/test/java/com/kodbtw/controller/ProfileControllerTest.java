@@ -1,20 +1,20 @@
 package com.kodbtw.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.ProfileRequest;
-import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.TestEmailConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 class ProfileControllerTest {
 
     @Autowired
@@ -46,6 +47,9 @@ class ProfileControllerTest {
     @Autowired
     private com.kodbtw.repository.PlatformStatSnapshotRepository platformStatSnapshotRepository;
 
+    @Autowired
+    private com.kodbtw.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     private String userToken;
 
     @BeforeEach
@@ -54,26 +58,14 @@ class ProfileControllerTest {
         leaderboardUserCacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Register and login to get token
+        // Register, verify, and log in to get a token
         mockMvc.perform(put("/api/profile").contentType(MediaType.APPLICATION_JSON)); // warmup
 
-        RegisterRequest register = new RegisterRequest("Sajal Goyal", "sajal@example.com", "password123");
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(register)));
-
-        LoginRequest login = new LoginRequest("sajal@example.com", "password123");
-        MvcResult result = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
-                .andReturn();
-
-        userToken = objectMapper.readTree(result.getResponse().getContentAsString())
-                .get("token").asText();
+        userToken = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Sajal Goyal", "sajal@example.com", "password123").token();
     }
 
     @Test

@@ -1,11 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { AppNavbar } from '../components/layout/AppNavbar';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { ProfileEditModal } from '../components/profile/ProfileEditModal';
 import { ShareProfileModal } from '../components/profile/ShareProfileModal';
 import { GoogleAccountConnection } from '../components/profile/GoogleAccountConnection';
+import { ProfileCodingPlatforms } from '../components/profile/ProfileCodingPlatforms';
 import { MetricCard } from '../components/dashboard/MetricCard';
+import { getPlatformCapability } from '../config/platformCapabilities';
+import { getPlatformStatsSourceLabel, getPlatformStatsSourceKind } from '../utils/platformStatsSource';
+import { getProfileMetricValue } from '../utils/profileStatistics';
 import { getStats } from '../services/api/dashboardApi';
 import { DashboardStatsResponse } from '../types/dashboard';
 import { ProfileRequest } from '../types/profile';
@@ -27,6 +32,8 @@ import {
   PlusCircle,
   AlertCircle,
   RefreshCw,
+  TrendingUp,
+  ArrowUpRight,
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -34,22 +41,53 @@ export const ProfilePage: React.FC = () => {
   const { profile, loading, saving, error, isInitialSetup, fetchProfile, saveProfile } = useProfile();
 
   const [dashboardStats, setDashboardStats] = useState<DashboardStatsResponse | null>(null);
+  const [dashboardStatsLoading, setDashboardStatsLoading] = useState(true);
+  const [dashboardStatsError, setDashboardStatsError] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false);
+  const statsRequestId = useRef(0);
+
+  const loadDashboardStats = useCallback(async () => {
+    const requestId = ++statsRequestId.current;
+    setDashboardStatsLoading(true);
+    setDashboardStatsError(null);
+    try {
+      const data = await getStats();
+      if (requestId === statsRequestId.current) setDashboardStats(data);
+    } catch {
+      if (requestId === statsRequestId.current) {
+        setDashboardStatsError('Coding statistics could not be updated. Previously loaded values, if any, remain visible.');
+      }
+    } finally {
+      if (requestId === statsRequestId.current) setDashboardStatsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    getStats()
-      .then((data) => setDashboardStats(data))
-      .catch(() => {
-        // Soft fail for stats highlight
-      });
-  }, []);
+    void loadDashboardStats();
+    return () => { statsRequestId.current += 1; };
+  }, [loadDashboardStats]);
 
   const handleSave = async (data: ProfileRequest) => {
     await saveProfile(data);
   };
 
   const overview = dashboardStats?.overview;
+  const profilesWithStats = dashboardStats?.platforms.filter((platform) => {
+    const hasValue = [
+      platform.totalProblemsSolved, platform.easySolved, platform.mediumSolved, platform.hardSolved,
+      platform.rating, platform.maxRating, platform.rank, platform.contestsParticipated,
+      platform.currentStreak, platform.longestStreak,
+    ].some((value) => value !== null && value !== undefined);
+    const sourceKind = getPlatformStatsSourceKind(platform.source);
+    return hasValue && (sourceKind === 'live' || sourceKind === 'third-party');
+  }) ?? [];
+  const statsCoverage = profilesWithStats.map((platform) => {
+    const name = getPlatformCapability(platform.platform)?.displayName ?? 'Coding platform';
+    return `${name} (${getPlatformStatsSourceLabel(platform.source)})`;
+  });
+  const currentStreak = getProfileMetricValue(overview?.currentStreak, overview?.connectedPlatformsCount);
+  const longestStreak = getProfileMetricValue(overview?.longestStreak, overview?.connectedPlatformsCount);
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -61,16 +99,16 @@ export const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="profile-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppNavbar />
 
       <main
+        className="profile-page-main"
         style={{
           flex: 1,
           maxWidth: '1280px',
           width: '100%',
           margin: '0 auto',
-          padding: '2rem 1.5rem',
           display: 'flex',
           flexDirection: 'column',
           gap: '2rem',
@@ -154,7 +192,7 @@ export const ProfilePage: React.FC = () => {
 
         {/* Completed Profile Display */}
         {!loading && !error && !isInitialSetup && (
-            <div className="card" style={{ padding: '2rem', position: 'relative' }}>
+            <div className="card profile-summary-card" style={{ padding: '2rem', position: 'relative' }}>
               <div
                 style={{
                   display: 'flex',
@@ -205,6 +243,7 @@ export const ProfilePage: React.FC = () => {
                       <h1 style={{ fontSize: '1.625rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                         {profile?.displayName || user?.name}
                       </h1>
+                      {profile?.username && <div className="profile-username">@{profile.username}</div>}
                       <div className="mono" style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
                         {user?.email}
                       </div>
@@ -327,18 +366,24 @@ export const ProfilePage: React.FC = () => {
 
         <GoogleAccountConnection />
 
+        <ProfileCodingPlatforms
+          platformStats={dashboardStats?.platforms ?? []}
+          statisticsLoading={dashboardStatsLoading}
+          statisticsError={dashboardStatsError}
+          onRetryStatistics={() => { void loadDashboardStats(); }}
+        />
+
         {/* Coding Stats Highlight section */}
         {!loading && !error && !isInitialSetup && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>
-                  Competitive Programming Highlight
-                </h2>
-                {overview && (
-                  <span className="badge badge-muted">
-                    {overview.connectedPlatformsCount} platform{overview.connectedPlatformsCount > 1 ? 's' : ''} connected
-                  </span>
-                )}
+            <section className="profile-stats-section" aria-labelledby="profile-stats-title">
+              <div className="profile-section-heading">
+                <div>
+                  <h2 id="profile-stats-title">Coding statistics</h2>
+                  <p>Only metrics returned by an eligible data source are included; unavailable values stay blank.</p>
+                </div>
+                <span className="badge badge-muted">
+                  {overview?.connectedPlatformsCount ?? 0} saved profile{overview?.connectedPlatformsCount === 1 ? '' : 's'}
+                </span>
               </div>
 
               <div
@@ -350,28 +395,28 @@ export const ProfilePage: React.FC = () => {
               >
                 <MetricCard
                   title="Total Platform Solves"
-                  value={overview?.totalProblemsSolved}
+                  value={getProfileMetricValue(overview?.totalProblemsSolved, overview?.connectedPlatformsCount)}
                   subtitle="Same problem may be counted on multiple platforms."
                   icon={<CheckCircle2 size={20} />}
                   accentColor="var(--color-primary)"
                 />
                 <MetricCard
-                  title="Contests"
-                  value={overview?.contestsParticipated}
-                  subtitle="Attended competitions"
+                  title="Reported contest participations"
+                  value={getProfileMetricValue(overview?.contestsParticipated, overview?.connectedPlatformsCount)}
+                  subtitle="Counts may include the same event on multiple platforms."
                   icon={<Trophy size={20} />}
                   accentColor="var(--color-chart-2)"
                 />
                 <MetricCard
                   title="Current Streak"
-                  value={overview?.currentStreak !== null && overview?.currentStreak !== undefined ? `${overview.currentStreak} days` : null}
+                  value={currentStreak === null ? null : `${currentStreak} days`}
                   subtitle="Active daily streak"
                   icon={<Flame size={20} />}
                   accentColor="var(--color-primary)"
                 />
                 <MetricCard
                   title="Longest Streak"
-                  value={overview?.longestStreak !== null && overview?.longestStreak !== undefined ? `${overview.longestStreak} days` : null}
+                  value={longestStreak === null ? null : `${longestStreak} days`}
                   subtitle="Personal record"
                   icon={<Flame size={20} />}
                   accentColor="var(--color-warning)"
@@ -384,7 +429,30 @@ export const ProfilePage: React.FC = () => {
                   accentColor="var(--color-success)"
                 />
               </div>
+
+              <p className="profile-statistics-coverage">
+                {statsCoverage.length > 0
+                  ? `Statistics currently available from: ${statsCoverage.join(' · ')}.`
+                  : 'No eligible source has returned statistics yet. Saved handles are shown above; missing data is not counted as zero.'}
+              </p>
+            </section>
+        )}
+
+        {!loading && !error && !isInitialSetup && (
+          <section className="profile-more-section" aria-label="Analytics and data availability">
+            <Link to="/analytics" className="card profile-analytics-link">
+              <span className="profile-analytics-icon" aria-hidden="true"><TrendingUp size={20} /></span>
+              <span className="profile-analytics-copy">
+                <strong>Rating history &amp; analytics</strong>
+                <span>Explore saved daily snapshots, platform comparisons, and difficulty coverage.</span>
+              </span>
+              <ArrowUpRight size={18} aria-hidden="true" />
+            </Link>
+            <div className="card profile-activity-unavailable" role="note">
+              <h2>Recent activity</h2>
+              <p>Submission-level activity is not available from the current platform sources. Rating snapshots are available in Analytics, and deterministic data-backed milestones appear with your coding profiles.</p>
             </div>
+          </section>
         )}
       </main>
 

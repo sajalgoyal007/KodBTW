@@ -1,6 +1,7 @@
 import { ContestCalendarEvent, ContestCalendarResponse } from '../types/contestCalendar';
 
 export type ContestPlatformFilter = 'ALL' | 'CODEFORCES';
+export type ContestTimeFilter = 'ALL_UPCOMING' | 'NEXT_7_DAYS' | 'NEXT_30_DAYS';
 export type ContestCalendarViewState = 'loading' | 'error' | 'unavailable' | 'stale' | 'empty' | 'contests';
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -68,10 +69,23 @@ export function parseContestCalendarResponse(value: unknown): ContestCalendarRes
 export function filterAndSortContests(
   contests: ContestCalendarEvent[],
   platform: ContestPlatformFilter = 'ALL',
+  timeRange: ContestTimeFilter = 'ALL_UPCOMING',
+  nowMs = Date.now(),
 ): ContestCalendarEvent[] {
-  return contests
-    .filter((contest) => platform === 'ALL' || contest.platform === platform)
-    .slice()
+  const rangeDays = timeRange === 'NEXT_7_DAYS' ? 7 : timeRange === 'NEXT_30_DAYS' ? 30 : null;
+  const latestStartMs = rangeDays === null ? Number.POSITIVE_INFINITY : nowMs + rangeDays * 86_400_000;
+  const unique = new Map<string, ContestCalendarEvent>();
+
+  for (const contest of contests) {
+    const startMs = Date.parse(contest.startTime);
+    if (!Number.isFinite(startMs) || !Number.isFinite(contest.durationSeconds) || contest.durationSeconds <= 0) continue;
+    const endMs = startMs + contest.durationSeconds * 1_000;
+    if (endMs <= nowMs || (platform !== 'ALL' && contest.platform !== platform) || startMs > latestStartMs) continue;
+    const key = `${contest.platform}:${contest.id}`;
+    if (!unique.has(key)) unique.set(key, contest);
+  }
+
+  return [...unique.values()]
     .sort((left, right) => Date.parse(left.startTime) - Date.parse(right.startTime)
       || left.platform.localeCompare(right.platform)
       || left.id.localeCompare(right.id));
@@ -107,20 +121,25 @@ export function getContestCalendarViewState(options: {
   return 'contests';
 }
 
-export function formatContestLocalTime(instant: string): { dateTime: string; timeZone: string } {
+export function formatContestLocalTime(
+  instant: string,
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time',
+  locale?: string,
+): { dateTime: string; timeZone: string } {
   const date = new Date(instant);
   if (!Number.isFinite(date.getTime())) return { dateTime: 'Time unavailable', timeZone: '' };
-  const formatter = new Intl.DateTimeFormat(undefined, {
+  const formatter = new Intl.DateTimeFormat(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short',
+    timeZone,
   });
   return {
     dateTime: formatter.format(date),
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'local time',
+    timeZone,
   };
 }
 

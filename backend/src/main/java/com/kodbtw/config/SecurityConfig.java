@@ -34,7 +34,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login",
-                                "/api/auth/google", "/api/auth/google/challenge").permitAll()
+                                "/api/auth/google", "/api/auth/google/challenge",
+                                "/api/auth/verify-email", "/api/auth/resend-verification").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/google/link/challenge", "/api/auth/google/link")
                                 .authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/auth/google/identity").authenticated()

@@ -21,3 +21,16 @@ spring:
 jwt:
   secret: dGVzdF9zZWNyZXRfa2V5X2Zvcl91bml0X3Rlc3RzX29ubHlfbXVzdF9iZV8yNTZfYml0c19sb25n
   expiration-ms: 86400000
+
+app:
+  public-site-url: http://localhost:5173
+  google-auth:
+    client-id: ""
+  resend:
+    api-key: "re_test_mock_api_key"
+    from-email: "KodBTW <onboarding@resend.dev>"
+    base-url: "http://localhost:8080/mock-resend"
+  verification:
+    token-validity: PT24H
+    cooldown: PT1M
+

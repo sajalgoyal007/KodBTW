@@ -74,6 +74,20 @@ class PublicSitemapServiceTest {
                 () -> new PublicSitemapService(profileRepository, "http://kodbtw.vercel.app"));
         assertThrows(IllegalArgumentException.class,
                 () -> new PublicSitemapService(profileRepository, "https://kodbtw.vercel.app/subpath"));
+        assertThrows(IllegalArgumentException.class,
+                () -> new PublicSitemapService(profileRepository, "https://user:pass@kodbtw.vercel.app"));
+        assertThrows(IllegalArgumentException.class,
+                () -> new PublicSitemapService(profileRepository, "https://kodbtw.vercel.app?redirect=1"));
+    }
+
+    @Test
+    void acceptsLoopbackHttpOriginForLocalDevelopment() throws Exception {
+        when(profileRepository.findAllByIndexableTrueOrderByUsernameAsc()).thenReturn(List.of());
+        PublicSitemapService service = new PublicSitemapService(profileRepository, "http://localhost:5173/");
+
+        String sitemap = service.generateSitemap();
+
+        assertTrue(sitemap.contains("http://localhost:5173/"));
     }
 
     @Test

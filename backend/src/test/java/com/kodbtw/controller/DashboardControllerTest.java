@@ -1,9 +1,7 @@
 package com.kodbtw.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.PlatformAccountRequest;
-import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.Platform;
 import com.kodbtw.entity.PlatformStatSnapshot;
 import com.kodbtw.entity.User;
@@ -11,12 +9,15 @@ import com.kodbtw.repository.PlatformAccountRepository;
 import com.kodbtw.repository.PlatformStatSnapshotRepository;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.TestEmailConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 class DashboardControllerTest {
 
     @Autowired
@@ -60,6 +62,9 @@ class DashboardControllerTest {
     @Autowired
     private PlatformStatSnapshotRepository platformStatSnapshotRepository;
 
+    @Autowired
+    private com.kodbtw.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     @MockBean
     private com.kodbtw.adapter.leetcode.LeetCodeClient leetCodeClient;
 
@@ -74,25 +79,12 @@ class DashboardControllerTest {
         leaderboardUserCacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
-        userToken = registerAndLogin("dashboarduser@example.com", "password123");
-    }
-
-    private String registerAndLogin(String email, String password) throws Exception {
-        RegisterRequest register = new RegisterRequest("Dashboard User", email, password);
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(register)));
-
-        LoginRequest login = new LoginRequest(email, password);
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString())
-                .get("token").asText();
+        userToken = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Dashboard User", "dashboarduser@example.com", "password123")
+                .token();
     }
 
     private void refreshLinkedAccounts() throws Exception {
@@ -297,7 +289,8 @@ class DashboardControllerTest {
     @Test
     void getInsights_returnsOnlyAuthenticatedUsersRealSnapshotWithoutProviderCalls() throws Exception {
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        registerAndLogin("otherinsights@example.com", "password123");
+        AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Other Insights User", "otherinsights@example.com", "password123");
         User otherUser = userRepository.findByEmail("otherinsights@example.com").orElseThrow();
 
         saveSnapshot(owner, "LEETCODE", "LEETCODE_REAL", 291, 124, 129, 38, 1352);
@@ -331,7 +324,8 @@ class DashboardControllerTest {
     @Test
     void activityAndContestIntelligenceAreUserScopedRealOnlyAndProviderFree() throws Exception {
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        registerAndLogin("otheractivity@example.com", "password123");
+        AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Other Activity User", "otheractivity@example.com", "password123");
         User otherUser = userRepository.findByEmail("otheractivity@example.com").orElseThrow();
         saveSnapshot(owner, "CODEFORCES", "CODEFORCES_REAL", 0, null, null, null, 1510);
         saveSnapshot(owner, "CODECHEF", "CODECHEF_MOCK", 30, null, null, null, 3000);

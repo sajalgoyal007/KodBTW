@@ -76,7 +76,7 @@ export function RouteMetadata(): null {
     const profileMatch = pathname.match(/^\/u\/([^/]+)\/?$/);
     const privateTitle = privateRouteTitles[pathname];
     const isPrivate = Boolean(privateTitle);
-    const isAuth = pathname === '/login' || pathname === '/register';
+    const isAuth = pathname === '/login' || pathname === '/register' || pathname === '/verify-email';
     let title = HOME_TITLE;
     let description = HOME_DESCRIPTION;
     let canonical: string | null = `${SITE_ORIGIN}/`;
@@ -88,6 +88,10 @@ export function RouteMetadata(): null {
     } else if (pathname === '/register') {
       title = 'Create Your Profile | KodBTW';
       description = 'Create a KodBTW profile to organize supported coding-platform statistics and share your developer profile.';
+      canonical = null;
+    } else if (pathname === '/verify-email') {
+      title = 'Verify Email | KodBTW';
+      description = 'Verify your email address to activate your KodBTW account.';
       canonical = null;
     } else if (privateTitle) {
       title = `${privateTitle} | KodBTW`;

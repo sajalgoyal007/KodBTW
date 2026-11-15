@@ -4,10 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kodbtw.adapter.codeforces.CodeforcesClient;
 import com.kodbtw.adapter.leetcode.LeetCodeClient;
-import com.kodbtw.dto.LoginRequest;
 import com.kodbtw.dto.PlatformAccountRequest;
 import com.kodbtw.dto.ProfileRequest;
-import com.kodbtw.dto.RegisterRequest;
 import com.kodbtw.entity.Platform;
 import com.kodbtw.entity.Profile;
 import com.kodbtw.entity.User;
@@ -16,12 +14,15 @@ import com.kodbtw.repository.PlatformAccountRepository;
 import com.kodbtw.repository.PlatformStatSnapshotRepository;
 import com.kodbtw.repository.ProfileRepository;
 import com.kodbtw.repository.UserRepository;
+import com.kodbtw.support.AuthTestSupport;
+import com.kodbtw.support.TestEmailConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestEmailConfig.class)
 class PublicProfileControllerTest {
 
     @Autowired
@@ -60,6 +62,9 @@ class PublicProfileControllerTest {
     @Autowired
     private PlatformStatSnapshotRepository snapshotRepository;
 
+    @Autowired
+    private com.kodbtw.repository.EmailVerificationTokenRepository emailVerificationTokenRepository;
+
     @MockBean
     private LeetCodeClient leetCodeClient;
 
@@ -75,25 +80,14 @@ class PublicProfileControllerTest {
         cacheRepository.deleteAll();
         platformAccountRepository.deleteAll();
         profileRepository.deleteAll();
+        emailVerificationTokenRepository.deleteAll();
         userRepository.deleteAll();
 
-        // Register and login test user
-        RegisterRequest register = new RegisterRequest("Test Coder", "coder@example.com", "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(register)))
-                .andExpect(status().isCreated());
-
-        LoginRequest login = new LoginRequest("coder@example.com", "password123");
-        MvcResult result = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        JsonNode authNode = objectMapper.readTree(result.getResponse().getContentAsString());
-        userToken = authNode.get("token").asText();
-        testUser = userRepository.findByEmail("coder@example.com").orElseThrow();
+        // Register, verify, and log in the test user
+        AuthTestSupport.AuthSession session = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "Test Coder", "coder@example.com", "password123");
+        userToken = session.token();
+        testUser = session.user();
     }
 
     @Test
@@ -237,7 +231,7 @@ class PublicProfileControllerTest {
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .content().contentTypeCompatibleWith(MediaType.APPLICATION_XML))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .content().string(containsString("https://kodbtw.vercel.app/u/sitemap_public")))
+                        .content().string(containsString("http://localhost:5173/u/sitemap_public")))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .content().string(not(containsString("sitemap_private"))))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
@@ -288,20 +282,9 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(firstUserReq)))
                 .andExpect(status().isOk());
 
-        // Register second user
-        RegisterRequest register2 = new RegisterRequest("User Two", "user2@example.com", "password123");
-        mockMvc.perform(post("/api/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(register2)))
-                .andExpect(status().isCreated());
-
-        LoginRequest login2 = new LoginRequest("user2@example.com", "password123");
-        MvcResult res2 = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(login2)))
-                .andExpect(status().isOk())
-                .andReturn();
-        String token2 = objectMapper.readTree(res2.getResponse().getContentAsString()).get("token").asText();
+        // Register and sign in a second user
+        String token2 = AuthTestSupport.registerAndLogin(
+                mockMvc, objectMapper, userRepository, "User Two", "user2@example.com", "password123").token();
 
         // Second user tries to take "uniquehandle" -> Expect 409 Conflict
         ProfileRequest secondUserReq = new ProfileRequest();

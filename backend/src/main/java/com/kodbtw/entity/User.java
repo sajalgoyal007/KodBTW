@@ -28,6 +28,12 @@ public class User {
     @Column(nullable = true)
     private String password;
 
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
+    @Column(name = "email_verified_at")
+    private LocalDateTime emailVerifiedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -41,6 +47,17 @@ public class User {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.emailVerified = false;
+    }
+
+    public User(String name, String email, String password, boolean emailVerified) {
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.emailVerified = emailVerified;
+        if (emailVerified) {
+            this.emailVerifiedAt = LocalDateTime.now();
+        }
     }
 
     @PrePersist
@@ -84,6 +101,22 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public LocalDateTime getEmailVerifiedAt() {
+        return emailVerifiedAt;
+    }
+
+    public void setEmailVerifiedAt(LocalDateTime emailVerifiedAt) {
+        this.emailVerifiedAt = emailVerifiedAt;
     }
 
     public LocalDateTime getCreatedAt() {

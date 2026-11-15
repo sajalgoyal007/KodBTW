@@ -7,6 +7,7 @@ import { ConfirmModal } from '../components/common/ConfirmModal';
 import { PlatformAccountResponse, PlatformAccountRequest } from '../types/platform';
 import { PlatformType } from '../types/platform';
 import { getDashboardRefreshFeedback, getPlatformAvailabilityLabel } from '../utils/platformStatsSource';
+import { getAccountConnectablePlatforms, getPlatformCapability } from '../config/platformCapabilities';
 import {
   PlusCircle,
   ExternalLink,
@@ -19,16 +20,14 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-const SUPPORTED_PLATFORMS = [
-  { platform: 'LEETCODE', label: 'LeetCode' },
-  { platform: 'CODEFORCES', label: 'Codeforces' },
-  { platform: 'CODECHEF', label: 'CodeChef' },
-  { platform: 'GEEKSFORGEEKS', label: 'GeeksforGeeks' },
-  { platform: 'HACKERRANK', label: 'HackerRank' },
-] as const;
+const SUPPORTED_PLATFORMS = getAccountConnectablePlatforms().map((capability) => ({
+  platform: capability.accountPlatform,
+  label: capability.displayName,
+  capability,
+}));
 
 const getPlatformDisplayName = (platform: string) =>
-  SUPPORTED_PLATFORMS.find((item) => item.platform === platform)?.label ?? 'Coding platform';
+  getPlatformCapability(platform)?.displayName ?? 'Coding platform';
 
 const getSyncStatusLabel = (status: PlatformAccountResponse['syncStatus']) => {
   switch (status) {
@@ -65,23 +64,6 @@ export const CodingProfilesPage: React.FC = () => {
   const [connectFeedback, setConnectFeedback] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
 
   const existingPlatforms = accounts.map((a) => a.platform);
-
-  const getPlatformBrandColor = (pName: string) => {
-    switch (pName.toUpperCase()) {
-      case 'LEETCODE':
-        return '#f89f1b';
-      case 'CODEFORCES':
-        return '#1f8acb';
-      case 'CODECHEF':
-        return '#8b4513';
-      case 'GEEKSFORGEEKS':
-        return '#2f8d46';
-      case 'HACKERRANK':
-        return '#2ec866';
-      default:
-        return 'var(--color-primary)';
-    }
-  };
 
   const formatDate = (isoString: string) => {
     if (!isoString) return '—';
@@ -293,17 +275,20 @@ export const CodingProfilesPage: React.FC = () => {
           <section aria-label="Supported coding platforms">
             <h2 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.75rem' }}>Supported Platforms</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 190px), 1fr))', gap: '0.75rem' }}>
-              {SUPPORTED_PLATFORMS.map(({ platform, label }) => {
+              {SUPPORTED_PLATFORMS.map(({ platform, label, capability }) => {
                 const linked = accounts.find((account) => account.platform === platform);
                 const availabilityLabel = getPlatformAvailabilityLabel(platform, linked);
                 return (
-                  <div key={platform} className="card platform-summary-card" style={{ padding: '1rem', borderTop: `3px solid ${getPlatformBrandColor(platform)}` }}>
+                  <div key={platform} className="card platform-summary-card" style={{ padding: '1rem', borderTop: `3px solid ${capability.accentColor}` }}>
                     <div style={{ fontWeight: 700 }}>{label}</div>
                     <div style={{ marginTop: '0.35rem', color: 'var(--color-text-secondary)', fontSize: '0.8125rem' }}>
                       {linked ? <span className="platform-account-identity">Connected · @{linked.username}</span> : 'Not connected'}
                     </div>
                     <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.75rem' }}>
                       {availabilityLabel}
+                    </div>
+                    <div style={{ marginTop: '0.25rem', color: 'var(--color-text-muted)', fontSize: '0.7rem', lineHeight: 1.45 }}>
+                      {capability.sourceDescription}
                     </div>
                     {linked?.lastSuccessAt && <div style={{ marginTop: '0.2rem', color: 'var(--color-text-muted)', fontSize: '0.6875rem' }}>Last successful sync · {formatDate(linked.lastSuccessAt)}</div>}
                     <button
@@ -331,7 +316,7 @@ export const CodingProfilesPage: React.FC = () => {
             }}
           >
             {accounts.map((acc) => {
-              const brandColor = getPlatformBrandColor(acc.platform);
+              const brandColor = getPlatformCapability(acc.platform)?.accentColor ?? 'var(--color-primary)';
               return (
                 <div
                   key={acc.id}

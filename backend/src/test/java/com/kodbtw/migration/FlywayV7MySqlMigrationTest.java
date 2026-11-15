@@ -16,6 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Exercises the real MySQL migration sequence against a disposable MySQL 8 container.
- * The database is migrated only through V6 and seeded before Spring starts; Spring then
- * applies V7 through V11 and validates the resulting schema against the application's JPA entities.
+ * The database is migrated through V6 and seeded with legacy rows, then through V11 so the
+ * Google identity table exists for the backfill fixture. Spring then applies V12 and validates
+ * the resulting schema against the application's JPA entities.
  */
 @SpringBootTest
 @Testcontainers
@@ -46,7 +48,7 @@ class FlywayV7MySqlMigrationTest {
     @DynamicPropertySource
     static void configureDatabase(DynamicPropertyRegistry registry) {
         MYSQL.start();
-        prepareV6Database();
+        prepareV11Database();
 
         registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
         registry.add("spring.datasource.username", MYSQL::getUsername);
@@ -58,7 +60,7 @@ class FlywayV7MySqlMigrationTest {
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.MySQLDialect");
     }
 
-    private static void prepareV6Database() {
+    private static void prepareV11Database() {
         Flyway.configure()
                 .dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())
                 .locations("classpath:db/migration")
@@ -93,10 +95,27 @@ class FlywayV7MySqlMigrationTest {
         } catch (SQLException exception) {
             throw new IllegalStateException("Could not seed disposable MySQL migration database", exception);
         }
+
+        // Apply V7 through V11 so user_auth_identities exists for the V12 backfill fixture.
+        Flyway.configure()
+                .dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())
+                .locations("classpath:db/migration")
+                .target(MigrationVersion.fromVersion("11"))
+                .load()
+                .migrate();
+
+        try (Connection connection = DriverManager.getConnection(
+                MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword());
+             var statement = connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO user_auth_identities (user_id, provider, provider_subject) "
+                    + "VALUES (101, 'GOOGLE', 'google-subject-101')");
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Could not seed Google identity for V12 backfill", exception);
+        }
     }
 
     @Test
-    void appliesV7ThroughV11PreservingLegacyRowsAndCreatingGoogleAuthSchema() {
+    void appliesV7ThroughV12PreservingLegacyRowsAndCreatingEmailVerificationSchema() {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM platform_stat_snapshots", Integer.class)).isEqualTo(5);
 
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM users", Integer.class)).isEqualTo(2);
@@ -137,9 +156,9 @@ class FlywayV7MySqlMigrationTest {
 
         List<Map<String, Object>> applied = jdbc.queryForList(
                 "SELECT version, success FROM flyway_schema_history WHERE type = 'SQL' ORDER BY installed_rank");
-        assertThat(applied).hasSize(11);
+        assertThat(applied).hasSize(12);
         assertThat(applied).extracting(row -> row.get("version"))
-                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11");
+                .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
         assertThat(applied).allSatisfy(row -> assertThat(row.get("success")).isEqualTo(true));
         assertThat(jdbc.queryForObject(
                 "SELECT indexable FROM profiles WHERE user_id = 101", Boolean.class)).isFalse();
@@ -226,6 +245,62 @@ class FlywayV7MySqlMigrationTest {
                         + "AND index_name = 'idx_google_auth_challenges_operation_user_expiry' "
                         + "AND column_name = 'operation' AND seq_in_index = 1 AND non_unique = 1",
                 Integer.class)).isEqualTo(1);
+
+        // --- V12: email verification columns and backfill policy ---
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'users' AND column_name = 'email_verified' "
+                        + "AND data_type = 'tinyint' AND is_nullable = 'NO'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT column_default FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'users' AND column_name = 'email_verified'", String.class)).isEqualTo("0");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'users' AND column_name = 'email_verified_at' "
+                        + "AND data_type = 'timestamp' AND is_nullable = 'YES'", Integer.class)).isEqualTo(1);
+
+        // Google identities are trusted because Google already verified email ownership.
+        assertThat(jdbc.queryForObject(
+                "SELECT email_verified FROM users WHERE id = 101", Boolean.class)).isTrue();
+        assertThat(jdbc.queryForObject(
+                "SELECT email_verified_at FROM users WHERE id = 101", Timestamp.class)).isNotNull();
+
+        // Legacy password-only accounts remain unverified until they complete the email flow.
+        assertThat(jdbc.queryForObject(
+                "SELECT email_verified FROM users WHERE id = 102", Boolean.class)).isFalse();
+        assertThat(jdbc.queryForObject(
+                "SELECT email_verified_at FROM users WHERE id = 102", Timestamp.class)).isNull();
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'email_verification_tokens'", Integer.class)).isEqualTo(1);
+        assertColumn("email_verification_tokens", "id", "bigint", "NO");
+        assertColumn("email_verification_tokens", "user_id", "bigint", "NO");
+        assertColumn("email_verification_tokens", "token_hash", "varchar", "NO");
+        assertColumn("email_verification_tokens", "expires_at", "timestamp", "NO");
+        assertColumn("email_verification_tokens", "used_at", "timestamp", "YES");
+        assertColumn("email_verification_tokens", "created_at", "timestamp", "NO");
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'email_verification_tokens' AND column_name = 'token_hash' "
+                        + "AND character_maximum_length = 64", Integer.class)).isEqualTo(1);
+        assertUniqueIndexColumns("email_verification_tokens", "uk_email_verification_token_hash",
+                List.of("token_hash"));
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM information_schema.key_column_usage WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'email_verification_tokens' "
+                        + "AND constraint_name = 'fk_email_verification_token_user' "
+                        + "AND column_name = 'user_id' AND referenced_table_name = 'users' "
+                        + "AND referenced_column_name = 'id'", Integer.class)).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT delete_rule FROM information_schema.referential_constraints WHERE table_schema = DATABASE() "
+                        + "AND table_name = 'email_verification_tokens' "
+                        + "AND constraint_name = 'fk_email_verification_token_user'", String.class))
+                .isEqualTo("CASCADE");
+        assertIndexColumns("email_verification_tokens", "idx_email_verification_tokens_user",
+                List.of("user_id", "created_at"));
+        assertIndexColumns("email_verification_tokens", "idx_email_verification_tokens_expiry",
+                List.of("expires_at"));
     }
 
     @Test
@@ -253,6 +328,15 @@ class FlywayV7MySqlMigrationTest {
         List<Map<String, Object>> actual = jdbc.queryForList(
                 "SELECT column_name FROM information_schema.statistics WHERE table_schema = DATABASE() "
                         + "AND table_name = ? AND index_name = ? AND non_unique = 0 ORDER BY seq_in_index",
+                table, index);
+        assertThat(actual).extracting(row -> row.get("column_name"))
+                .containsExactlyElementsOf(columns);
+    }
+
+    private void assertIndexColumns(String table, String index, List<String> columns) {
+        List<Map<String, Object>> actual = jdbc.queryForList(
+                "SELECT column_name FROM information_schema.statistics WHERE table_schema = DATABASE() "
+                        + "AND table_name = ? AND index_name = ? ORDER BY seq_in_index",
                 table, index);
         assertThat(actual).extracting(row -> row.get("column_name"))
                 .containsExactlyElementsOf(columns);
