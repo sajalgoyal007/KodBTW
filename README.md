@@ -802,7 +802,7 @@ Create a local development database:
 CREATE DATABASE kodbtw CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 ```
 
-Set backend values in the process environment or a secret manager. `.env.example` is a reference, not an automatically loaded Spring configuration. Use local development credentials and a fresh JWT secret; do not commit populated environment files.
+Set backend values in the process environment, a secret manager, or — for local development only — a `.env` file at the repository root. Spring Boot imports `.env` as optional configuration (`optional:file:.env`), so missing files and blank values fall back to the direct public contest feeds. Use local development credentials and a fresh JWT secret; do not commit populated environment files.
 
 Example PowerShell configuration for a local MySQL service:
 
@@ -830,7 +830,7 @@ npm ci
 npm run dev
 ```
 
-The frontend uses Vite on port `5173` and proxies `/api` to the backend on port `8080`. Flyway applies migrations V1–V13; Hibernate validates the migrated schema. The default contest provider is Codeforces. The local fixture option is documented in [`docs/contest-calendar-fixture-mode.md`](docs/contest-calendar-fixture-mode.md).
+The frontend uses Vite on port `5173` and proxies `/api` to the backend on port `8080`. Flyway applies migrations V1–V13; Hibernate validates the migrated schema. The contest calendar is refreshed on startup and every six hours from clist.by plus direct public feeds for Codeforces, CodeChef, AtCoder, LeetCode, HackerRank and HackerEarth; GFG and Code360 come from clist.by. Partial provider failures never delete stored contests. The local fixture option is documented in [`docs/contest-calendar-fixture-mode.md`](docs/contest-calendar-fixture-mode.md).
 
 ## API overview
 
@@ -854,6 +854,7 @@ All API routes use the `/api` prefix. Routes described as protected require a be
 | `/api/platform-accounts/**` | Protected | Create, list, inspect, update, delete, and sync owned handles |
 | `/api/dashboard/{stats,analytics,history,insights,activity,contests}` | Protected | Read dashboard and history data |
 | `GET /api/contests` | Protected | Read upcoming contest information |
+| `GET /api/contests/calendar?year=&month=&platforms=` | Public | Read a UTC-normalized monthly contest calendar |
 | `GET /api/leaderboard`, `/college`, `/me` | Protected | Read leaderboard views |
 | `POST /api/leaderboard/sync` | Admin | Rebuild the cached leaderboard projection |
 

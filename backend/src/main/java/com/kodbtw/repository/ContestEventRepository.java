@@ -13,6 +13,9 @@ public interface ContestEventRepository extends JpaRepository<ContestEvent, Long
 
     Optional<ContestEvent> findByExternalId(String externalId);
 
+    Optional<ContestEvent> findFirstByPlatformAndStartTimeUtcAndDurationSeconds(
+            String platform, LocalDateTime startTimeUtc, long durationSeconds);
+
     List<ContestEvent> findByStartTimeUtcGreaterThanEqualAndStartTimeUtcLessThanOrderByStartTimeUtcAsc(
             LocalDateTime fromInclusive, LocalDateTime toExclusive);
 }

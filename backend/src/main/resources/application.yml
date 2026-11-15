@@ -11,6 +11,13 @@ spring:
   application:
     name: kodbtw-backend
 
+  # Load the repository-root .env for local development. Both paths are optional so
+  # production containers can keep supplying plain environment variables instead.
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

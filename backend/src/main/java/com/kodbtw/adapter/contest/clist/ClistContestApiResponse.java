@@ -4,7 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
 
-/** Minimal view of the clist.by API v4 contest list response. */
+/**
+ * Minimal view of the clist.by API v4 contest list response.
+ *
+ * <p>In API v4 {@code resource} is a plain resource name string (for example
+ * {@code codeforces.com}), not an object. Treating it as an object made every
+ * authenticated sync fail to deserialize, which silently forced the calendar
+ * back to the Codeforces-only fallback.</p>
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ClistContestApiResponse(
         List<ClistContestRecord> objects
@@ -15,16 +22,10 @@ public record ClistContestApiResponse(
             Long id,
             String event,
             String href,
-            ClistResource resource,
+            String resource,
             String start,
             String end,
             Long duration
-    ) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    public record ClistResource(
-            String name
     ) {
     }
 }
