@@ -293,7 +293,8 @@ class FlywayV7MySqlMigrationTest {
                         + "AND column_name = 'user_id' AND referenced_table_name = 'users' "
                         + "AND referenced_column_name = 'id'", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject(
-                "SELECT delete_rule FROM information_schema.referential_constraints WHERE table_schema = DATABASE() "
+                "SELECT delete_rule FROM information_schema.referential_constraints "
+                        + "WHERE constraint_schema = DATABASE() "
                         + "AND table_name = 'email_verification_tokens' "
                         + "AND constraint_name = 'fk_email_verification_token_user'", String.class))
                 .isEqualTo("CASCADE");
