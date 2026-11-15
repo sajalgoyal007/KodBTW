@@ -21,4 +21,4 @@ ENV SERVER_ADDRESS=0.0.0.0
 EXPOSE 8080
 USER spring
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:+TieredCompilation", "-XX:TieredStopAtLevel=1", "-XX:MaxRAMPercentage=75.0", "-jar", "/app/app.jar"]

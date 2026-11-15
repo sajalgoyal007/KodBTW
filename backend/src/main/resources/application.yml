@@ -25,12 +25,18 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        # Skip Hibernate's remote JDBC metadata probe at boot. It is very slow on
+        # the managed Aiven MySQL instance and unnecessary with an explicit dialect.
+        boot:
+          allow_jdbc_metadata_access: false
 
   flyway:
     enabled: true
