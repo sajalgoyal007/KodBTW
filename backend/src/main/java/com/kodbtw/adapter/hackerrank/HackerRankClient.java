@@ -1,7 +1,8 @@
 package com.kodbtw.adapter.hackerrank;
 
-import com.kodbtw.adapter.hackerrank.dto.HackerRankStatsResponse;
+import com.kodbtw.adapter.hackerrank.dto.HackerRankPublicStats;
 
 public interface HackerRankClient {
-    HackerRankStatsResponse fetchStats(String username);
+
+    HackerRankPublicStats fetchStats(String username);
 }

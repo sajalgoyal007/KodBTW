@@ -8,23 +8,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PlatformStatsSourcePolicyTest {
 
     @Test
-    void acceptsExplicitlySupportedRealSources() {
+    void acceptsEverySupportedLiveAndThirdPartySource() {
         assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("LEETCODE_REAL"));
         assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("CODEFORCES_REAL"));
         assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("CODECHEF_REAL"));
         assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("CODECHEF_THIRD_PARTY"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("ATCODER_REAL"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("GEEKSFORGEEKS_THIRD_PARTY"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("CODE360_THIRD_PARTY"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("HACKERRANK_REAL"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("INTERVIEWBIT_REAL"));
+        assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource("HACKEREARTH_REAL"));
         assertTrue(PlatformStatsSourcePolicy.isEligibleRealSource(" codechef_third_party "));
     }
 
     @Test
-    void rejectsMockBlankNullAndUnknownSources() {
+    void rejectsMockBlankNullUnknownAndLinkOnlySources() {
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource(null));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource(""));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("   "));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("MOCK"));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("LEETCODE_MOCK_REAL"));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("UNKNOWN_PLATFORM_REAL"));
-        assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("GEEKSFORGEEKS_THIRD_PARTY"));
         assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("HACKERRANK_THIRD_PARTY"));
+        assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("ALGOMASTER_LINK_ONLY"));
+        assertFalse(PlatformStatsSourcePolicy.isEligibleRealSource("LINK_ONLY"));
     }
 }

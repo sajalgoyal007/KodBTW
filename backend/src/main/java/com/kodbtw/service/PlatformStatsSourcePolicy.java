@@ -9,7 +9,13 @@ public final class PlatformStatsSourcePolicy {
             "LEETCODE_REAL",
             "CODEFORCES_REAL",
             "CODECHEF_REAL",
-            "CODECHEF_THIRD_PARTY"
+            "CODECHEF_THIRD_PARTY",
+            "ATCODER_REAL",
+            "GEEKSFORGEEKS_THIRD_PARTY",
+            "CODE360_THIRD_PARTY",
+            "HACKERRANK_REAL",
+            "INTERVIEWBIT_REAL",
+            "HACKEREARTH_REAL"
     );
 
     private PlatformStatsSourcePolicy() {}

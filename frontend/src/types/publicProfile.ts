@@ -35,7 +35,7 @@ export interface PublicPlatformStat {
   currentStreak: number | null;
   longestStreak: number | null;
   source: string;
-  sourceStatus: 'REAL_AVAILABLE' | 'SOURCE_PENDING';
+  sourceStatus: 'REAL_AVAILABLE' | 'SOURCE_PENDING' | 'LINK_ONLY';
   lastSyncedAt: string | null;
 }
 

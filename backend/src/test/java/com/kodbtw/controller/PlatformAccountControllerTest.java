@@ -121,26 +121,32 @@ class PlatformAccountControllerTest {
     }
 
     @Test
-    void allFivePlatformsCanConnectAndPendingSourcesHaveNoFakeStats() throws Exception {
+    void allSupportedPlatformsCanConnectAndOnlyLinkOnlySourcesHaveNoFakeStats() throws Exception {
         for (Platform platform : Platform.values()) {
+            String profileUrl = platform == Platform.ALGOMASTER
+                    ? "https://algomaster.io/profile/same-handle"
+                    : null;
             MvcResult result = mockMvc.perform(post("/api/platform-accounts")
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(makeRequest(platform, "same-handle", null))))
+                            .content(objectMapper.writeValueAsString(makeRequest(platform, "same-handle", profileUrl))))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.platform").value(platform.name()))
                     .andReturn();
             long id = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
-            String expectedStatus = platform.hasLiveStatsSource() ? "REAL_AVAILABLE" : "SOURCE_PENDING";
+            String expectedStatus = platform.isLinkOnly()
+                    ? "LINK_ONLY"
+                    : platform.hasLiveStatsSource() ? "REAL_AVAILABLE" : "SOURCE_PENDING";
             mockMvc.perform(get("/api/platform-accounts/" + id)
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.sourceStatus").value(expectedStatus));
-            if (!platform.hasLiveStatsSource()) {
+            if (platform.isLinkOnly()) {
                 mockMvc.perform(get("/api/platform-accounts/" + id + "/stats")
                                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                         .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.source").value("SOURCE_PENDING"))
+                        .andExpect(jsonPath("$.source").value("LINK_ONLY"))
+                        .andExpect(jsonPath("$.profileUrl").value(profileUrl))
                         .andExpect(jsonPath("$.totalProblemsSolved").doesNotExist())
                         .andExpect(jsonPath("$.rating").doesNotExist());
             }
@@ -667,11 +673,12 @@ class PlatformAccountControllerTest {
     }
 
     @Test
-    void unsupportedMockPlatformReturnsUnavailableWithoutCreatingFakeSnapshot() throws Exception {
+    void linkOnlyPlatformSyncReturnsSavedLinkWithoutCreatingFakeSnapshot() throws Exception {
         MvcResult created = mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(makeRequest(Platform.GEEKSFORGEEKS, "chefuser", null))))
+                        .content(objectMapper.writeValueAsString(makeRequest(
+                                Platform.ALGOMASTER, "algomaster-user", "https://algomaster.io/profile/algomaster-user"))))
                 .andExpect(status().isCreated()).andReturn();
         long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
 
@@ -679,9 +686,35 @@ class PlatformAccountControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.syncStatus.status").value("NEVER_SYNCED"))
-                .andExpect(jsonPath("$.currentStats.source").value("SOURCE_PENDING"))
+                .andExpect(jsonPath("$.currentStats.source").value("LINK_ONLY"))
+                .andExpect(jsonPath("$.currentStats.profileUrl").value("https://algomaster.io/profile/algomaster-user"))
                 .andExpect(jsonPath("$.currentStats.totalProblemsSolved").doesNotExist());
 
         org.junit.jupiter.api.Assertions.assertTrue(platformStatSnapshotRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void algoMasterRequiresAProfileUrlOnCreateAndUpdate() throws Exception {
+        mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.ALGOMASTER, "algomaster-user", null))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
+
+        MvcResult created = mockMvc.perform(post("/api/platform-accounts")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(
+                                Platform.ALGOMASTER, "algomaster-user", "https://algomaster.io/profile/algomaster-user"))))
+                .andExpect(status().isCreated()).andReturn();
+        long id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(put("/api/platform-accounts/" + id)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(makeRequest(Platform.ALGOMASTER, "algomaster-user", ""))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Bad Request"));
     }
 }

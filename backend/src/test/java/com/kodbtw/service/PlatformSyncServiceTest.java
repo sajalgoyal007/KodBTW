@@ -88,32 +88,50 @@ class PlatformSyncServiceTest {
         verify(persistence, never()).recordSuccess(eq(9L), any());
     }
 
-    @Test void sourcePendingPlatformReturnsUnavailableStateWithoutAdapterOrPersistenceCalls() {
-        assertSourcePendingPlatformDoesNotReachAdapter(Platform.GEEKSFORGEEKS);
+    @Test void linkOnlyPlatformReturnsSavedProfileWithoutAdapterOrPersistenceCalls() {
+        assertLinkOnlyPlatformDoesNotReachAdapter(Platform.ALGOMASTER);
     }
 
-    @Test void hackerRankSourcePendingDoesNotLookUpOrInvokeAdapter() {
-        assertSourcePendingPlatformDoesNotReachAdapter(Platform.HACKERRANK);
-    }
-
-    private void assertSourcePendingPlatformDoesNotReachAdapter(Platform platform) {
+    private void assertLinkOnlyPlatformDoesNotReachAdapter(Platform platform) {
         when(adapter.getPlatform()).thenReturn(platform);
         PlatformAdapterRegistry registry = spy(new PlatformAdapterRegistry(List.of(adapter)));
         service = new PlatformSyncService(accounts, registry, persistence, statsService);
         account.setPlatform(platform);
+        account.setProfileUrl("https://algomaster.io/profile/coder");
         when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
-        PlatformStats pending = PlatformStats.builder().platform(platform).source("SOURCE_PENDING").build();
-        when(statsService.getStats(7L, 9L)).thenReturn(pending);
+        PlatformStats linkOnly = PlatformStats.builder().platform(platform).source("LINK_ONLY")
+                .profileUrl("https://algomaster.io/profile/coder").build();
+        when(statsService.getStats(7L, 9L)).thenReturn(linkOnly);
 
         var response = service.syncOwnedAccount(7L, 9L);
 
         assertEquals(SyncStatus.NEVER_SYNCED, response.syncStatus().status());
-        assertEquals("SOURCE_PENDING", response.currentStats().getSource());
+        assertEquals("LINK_ONLY", response.currentStats().getSource());
+        assertEquals("https://algomaster.io/profile/coder", response.currentStats().getProfileUrl());
         verify(registry, never()).getAdapter(platform);
         verify(adapter, never()).fetchStats(any());
         verify(persistence, never()).markStarted(anyLong(), anyLong());
         verify(persistence, never()).recordSuccess(anyLong(), any());
         verify(persistence, never()).recordFailure(anyLong(), any());
+    }
+
+    @Test void everyLivePlatformStillReachesItsAdapter() {
+        for (Platform platform : Platform.values()) {
+            if (!platform.hasLiveStatsSource()) continue;
+            when(adapter.getPlatform()).thenReturn(platform);
+            service = new PlatformSyncService(accounts, new PlatformAdapterRegistry(List.of(adapter)), persistence, statsService);
+            account.setPlatform(platform);
+            when(persistence.getOwnedAccount(7L, 9L)).thenReturn(account);
+            when(persistence.markStarted(7L, 9L)).thenReturn(true);
+            PlatformStats stats = PlatformStats.builder().platform(platform).source("SOURCE").build();
+            when(adapter.fetchStats(account)).thenReturn(stats);
+            when(statsService.getStats(7L, 9L)).thenReturn(stats);
+
+            service.syncOwnedAccount(7L, 9L);
+
+            verify(adapter, atLeastOnce()).fetchStats(account);
+            org.mockito.Mockito.clearInvocations(adapter);
+        }
     }
 
     @Test void rateLimitFailureIsCategorizedWithoutReplacingPersistedStats() {

@@ -47,8 +47,10 @@ public class PlatformStatsService {
                     .username(account.getUsername())
                     .profileUrl(profileUrl(account))
                     .lastSyncedAt(null)
-                    .source(account.getPlatform().hasLiveStatsSource()
-                            ? "UNSYNCED" : PlatformSourceStatus.SOURCE_PENDING.name())
+                    .source(account.getPlatform().isLinkOnly()
+                            ? "LINK_ONLY"
+                            : account.getPlatform().hasLiveStatsSource()
+                                ? "UNSYNCED" : PlatformSourceStatus.SOURCE_PENDING.name())
                     .build();
         }
         return PlatformStats.builder()
@@ -80,8 +82,13 @@ public class PlatformStatsService {
             case LEETCODE -> "https://leetcode.com/u/" + account.getUsername() + "/";
             case CODEFORCES -> "https://codeforces.com/profile/" + account.getUsername();
             case CODECHEF -> "https://www.codechef.com/users/" + account.getUsername();
+            case ATCODER -> "https://atcoder.jp/users/" + account.getUsername();
             case GEEKSFORGEEKS -> "https://www.geeksforgeeks.org/profile/" + account.getUsername();
+            case CODE360 -> "https://www.naukri.com/code360/profile/" + account.getUsername();
             case HACKERRANK -> "https://www.hackerrank.com/profile/" + account.getUsername();
+            case INTERVIEWBIT -> "https://www.interviewbit.com/profile/" + account.getUsername() + "/";
+            case HACKEREARTH -> "https://www.hackerearth.com/@" + account.getUsername();
+            case ALGOMASTER -> "https://algomaster.io/";
         };
     }
 

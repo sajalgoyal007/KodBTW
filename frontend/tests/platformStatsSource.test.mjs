@@ -33,35 +33,55 @@ const {
   `data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`,
 );
 
-test('recognizes CodeChef third-party stats without accepting mock sources', () => {
+test('recognizes live and third-party stats without accepting mock, pending, or link-only sources', () => {
   assert.equal(isVerifiedStatsSource('CODECHEF_THIRD_PARTY'), true);
+  assert.equal(isVerifiedStatsSource('GEEKSFORGEEKS_THIRD_PARTY'), true);
+  assert.equal(isVerifiedStatsSource('CODE360_THIRD_PARTY'), true);
   assert.equal(isVerifiedStatsSource('LEETCODE_REAL'), true);
   assert.equal(isVerifiedStatsSource('CODEFORCES_REAL'), true);
+  assert.equal(isVerifiedStatsSource('ATCODER_REAL'), true);
+  assert.equal(isVerifiedStatsSource('HACKERRANK_REAL'), true);
+  assert.equal(isVerifiedStatsSource('INTERVIEWBIT_REAL'), true);
+  assert.equal(isVerifiedStatsSource('HACKEREARTH_REAL'), true);
   assert.equal(isVerifiedStatsSource('MOCK'), false);
   assert.equal(isVerifiedStatsSource('CODECHEF_MOCK'), false);
   assert.equal(isVerifiedStatsSource('SOURCE_PENDING'), false);
+  assert.equal(isVerifiedStatsSource('UNSYNCED'), false);
+  assert.equal(isVerifiedStatsSource('LINK_ONLY'), false);
+  assert.equal(isVerifiedStatsSource('ALGOMASTER_LINK_ONLY'), false);
   assert.equal(isVerifiedStatsSource('UNRELATED_REAL'), false);
   assert.equal(isVerifiedStatsSource(null), false);
 });
 
-test('source labels and badge styles distinguish live, third-party, mock, pending, and unknown sources', () => {
+test('source labels and badge styles distinguish live, third-party, link-only, mock, pending, and unknown sources', () => {
   assert.equal(getPlatformStatsSourceKind('LEETCODE_REAL'), 'live');
   assert.equal(getPlatformStatsSourceKind('CODEFORCES_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('ATCODER_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('HACKERRANK_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('INTERVIEWBIT_REAL'), 'live');
+  assert.equal(getPlatformStatsSourceKind('HACKEREARTH_REAL'), 'live');
   assert.equal(getPlatformStatsSourceKind('CODECHEF_THIRD_PARTY'), 'third-party');
+  assert.equal(getPlatformStatsSourceKind('GEEKSFORGEEKS_THIRD_PARTY'), 'third-party');
+  assert.equal(getPlatformStatsSourceKind('CODE360_THIRD_PARTY'), 'third-party');
+  assert.equal(getPlatformStatsSourceKind('LINK_ONLY'), 'link-only');
+  assert.equal(getPlatformStatsSourceKind('ALGOMASTER_LINK_ONLY'), 'link-only');
   assert.equal(getPlatformStatsSourceKind('MOCK'), 'mock');
   assert.equal(getPlatformStatsSourceKind('SOURCE_PENDING'), 'pending');
-  assert.equal(getPlatformStatsSourceKind('GEEKSFORGEEKS_THIRD_PARTY'), 'unknown');
   assert.equal(getPlatformStatsSourceKind('UNRELATED_REAL'), 'unknown');
 
   assert.equal(getPlatformStatsSourceLabel('LEETCODE_REAL'), 'Live Public Data');
   assert.equal(getPlatformStatsSourceLabel('CODEFORCES_REAL'), 'Live Public Data');
   assert.equal(getPlatformStatsSourceLabel('CODECHEF_THIRD_PARTY'), 'Third-party Live Data');
+  assert.equal(getPlatformStatsSourceLabel('GEEKSFORGEEKS_THIRD_PARTY'), 'Third-party Live Data');
+  assert.equal(getPlatformStatsSourceLabel('CODE360_THIRD_PARTY'), 'Third-party Live Data');
+  assert.equal(getPlatformStatsSourceLabel('LINK_ONLY'), 'Profile link only');
   assert.equal(getPlatformStatsSourceLabel('MOCK'), 'Mock Sandbox');
   assert.equal(getPlatformStatsSourceLabel('SOURCE_PENDING'), 'Live statistics unavailable');
   assert.equal(getPlatformStatsSourceLabel('UNRELATED_REAL'), 'Source unknown');
 
   assert.equal(getPlatformStatsSourceBadgeClass('LEETCODE_REAL'), 'badge-success');
   assert.equal(getPlatformStatsSourceBadgeClass('CODECHEF_THIRD_PARTY'), 'badge-primary');
+  assert.equal(getPlatformStatsSourceBadgeClass('LINK_ONLY'), 'badge-muted');
   assert.equal(getPlatformStatsSourceBadgeClass('UNRELATED_REAL'), 'badge-muted');
 });
 
@@ -95,8 +115,10 @@ test('dashboard source labels distinguish live, pending, mock, and unknown data'
   assert.equal(getPlatformAvailabilityLabel('UNKNOWN_PLATFORM'), 'Availability unknown; no platform integration is configured.');
   assert.equal(getPlatformAvailabilityLabel('CODEFORCES'), 'Official API sync provides rating and max rating; solved counts and numeric global rank are unavailable.');
   assert.equal(getPlatformAvailabilityLabel('LEETCODE'), 'Live stats use an undocumented public endpoint; its authorization and stability are unverified.');
-  assert.equal(getPlatformAvailabilityLabel('GEEKSFORGEEKS'), 'A handle can be saved, but live statistics and synchronization are unavailable.');
-  assert.equal(getPlatformAvailabilityLabel('HACKERRANK'), 'A handle can be saved, but live statistics and synchronization are unavailable.');
+  assert.equal(getPlatformAvailabilityLabel('GEEKSFORGEEKS'), 'Third-party stats are integrated, but provider permission and reliability are unverified.');
+  assert.equal(getPlatformAvailabilityLabel('HACKERRANK'), 'Live stats use undocumented public HackerRank REST endpoints; availability and response shapes may change.');
+  assert.equal(getPlatformAvailabilityLabel('ALGOMASTER', { sourceStatus: 'LINK_ONLY' }), 'Profile link saved · statistics not tracked');
+  assert.equal(getPlatformAvailabilityLabel('ALGOMASTER'), 'AlgoMaster is link-only: save a public profile URL to display it; statistics are not fetched.');
 });
 
 test('dashboard refresh reports success only for succeeded syncs with verified populated stats', () => {
@@ -126,6 +148,7 @@ test('account availability changes to synced only after a confirmed usable stats
   };
   assert.equal(getPlatformSyncSourceStatus('REAL_AVAILABLE', successful), 'SYNCED');
   assert.equal(getPlatformSyncSourceStatus('SOURCE_PENDING', successful), 'SOURCE_PENDING');
+  assert.equal(getPlatformSyncSourceStatus('LINK_ONLY', successful), 'LINK_ONLY');
 
   for (const currentStats of [
     { source: 'SOURCE_PENDING', totalProblemsSolved: null },

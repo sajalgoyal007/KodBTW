@@ -44,8 +44,9 @@ export function hasAvailablePlatformStats(platform: PlatformStats): boolean {
 }
 
 export function hasPartialPlatformStats(platforms: PlatformStats[], connectedPlatformCount = platforms.length): boolean {
-  return platforms.length < connectedPlatformCount
-    || platforms.some((platform) => PLATFORM_METRIC_KEYS.some((key) => platform[key] === null || platform[key] === undefined));
+  const trackedPlatforms = platforms.filter((platform) => platform.source?.toUpperCase() !== 'LINK_ONLY');
+  return trackedPlatforms.length < connectedPlatformCount
+    || trackedPlatforms.some((platform) => PLATFORM_METRIC_KEYS.some((key) => platform[key] === null || platform[key] === undefined));
 }
 
 /**
@@ -99,6 +100,14 @@ export function getPlatformSyncPresentation(
   account: Pick<PlatformAccountResponse, 'syncStatus' | 'sourceStatus' | 'fresh' | 'lastSuccessAt'> | undefined,
 ): PlatformSyncPresentation {
   if (!account) return { label: 'Sync status unavailable', detail: 'Account status could not be loaded.', tone: 'neutral' };
+
+  if (account.sourceStatus === 'LINK_ONLY') {
+    return {
+      label: 'Profile link only',
+      detail: 'AlgoMaster statistics are not fetched; the saved profile link is shown as-is.',
+      tone: 'neutral',
+    };
+  }
 
   if (account.syncStatus === 'RUNNING') {
     return {

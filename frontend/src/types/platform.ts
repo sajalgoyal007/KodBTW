@@ -1,4 +1,22 @@
-export type PlatformType = 'LEETCODE' | 'CODECHEF' | 'CODEFORCES' | 'GEEKSFORGEEKS' | 'HACKERRANK';
+export type PlatformType =
+  | 'LEETCODE'
+  | 'CODECHEF'
+  | 'CODEFORCES'
+  | 'ATCODER'
+  | 'GEEKSFORGEEKS'
+  | 'CODE360'
+  | 'HACKERRANK'
+  | 'INTERVIEWBIT'
+  | 'HACKEREARTH'
+  | 'ALGOMASTER';
+
+export type PlatformSourceStatus =
+  | 'REAL_AVAILABLE'
+  | 'SOURCE_PENDING'
+  | 'LINK_ONLY'
+  | 'SYNCING'
+  | 'SYNCED'
+  | 'SYNC_FAILED';
 
 export interface PlatformAccountResponse {
   id: number;
@@ -16,7 +34,7 @@ export interface PlatformAccountResponse {
   lastSyncErrorCategory: string | null;
   lastSyncErrorMessage: string | null;
   fresh: boolean;
-  sourceStatus: 'REAL_AVAILABLE' | 'SOURCE_PENDING' | 'SYNCING' | 'SYNCED' | 'SYNC_FAILED';
+  sourceStatus: PlatformSourceStatus;
 }
 
 export interface PlatformAccountRequest {

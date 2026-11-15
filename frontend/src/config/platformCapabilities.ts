@@ -1,4 +1,4 @@
-import type { PlatformType } from '../types/platform';
+import type { PlatformAccountResponse, PlatformType } from '../types/platform';
 
 export type PlatformMetric =
   | 'totalProblemsSolved'
@@ -12,6 +12,8 @@ export type PlatformMetric =
   | 'currentStreak'
   | 'longestStreak';
 
+export type PlatformSourceApprovalStatus = 'documented-public-api' | 'unverified' | 'unavailable';
+
 export interface PlatformCapability {
   id: string;
   displayName: string;
@@ -22,13 +24,23 @@ export interface PlatformCapability {
   synchronizationEnabled: boolean;
   supportedMetrics: readonly PlatformMetric[];
   statisticsSourceTag: string | null;
-  sourceApprovalStatus: 'documented-public-api' | 'unverified' | 'unavailable';
+  sourceApprovalStatus: PlatformSourceApprovalStatus;
   sourceDescription: string;
   availabilityMessage: string;
   profileUrlFor: ((username: string) => string) | null;
 }
 
 const safeHandle = (username: string) => encodeURIComponent(username.trim());
+
+/**
+ * Sources that come from a third-party provider or public HTML rather than an official
+ * platform API. They render with the third-party badge instead of the live badge.
+ */
+const THIRD_PARTY_SOURCE_TAGS = new Set([
+  'CODECHEF_THIRD_PARTY',
+  'GEEKSFORGEEKS_THIRD_PARTY',
+  'CODE360_THIRD_PARTY',
+]);
 
 export const PLATFORM_CAPABILITIES: readonly PlatformCapability[] = [
   {
@@ -77,19 +89,49 @@ export const PLATFORM_CAPABILITIES: readonly PlatformCapability[] = [
     profileUrlFor: (username) => `https://www.codechef.com/users/${safeHandle(username)}`,
   },
   {
+    id: 'ATCODER',
+    displayName: 'AtCoder',
+    accentColor: '#2f3640',
+    accountPlatform: 'ATCODER',
+    accountConnectionAvailable: true,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'rating', 'maxRating', 'rank', 'contestsParticipated', 'currentStreak', 'longestStreak'],
+    statisticsSourceTag: 'ATCODER_REAL',
+    sourceApprovalStatus: 'unverified',
+    sourceDescription: 'AtCoder public rating history plus Kenkoooo’s public accepted-count and submissions APIs.',
+    availabilityMessage: 'Live stats combine AtCoder public history with Kenkoooo’s public API; endpoint stability is unverified.',
+    profileUrlFor: (username) => `https://atcoder.jp/users/${safeHandle(username)}`,
+  },
+  {
     id: 'GEEKSFORGEEKS',
     displayName: 'GeeksforGeeks',
     accentColor: '#2f8d46',
     accountPlatform: 'GEEKSFORGEEKS',
     accountConnectionAvailable: true,
-    liveStatisticsAvailable: false,
-    synchronizationEnabled: false,
-    supportedMetrics: [],
-    statisticsSourceTag: null,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'easySolved', 'mediumSolved', 'hardSolved'],
+    statisticsSourceTag: 'GEEKSFORGEEKS_THIRD_PARTY',
     sourceApprovalStatus: 'unverified',
-    sourceDescription: 'Third-party prototype exists but normal synchronization is disabled.',
-    availabilityMessage: 'A handle can be saved, but live statistics and synchronization are unavailable.',
+    sourceDescription: 'Unofficial third-party stats provider; authorization and reliability are unverified.',
+    availabilityMessage: 'Third-party stats are integrated, but provider permission and reliability are unverified.',
     profileUrlFor: (username) => `https://www.geeksforgeeks.org/profile/${safeHandle(username)}`,
+  },
+  {
+    id: 'CODE360',
+    displayName: 'Code360 (CodeStudio)',
+    accentColor: '#5a67d8',
+    accountPlatform: 'CODE360',
+    accountConnectionAvailable: true,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'rating', 'contestsParticipated', 'currentStreak', 'longestStreak'],
+    statisticsSourceTag: 'CODE360_THIRD_PARTY',
+    sourceApprovalStatus: 'unverified',
+    sourceDescription: 'Parses the public Naukri Code360 profile page; no documented stats API is available.',
+    availabilityMessage: 'Live stats parse the public Code360 profile page; markup changes can interrupt sync.',
+    profileUrlFor: (username) => `https://www.naukri.com/code360/profile/${safeHandle(username)}`,
   },
   {
     id: 'HACKERRANK',
@@ -97,58 +139,58 @@ export const PLATFORM_CAPABILITIES: readonly PlatformCapability[] = [
     accentColor: '#2ec866',
     accountPlatform: 'HACKERRANK',
     accountConnectionAvailable: true,
-    liveStatisticsAvailable: false,
-    synchronizationEnabled: false,
-    supportedMetrics: [],
-    statisticsSourceTag: null,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'rating', 'maxRating'],
+    statisticsSourceTag: 'HACKERRANK_REAL',
     sourceApprovalStatus: 'unverified',
-    sourceDescription: 'Third-party prototype exists but normal synchronization is disabled.',
-    availabilityMessage: 'A handle can be saved, but live statistics and synchronization are unavailable.',
+    sourceDescription: 'Undocumented public HackerRank badge and ELO-score REST endpoints.',
+    availabilityMessage: 'Live stats use undocumented public HackerRank REST endpoints; availability and response shapes may change.',
     profileUrlFor: (username) => `https://www.hackerrank.com/profile/${safeHandle(username)}`,
-  },
-  {
-    id: 'ATCODER',
-    displayName: 'AtCoder',
-    accentColor: 'var(--color-border-subtle)',
-    accountPlatform: null,
-    accountConnectionAvailable: false,
-    liveStatisticsAvailable: false,
-    synchronizationEnabled: false,
-    supportedMetrics: [],
-    statisticsSourceTag: null,
-    sourceApprovalStatus: 'unavailable',
-    sourceDescription: 'No approved integration is configured.',
-    availabilityMessage: 'Account connection and statistics are not available.',
-    profileUrlFor: null,
   },
   {
     id: 'INTERVIEWBIT',
     displayName: 'InterviewBit',
-    accentColor: 'var(--color-border-subtle)',
-    accountPlatform: null,
-    accountConnectionAvailable: false,
-    liveStatisticsAvailable: false,
-    synchronizationEnabled: false,
-    supportedMetrics: [],
-    statisticsSourceTag: null,
-    sourceApprovalStatus: 'unavailable',
-    sourceDescription: 'No approved integration is configured.',
-    availabilityMessage: 'Account connection and statistics are not available.',
-    profileUrlFor: null,
+    accentColor: '#3b82f6',
+    accountPlatform: 'INTERVIEWBIT',
+    accountConnectionAvailable: true,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'rating', 'rank', 'currentStreak'],
+    statisticsSourceTag: 'INTERVIEWBIT_REAL',
+    sourceApprovalStatus: 'unverified',
+    sourceDescription: 'Parses the public InterviewBit profile page; no documented stats API is available.',
+    availabilityMessage: 'Live stats parse the public InterviewBit profile page; markup changes can interrupt sync.',
+    profileUrlFor: (username) => `https://www.interviewbit.com/profile/${safeHandle(username)}/`,
   },
   {
-    id: 'CODESTUDIO',
-    displayName: 'CodeStudio',
-    accentColor: 'var(--color-border-subtle)',
-    accountPlatform: null,
-    accountConnectionAvailable: false,
+    id: 'HACKEREARTH',
+    displayName: 'HackerEarth',
+    accentColor: '#2c3e8f',
+    accountPlatform: 'HACKEREARTH',
+    accountConnectionAvailable: true,
+    liveStatisticsAvailable: true,
+    synchronizationEnabled: true,
+    supportedMetrics: ['totalProblemsSolved', 'rating', 'contestsParticipated'],
+    statisticsSourceTag: 'HACKEREARTH_REAL',
+    sourceApprovalStatus: 'unverified',
+    sourceDescription: 'Parses the public HackerEarth profile page; no documented stats API is available.',
+    availabilityMessage: 'Live stats parse the public HackerEarth profile page; markup changes can interrupt sync.',
+    profileUrlFor: (username) => `https://www.hackerearth.com/@${safeHandle(username)}`,
+  },
+  {
+    id: 'ALGOMASTER',
+    displayName: 'AlgoMaster',
+    accentColor: '#7c3aed',
+    accountPlatform: 'ALGOMASTER',
+    accountConnectionAvailable: true,
     liveStatisticsAvailable: false,
     synchronizationEnabled: false,
     supportedMetrics: [],
     statisticsSourceTag: null,
     sourceApprovalStatus: 'unavailable',
-    sourceDescription: 'No approved integration is configured.',
-    availabilityMessage: 'Account connection and statistics are not available.',
+    sourceDescription: 'Link-only integration. AlgoMaster does not publish public user statistics.',
+    availabilityMessage: 'AlgoMaster is link-only: save a public profile URL to display it; statistics are not fetched.',
     profileUrlFor: null,
   },
 ];
@@ -169,13 +211,16 @@ export function getUnavailablePlatforms(): PlatformCapability[] {
   return PLATFORM_CAPABILITIES.filter((capability) => !capability.accountConnectionAvailable);
 }
 
-export function getStatsSourceKind(source: string | null | undefined): 'live' | 'third-party' | 'mock' | 'pending' | 'unknown' {
+export function getStatsSourceKind(
+  source: string | null | undefined,
+): 'live' | 'third-party' | 'link-only' | 'mock' | 'pending' | 'unknown' {
   const normalized = source?.trim().toUpperCase();
   if (!normalized) return 'unknown';
+  if (THIRD_PARTY_SOURCE_TAGS.has(normalized)) return 'third-party';
+  if (normalized === 'LINK_ONLY' || normalized === 'ALGOMASTER_LINK_ONLY') return 'link-only';
   const sourceCapability = PLATFORM_CAPABILITIES.find((capability) =>
     capability.synchronizationEnabled && capability.statisticsSourceTag === normalized,
   );
-  if (sourceCapability?.id === 'CODECHEF') return 'third-party';
   if (sourceCapability) return 'live';
   if (normalized === 'MOCK') return 'mock';
   if (normalized === 'SOURCE_PENDING' || normalized === 'UNSYNCED') return 'pending';
@@ -184,12 +229,15 @@ export function getStatsSourceKind(source: string | null | undefined): 'live' | 
 
 export function getPlatformConnectionStatus(
   platform: string,
-  sourceStatus?: 'REAL_AVAILABLE' | 'SOURCE_PENDING' | 'SYNCING' | 'SYNCED' | 'SYNC_FAILED',
+  sourceStatus?: PlatformAccountResponse['sourceStatus'],
 ): string {
   const capability = getPlatformCapability(platform);
   if (!capability?.accountConnectionAvailable) return 'Unavailable';
   if (!sourceStatus) return 'Not connected';
-  if (sourceStatus === 'SOURCE_PENDING' || !capability.synchronizationEnabled) {
+  if (sourceStatus === 'LINK_ONLY' || !capability.synchronizationEnabled) {
+    return 'Profile link saved · statistics not tracked';
+  }
+  if (sourceStatus === 'SOURCE_PENDING') {
     return 'Handle saved · live statistics unavailable';
   }
   if (sourceStatus === 'SYNCING') return 'Sync in progress';

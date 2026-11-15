@@ -99,10 +99,12 @@ export const CodingProfilesPage: React.FC = () => {
     } else {
       setConnectFeedback(null);
       const account = await createAccount(data);
-      if (account.sourceStatus === 'SOURCE_PENDING') {
+      if (account.sourceStatus === 'SOURCE_PENDING' || account.sourceStatus === 'LINK_ONLY') {
         setConnectFeedback({
-          type: 'warning',
-          message: `${getPlatformDisplayName(account.platform)} connected. Live statistics are currently unavailable.`,
+          type: account.sourceStatus === 'LINK_ONLY' ? 'success' : 'warning',
+          message: account.sourceStatus === 'LINK_ONLY'
+            ? `${getPlatformDisplayName(account.platform)} connected. Profile link saved; statistics are not tracked.`
+            : `${getPlatformDisplayName(account.platform)} connected. Live statistics are currently unavailable.`,
         });
         return;
       }
@@ -116,7 +118,7 @@ export const CodingProfilesPage: React.FC = () => {
   };
 
   const handleRefreshStats = async (account: PlatformAccountResponse, justConnected = false) => {
-    if (account.sourceStatus === 'SOURCE_PENDING') return;
+    if (account.sourceStatus === 'SOURCE_PENDING' || account.sourceStatus === 'LINK_ONLY') return;
     setConnectFeedback(null);
     setRefreshingAccountId(account.id);
     try {
@@ -183,8 +185,8 @@ export const CodingProfilesPage: React.FC = () => {
             <button
               onClick={() => handleOpenCreate()}
               className="btn btn-primary"
-              disabled={loading || accounts.length >= 5}
-              title={accounts.length >= 5 ? 'All 5 supported platforms are connected' : 'Connect a new platform'}
+              disabled={loading || accounts.length >= SUPPORTED_PLATFORMS.length}
+              title={accounts.length >= SUPPORTED_PLATFORMS.length ? `All ${SUPPORTED_PLATFORMS.length} supported platforms are connected` : 'Connect a new platform'}
             >
               <PlusCircle size={16} />
               <span>Connect Platform</span>
@@ -404,7 +406,7 @@ export const CodingProfilesPage: React.FC = () => {
                           {getPlatformAvailabilityLabel(acc.platform, acc)}
                         </span>
                       </div>
-                      {acc.sourceStatus !== 'SOURCE_PENDING' && (
+                      {acc.sourceStatus !== 'SOURCE_PENDING' && acc.sourceStatus !== 'LINK_ONLY' && (
                         <div className="platform-account-meta-row">
                           <span style={{ color: 'var(--color-text-muted)' }}>Sync Status</span>
                           <span className="mono" style={{ color: acc.syncStatus === 'FAILED' ? 'var(--color-error)' : 'var(--color-text-primary)' }}>
@@ -435,7 +437,7 @@ export const CodingProfilesPage: React.FC = () => {
                       <BarChart2 size={13} /> Inspect Stats
                     </button>
 
-                    {acc.sourceStatus !== 'SOURCE_PENDING' && <button
+                    {acc.sourceStatus !== 'SOURCE_PENDING' && acc.sourceStatus !== 'LINK_ONLY' && <button
                       onClick={() => handleRefreshStats(acc)}
                       className="btn btn-ghost"
                       style={{ padding: '0.4375rem 0.625rem', fontSize: '0.75rem' }}

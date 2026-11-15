@@ -39,6 +39,10 @@ export function getProfileSyncMessage(
   account: PlatformAccountResponse,
   hasSavedSnapshot: boolean,
 ): string {
+  if (account.sourceStatus === 'LINK_ONLY') {
+    return 'Profile link saved. AlgoMaster statistics are not fetched or tracked.';
+  }
+
   if (account.syncStatus === 'RUNNING') {
     return account.lastSuccessAt
       ? 'A refresh is running; the last successful snapshot remains visible.'

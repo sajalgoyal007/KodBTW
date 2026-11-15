@@ -79,9 +79,8 @@ export const ProfileCodingPlatforms: React.FC<ProfileCodingPlatformsProps> = ({
       <div className="profile-platform-grid">
         {platforms.map((capability) => {
           const account = findAccount(accounts, capability.accountPlatform);
-          const profileUrl = account && capability.profileUrlFor
-            ? capability.profileUrlFor(account.username)
-            : null;
+          const profileUrl = account?.profileUrl
+            || (account && capability.profileUrlFor ? capability.profileUrlFor(account.username) : null);
           const connectionStatus = getPlatformConnectionStatus(capability.id, account?.sourceStatus);
           const lastSync = account ? formatDate(account.lastSuccessAt) : null;
           const stats = account ? statisticsByPlatform.get(account.platform) : undefined;
@@ -129,9 +128,11 @@ export const ProfileCodingPlatforms: React.FC<ProfileCodingPlatformsProps> = ({
                     </dl>
                   ) : !statisticsError && !statisticsLoading ? (
                     <p className="profile-platform-status" style={{ marginTop: '.65rem' }}>
-                      {stats && isVerifiedStatsSource(stats.source)
-                        ? 'This source has not reported supported metrics yet.'
-                        : 'No eligible statistics snapshot is available yet.'}
+                      {account.sourceStatus === 'LINK_ONLY'
+                        ? 'Link-only profile: statistics are not fetched for this platform.'
+                        : stats && isVerifiedStatsSource(stats.source)
+                          ? 'This source has not reported supported metrics yet.'
+                          : 'No eligible statistics snapshot is available yet.'}
                     </p>
                   ) : null}
                 </>

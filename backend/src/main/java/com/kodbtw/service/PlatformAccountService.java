@@ -43,6 +43,10 @@ public class PlatformAccountService {
         String profileUrl = (request.getProfileUrl() != null && request.getProfileUrl().isBlank())
                 ? null : request.getProfileUrl();
 
+        if (request.getPlatform().isLinkOnly() && profileUrl == null) {
+            throw new IllegalArgumentException("AlgoMaster is link-only; a public profile URL is required.");
+        }
+
         PlatformAccount account = new PlatformAccount(
                 user, request.getPlatform(), request.getUsername().trim(), profileUrl);
         PlatformAccount saved = platformAccountRepository.save(account);
@@ -85,6 +89,11 @@ public class PlatformAccountService {
             account.setProfileUrl(request.getProfileUrl().isBlank() ? null : request.getProfileUrl());
         }
 
+        if (account.getPlatform().isLinkOnly()
+                && (account.getProfileUrl() == null || account.getProfileUrl().isBlank())) {
+            throw new IllegalArgumentException("AlgoMaster is link-only; a public profile URL is required.");
+        }
+
         PlatformAccount saved = platformAccountRepository.save(account);
         return toResponse(saved);
     }
@@ -120,6 +129,7 @@ public class PlatformAccountService {
     }
 
     private PlatformSourceStatus sourceStatus(PlatformAccount account) {
+        if (account.getPlatform().isLinkOnly()) return PlatformSourceStatus.LINK_ONLY;
         if (!account.getPlatform().hasLiveStatsSource()) return PlatformSourceStatus.SOURCE_PENDING;
         return switch (account.getSyncStatus()) {
             case RUNNING -> PlatformSourceStatus.SYNCING;

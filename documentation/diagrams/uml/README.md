@@ -46,8 +46,13 @@ classDiagram
   class LeetCodeAdapter
   class CodeforcesAdapter
   class CodeChefAdapter
+  class AtCoderAdapter
   class GeeksForGeeksAdapter
+  class Code360Adapter
   class HackerRankAdapter
+  class InterviewBitAdapter
+  class HackerEarthAdapter
+  class AlgoMasterAdapter
   class User {
     Long id
     String name
@@ -115,8 +120,13 @@ classDiagram
   PlatformAdapter <|.. LeetCodeAdapter
   PlatformAdapter <|.. CodeforcesAdapter
   PlatformAdapter <|.. CodeChefAdapter
+  PlatformAdapter <|.. AtCoderAdapter
   PlatformAdapter <|.. GeeksForGeeksAdapter
+  PlatformAdapter <|.. Code360Adapter
   PlatformAdapter <|.. HackerRankAdapter
+  PlatformAdapter <|.. InterviewBitAdapter
+  PlatformAdapter <|.. HackerEarthAdapter
+  PlatformAdapter <|.. AlgoMasterAdapter
   PlatformAdapter ..> PlatformStats
   PlatformAccount --> Platform
   Profile --> User
@@ -125,7 +135,7 @@ classDiagram
   LeaderboardUserCache --> User
 ```
 
-Adapter class presence does not mean its platform is enabled for regular sync: GFG and HackerRank are excluded by `Platform.hasLiveStatsSource()` in the current working tree.
+All ten adapters are registry entries. Nine are enabled by `Platform.hasLiveStatsSource()`; AlgoMaster is link-only, so normal sync returns its saved profile URL without fetching statistics or creating numeric snapshots.
 
 ## Authentication sequence
 

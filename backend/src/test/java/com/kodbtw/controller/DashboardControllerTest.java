@@ -128,11 +128,12 @@ class DashboardControllerTest {
     }
 
     @Test
-    void getStats_authenticated_withLinkedAccount_returns200AndAggregatedStats() throws Exception {
-        // Link a GFG account and prove a legacy MOCK snapshot is excluded.
+    void getStats_authenticated_withLinkOnlyAccountKeepsSavedProfileWithoutFakeStats() throws Exception {
+        // AlgoMaster is link-only: even a legacy MOCK snapshot must never influence totals.
         PlatformAccountRequest accountRequest = new PlatformAccountRequest();
-        accountRequest.setPlatform(Platform.GEEKSFORGEEKS);
+        accountRequest.setPlatform(Platform.ALGOMASTER);
         accountRequest.setUsername("testchef");
+        accountRequest.setProfileUrl("https://algomaster.io/profile/testchef");
 
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -143,7 +144,7 @@ class DashboardControllerTest {
         refreshLinkedAccounts();
 
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        saveSnapshot(owner, "GEEKSFORGEEKS", "MOCK", 210, 120, 70, 20, 1750);
+        saveSnapshot(owner, "ALGOMASTER", "MOCK", 210, 120, 70, 20, 1750);
         var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
         mockSnapshot.setContests(25);
         mockSnapshot.setRank(4500);
@@ -159,11 +160,12 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.overview.hardSolved", nullValue()))
                 .andExpect(jsonPath("$.overview.contestsParticipated", nullValue()))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
-                .andExpect(jsonPath("$.platforms[0].platform", is("GEEKSFORGEEKS")))
+                .andExpect(jsonPath("$.platforms[0].platform", is("ALGOMASTER")))
                 .andExpect(jsonPath("$.platforms[0].username", is("testchef")))
+                .andExpect(jsonPath("$.platforms[0].profileUrl", is("https://algomaster.io/profile/testchef")))
                 .andExpect(jsonPath("$.platforms[0].rating", nullValue()))
                 .andExpect(jsonPath("$.platforms[0].rank", nullValue()))
-                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")));
+                .andExpect(jsonPath("$.platforms[0].source", is("LINK_ONLY")));
     }
 
     @Test
@@ -191,10 +193,11 @@ class DashboardControllerTest {
     }
 
     @Test
-    void getAnalytics_authenticated_withLinkedAccount_returns200AndAnalytics() throws Exception {
+    void getAnalytics_authenticated_withLinkOnlyAccountReturns200AndNullMetrics() throws Exception {
         PlatformAccountRequest accountRequest = new PlatformAccountRequest();
-        accountRequest.setPlatform(Platform.GEEKSFORGEEKS);
+        accountRequest.setPlatform(Platform.ALGOMASTER);
         accountRequest.setUsername("testchef");
+        accountRequest.setProfileUrl("https://algomaster.io/profile/testchef");
 
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
@@ -205,7 +208,7 @@ class DashboardControllerTest {
         refreshLinkedAccounts();
 
         User owner = userRepository.findByEmail("dashboarduser@example.com").orElseThrow();
-        saveSnapshot(owner, "GEEKSFORGEEKS", "MOCK", 210, 120, 70, 20, 1750);
+        saveSnapshot(owner, "ALGOMASTER", "MOCK", 210, 120, 70, 20, 1750);
         var mockSnapshot = platformStatSnapshotRepository.findAll().getFirst();
         mockSnapshot.setContests(25);
         mockSnapshot.setRank(4500);
@@ -222,23 +225,23 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.difficulty.hard.count", nullValue()))
                 .andExpect(jsonPath("$.difficulty.hard.percentage", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown", hasSize(1)))
-                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("GEEKSFORGEEKS")))
+                .andExpect(jsonPath("$.difficulty.platformBreakdown[0].platform", is("ALGOMASTER")))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].easy", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].medium", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].hard", nullValue()))
                 .andExpect(jsonPath("$.difficulty.platformBreakdown[0].total", nullValue()))
                 .andExpect(jsonPath("$.platformComparison", hasSize(1)))
-                .andExpect(jsonPath("$.platformComparison[0].platform", is("GEEKSFORGEEKS")))
+                .andExpect(jsonPath("$.platformComparison[0].platform", is("ALGOMASTER")))
                 .andExpect(jsonPath("$.platformComparison[0].username", is("testchef")))
                 .andExpect(jsonPath("$.platformComparison[0].totalSolved", nullValue()))
                 .andExpect(jsonPath("$.platformComparison[0].sharePercentage", is(0.0)))
                 .andExpect(jsonPath("$.platformComparison[0].rating", nullValue()))
                 .andExpect(jsonPath("$.platformComparison[0].rank", nullValue()))
                 .andExpect(jsonPath("$.platformComparison[0].contestsParticipated", nullValue()))
-                .andExpect(jsonPath("$.platformComparison[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platformComparison[0].source", is("LINK_ONLY")))
                 .andExpect(jsonPath("$.contests.totalContests", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown", hasSize(1)))
-                .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("GEEKSFORGEEKS")))
+                .andExpect(jsonPath("$.contests.platformBreakdown[0].platform", is("ALGOMASTER")))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].contests", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rating", nullValue()))
                 .andExpect(jsonPath("$.contests.platformBreakdown[0].rank", nullValue()));

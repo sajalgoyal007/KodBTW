@@ -1,3 +1,5 @@
+import type { PlatformType } from '../types/platform';
+
 export interface PlatformAccountFormValues {
   username: string;
   profileUrl: string;
@@ -19,7 +21,10 @@ export async function runSingleSubmission(
   }
 }
 
-export function validatePlatformAccountForm(values: PlatformAccountFormValues): PlatformAccountFieldErrors {
+export function validatePlatformAccountForm(
+  values: PlatformAccountFormValues,
+  platform?: PlatformType,
+): PlatformAccountFieldErrors {
   const errors: PlatformAccountFieldErrors = {};
   const username = values.username.trim();
   const profileUrl = values.profileUrl.trim();
@@ -39,6 +44,8 @@ export function validatePlatformAccountForm(values: PlatformAccountFormValues): 
     } catch {
       errors.profileUrl = 'Enter a valid HTTP or HTTPS profile URL.';
     }
+  } else if (platform === 'ALGOMASTER') {
+    errors.profileUrl = 'AlgoMaster is link-only; a public profile URL is required.';
   }
 
   return errors;

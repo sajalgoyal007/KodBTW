@@ -9,15 +9,15 @@ import com.kodbtw.entity.PlatformAccount;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class GeeksForGeeksAdapterTest {
+class GfgAdapterTest {
 
     @Test
-    void prototypeDoesNotEnableNormalPlatformSync() {
-        assertFalse(Platform.GEEKSFORGEEKS.hasLiveStatsSource());
+    void gfgLiveSourceIsEnabled() {
+        assertTrue(Platform.GEEKSFORGEEKS.hasLiveStatsSource());
     }
 
     @Test

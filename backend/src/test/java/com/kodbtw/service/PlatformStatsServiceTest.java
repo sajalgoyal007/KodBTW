@@ -105,28 +105,50 @@ class PlatformStatsServiceTest {
         when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "GEEKSFORGEEKS"))
                 .thenReturn(Optional.empty());
         PlatformStats result = service.getDashboardStats(4L).getPlatforms().get(0);
-        assertEquals("SOURCE_PENDING", result.getSource()); assertNull(result.getRating());
+        assertEquals("UNSYNCED", result.getSource()); assertNull(result.getRating());
         assertNull(result.getLastSyncedAt());
         assertNull(service.getDashboardStats(4L).getOverview().getTotalProblemsSolved());
+    }
+
+    @Test void linkOnlyPlatformShowsSavedProfileAndNeverContributesFakeTotals() {
+        User user = new User(); user.setId(4L);
+        PlatformAccount account = new PlatformAccount();
+        account.setUser(user); account.setPlatform(Platform.ALGOMASTER); account.setUsername("sample");
+        account.setProfileUrl("https://algomaster.io/profile/sample");
+        PlatformStatSnapshot unexpected = snapshot("ALGOMASTER", "ALGOMASTER_LINK_ONLY");
+        unexpected.setTotalSolved(999);
+        when(accounts.findAllByUserId(4L)).thenReturn(List.of(account));
+        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "ALGOMASTER"))
+                .thenReturn(Optional.of(unexpected));
+
+        DashboardStatsResponse response = service.getDashboardStats(4L);
+
+        PlatformStats stats = response.getPlatforms().get(0);
+        assertEquals("LINK_ONLY", stats.getSource());
+        assertEquals("https://algomaster.io/profile/sample", stats.getProfileUrl());
+        assertNull(stats.getTotalProblemsSolved());
+        assertNull(response.getOverview().getTotalProblemsSolved());
+        assertEquals(1, response.getOverview().getConnectedPlatformsCount());
     }
 
     @Test void dashboardAggregatesPersistedPlatformsAndUsesMaximumStreaks() {
         User user = new User(); user.setId(4L);
         PlatformAccount leetCode = new PlatformAccount();
         leetCode.setUser(user); leetCode.setPlatform(Platform.LEETCODE); leetCode.setUsername("lc");
-        PlatformAccount geeksForGeeks = new PlatformAccount();
-        geeksForGeeks.setUser(user); geeksForGeeks.setPlatform(Platform.GEEKSFORGEEKS); geeksForGeeks.setUsername("gfg");
+        PlatformAccount algoMaster = new PlatformAccount();
+        algoMaster.setUser(user); algoMaster.setPlatform(Platform.ALGOMASTER); algoMaster.setUsername("am");
+        algoMaster.setProfileUrl("https://algomaster.io/profile/am");
         PlatformStatSnapshot real = snapshot("LEETCODE", "LEETCODE_REAL");
         real.setTotalSolved(120); real.setEasySolved(30); real.setMediumSolved(50); real.setHardSolved(40);
         real.setContests(4); real.setCurrentStreak(8); real.setLongestStreak(18);
-        PlatformStatSnapshot mock = snapshot("GEEKSFORGEEKS", "MOCK");
-        mock.setTotalSolved(80); mock.setEasySolved(20); mock.setMediumSolved(40); mock.setHardSolved(20);
-        mock.setContests(6); mock.setCurrentStreak(3); mock.setLongestStreak(25);
-        when(accounts.findAllByUserId(4L)).thenReturn(List.of(leetCode, geeksForGeeks));
+        PlatformStatSnapshot linkOnly = snapshot("ALGOMASTER", "ALGOMASTER_LINK_ONLY");
+        linkOnly.setTotalSolved(80); linkOnly.setEasySolved(20); linkOnly.setMediumSolved(40); linkOnly.setHardSolved(20);
+        linkOnly.setContests(6); linkOnly.setCurrentStreak(3); linkOnly.setLongestStreak(25);
+        when(accounts.findAllByUserId(4L)).thenReturn(List.of(leetCode, algoMaster));
         when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "LEETCODE"))
                 .thenReturn(Optional.of(real));
-        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "GEEKSFORGEEKS"))
-                .thenReturn(Optional.of(mock));
+        when(snapshots.findFirstByUserIdAndPlatformOrderBySnapshotDateDesc(4L, "ALGOMASTER"))
+                .thenReturn(Optional.of(linkOnly));
 
         DashboardStatsResponse result = service.getDashboardStats(4L);
         assertEquals(120, result.getOverview().getTotalProblemsSolved());
@@ -134,7 +156,7 @@ class PlatformStatsServiceTest {
         assertEquals(4, result.getOverview().getContestsParticipated());
         assertEquals(8, result.getOverview().getCurrentStreak());
         assertEquals(18, result.getOverview().getLongestStreak());
-        assertEquals("SOURCE_PENDING", result.getPlatforms().get(1).getSource());
+        assertEquals("LINK_ONLY", result.getPlatforms().get(1).getSource());
         assertNull(result.getPlatforms().get(1).getTotalProblemsSolved());
     }
 

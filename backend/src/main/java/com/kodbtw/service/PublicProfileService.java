@@ -141,8 +141,10 @@ public class PublicProfileService {
                     ps.getCurrentStreak(),
                     ps.getLongestStreak(),
                     ps.getSource() != null ? ps.getSource() : "MOCK",
-                    ps.getPlatform() != null && ps.getPlatform().hasLiveStatsSource()
-                            ? "REAL_AVAILABLE" : "SOURCE_PENDING",
+                    ps.getPlatform() != null && ps.getPlatform().isLinkOnly()
+                            ? "LINK_ONLY"
+                            : ps.getPlatform() != null && ps.getPlatform().hasLiveStatsSource()
+                                ? "REAL_AVAILABLE" : "SOURCE_PENDING",
                     ps.getLastSyncedAt()
             ));
         }

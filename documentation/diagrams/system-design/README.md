@@ -69,7 +69,7 @@ flowchart TD
   NotFound --> Done
 ```
 
-The normal source gate currently enables LeetCode, Codeforces, and CodeChef. CodeChef uses an unofficial provider. Local GFG/HackerRank adapter clients are not invoked by normal sync. A global sync semaphore, per-account cooldown, Codeforces call spacing, status persistence, and no-mock-fallback behavior are implemented in `PlatformSyncService` and `PlatformSyncPersistenceService`.
+The normal source gate enables nine live platforms: LeetCode, Codeforces, CodeChef, AtCoder, GeeksforGeeks, Code360, HackerRank, InterviewBit, and HackerEarth. CodeChef and GeeksforGeeks use an unofficial provider; the others use direct public endpoints or public profile pages. AlgoMaster is link-only and never fetches statistics. A global sync semaphore, per-account cooldown, Codeforces call spacing, status persistence, and no-mock-fallback behavior are implemented in `PlatformSyncService` and `PlatformSyncPersistenceService`.
 
 ## Deployment/configuration view
 

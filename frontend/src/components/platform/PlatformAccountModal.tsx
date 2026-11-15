@@ -15,13 +15,21 @@ interface PlatformAccountModalProps {
   onSubmit: (data: PlatformAccountRequest) => Promise<void>;
 }
 
-const PLATFORM_OPTIONS: { value: PlatformType; label: string }[] = [
-  { value: 'LEETCODE', label: 'LeetCode' },
-  { value: 'CODEFORCES', label: 'Codeforces' },
-  { value: 'CODECHEF', label: 'CodeChef' },
-  { value: 'GEEKSFORGEEKS', label: 'GeeksforGeeks' },
-  { value: 'HACKERRANK', label: 'HackerRank' },
+const PLATFORM_OPTIONS: { value: PlatformType; label: string; handlePlaceholder: string; profilePlaceholder: string }[] = [
+  { value: 'LEETCODE', label: 'LeetCode', handlePlaceholder: 'e.g. tourist, neal_wu', profilePlaceholder: 'https://leetcode.com/u/username/' },
+  { value: 'CODEFORCES', label: 'Codeforces', handlePlaceholder: 'e.g. tourist, neal_wu', profilePlaceholder: 'https://codeforces.com/profile/username' },
+  { value: 'CODECHEF', label: 'CodeChef', handlePlaceholder: 'e.g. gennady.korotkevich', profilePlaceholder: 'https://www.codechef.com/users/username' },
+  { value: 'ATCODER', label: 'AtCoder', handlePlaceholder: 'e.g. tourist, chokudai', profilePlaceholder: 'https://atcoder.jp/users/username' },
+  { value: 'GEEKSFORGEEKS', label: 'GeeksforGeeks', handlePlaceholder: 'e.g. your-gfg-handle', profilePlaceholder: 'https://www.geeksforgeeks.org/profile/username' },
+  { value: 'CODE360', label: 'Code360 (CodeStudio)', handlePlaceholder: 'e.g. your-code360-handle', profilePlaceholder: 'https://www.naukri.com/code360/profile/username' },
+  { value: 'HACKERRANK', label: 'HackerRank', handlePlaceholder: 'e.g. your-hackerrank-handle', profilePlaceholder: 'https://www.hackerrank.com/profile/username' },
+  { value: 'INTERVIEWBIT', label: 'InterviewBit', handlePlaceholder: 'e.g. your-interviewbit-handle', profilePlaceholder: 'https://www.interviewbit.com/profile/username/' },
+  { value: 'HACKEREARTH', label: 'HackerEarth', handlePlaceholder: 'e.g. your-hackerearth-handle', profilePlaceholder: 'https://www.hackerearth.com/@username' },
+  { value: 'ALGOMASTER', label: 'AlgoMaster (link-only)', handlePlaceholder: 'e.g. your-algomaster-name', profilePlaceholder: 'https://algomaster.io/profile/...' },
 ];
+
+const getPlatformOption = (value: PlatformType) =>
+  PLATFORM_OPTIONS.find((option) => option.value === value) ?? PLATFORM_OPTIONS[0];
 
 export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
   isOpen,
@@ -78,13 +86,16 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
 
   if (!isOpen) return null;
 
+  const selectedPlatform = getPlatformOption(platform);
+  const isLinkOnly = platform === 'ALGOMASTER';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading || submittingRef.current) return;
     setFieldErrors({});
     setGeneralError(null);
 
-    const errors = validatePlatformAccountForm({ username, profileUrl });
+    const errors = validatePlatformAccountForm({ username, profileUrl }, platform);
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -223,7 +234,7 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
               id="platform-account-username"
               type="text"
               className="form-input"
-              placeholder="e.g. tourist, neal_wu"
+              placeholder={selectedPlatform.handlePlaceholder}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               disabled={isLoading}
@@ -237,12 +248,14 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
 
           {/* Profile URL */}
           <div className="form-group">
-            <label className="form-label" htmlFor="platform-account-profile-url">Profile URL (optional)</label>
+            <label className="form-label" htmlFor="platform-account-profile-url">
+              Profile URL {isLinkOnly ? '*' : '(optional)'}
+            </label>
             <input
               id="platform-account-profile-url"
               type="url"
               className="form-input"
-              placeholder="https://leetcode.com/u/username"
+              placeholder={selectedPlatform.profilePlaceholder}
               value={profileUrl}
               onChange={(e) => setProfileUrl(e.target.value)}
               disabled={isLoading}
@@ -251,6 +264,11 @@ export const PlatformAccountModal: React.FC<PlatformAccountModalProps> = ({
               aria-describedby={fieldErrors.profileUrl ? 'platform-account-profile-url-error' : undefined}
             />
             {fieldErrors.profileUrl && <div id="platform-account-profile-url-error" className="form-error" role="alert">{fieldErrors.profileUrl}</div>}
+            {isLinkOnly && !fieldErrors.profileUrl && (
+              <div style={{ marginTop: '0.35rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+                AlgoMaster is link-only. A public profile URL is required; no statistics are fetched.
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.5rem' }}>

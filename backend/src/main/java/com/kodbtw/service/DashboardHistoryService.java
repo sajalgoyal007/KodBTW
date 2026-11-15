@@ -45,11 +45,8 @@ public class DashboardHistoryService {
         LocalDate startDate = range.startDate(today);
 
         List<PlatformStatSnapshot> rows = new ArrayList<>(snapshots
-                .findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                        userId, startDate, today, "_REAL"));
-        rows.addAll(snapshots
-                .findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                        userId, startDate, today, "CODECHEF_THIRD_PARTY"));
+                .findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                        userId, startDate, today));
 
         // Defensive source filtering keeps MOCK and any unexpected source out of real history.
         TreeMap<LocalDate, TreeMap<String, PlatformStatSnapshot>> byDate = new TreeMap<>();

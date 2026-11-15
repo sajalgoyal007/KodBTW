@@ -210,7 +210,9 @@ export const PublicProfilePage: React.FC = () => {
 
   const { overview, socialLinks, analytics } = data;
   const platforms = data.platforms.filter((platform) =>
-    platform.sourceStatus === 'SOURCE_PENDING' || isVerifiedStatsSource(platform.source)
+    platform.sourceStatus === 'SOURCE_PENDING'
+      || platform.sourceStatus === 'LINK_ONLY'
+      || isVerifiedStatsSource(platform.source)
   );
   const isOwnProfile = isAuthenticated && (user?.email && data.displayName === user.name);
 
@@ -719,7 +721,11 @@ export const PublicProfilePage: React.FC = () => {
                         <div style={{ marginTop: '0.35rem', color: 'var(--color-text-muted)', fontSize: '0.7rem' }}>Self-reported · unverified handle</div>
                       </div>
 
-                      {p.sourceStatus === 'SOURCE_PENDING' ? (
+                      {p.sourceStatus === 'LINK_ONLY' ? (
+                        <div style={{ padding: '0.875rem', borderRadius: '8px', marginBottom: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', background: 'rgba(0,0,0,0.2)', fontSize: '0.8125rem' }}>
+                          Profile link saved — statistics are not tracked for this platform.
+                        </div>
+                      ) : p.sourceStatus === 'SOURCE_PENDING' ? (
                         <div style={{ padding: '0.875rem', borderRadius: '8px', marginBottom: '0.75rem', color: 'var(--color-text-muted, var(--color-text-muted))', background: 'rgba(0,0,0,0.2)', fontSize: '0.8125rem' }}>
                           Connected — live statistics currently unavailable.
                         </div>

@@ -6,8 +6,8 @@ This document describes the current repository implementation rather than the or
 
 - **Frontend:** React 18, TypeScript, React Router, and Vite. The client serves public landing/profile routes and authenticated account/dashboard routes.
 - **API:** Java 21 and Spring Boot 3.3 REST controllers delegate to services. Spring Security is stateless; requests use signed JWT bearer tokens. BCrypt hashes passwords.
-- **Persistence:** Spring Data JPA repositories use MySQL. Flyway V1–V7 manage DDL; Hibernate validates the migrated schema.
-- **Platform data:** `PlatformAdapter` and `PlatformAdapterRegistry` provide the adapter boundary. LeetCode, Codeforces, and CodeChef are enabled by `Platform.hasLiveStatsSource()`. CodeChef uses an unofficial third-party provider and is labelled `CODECHEF_THIRD_PARTY`. GFG/HackerRank adapter/client prototypes present in the current local working tree are excluded from normal sync and remain unavailable.
+- **Persistence:** Spring Data JPA repositories use MySQL. Flyway applies versioned migrations (currently V1–V13); Hibernate validates the migrated schema.
+- **Platform data:** `PlatformAdapter` and `PlatformAdapterRegistry` provide the adapter boundary. Nine platforms are enabled by `Platform.hasLiveStatsSource()`: LeetCode, Codeforces, CodeChef, AtCoder, GeeksforGeeks, Code360, HackerRank, InterviewBit, and HackerEarth. AlgoMaster is link-only: `Platform.isLinkOnly()` is true and no statistics are fetched. CodeChef and GeeksforGeeks use an unofficial third-party provider; AtCoder, HackerRank, Code360, InterviewBit, and HackerEarth use direct public endpoints or public profile pages. These labels describe provenance, not official authorization.
 - **Analytics/history:** source-labelled snapshots are stored per user/platform/date; services create dashboard responses and the leaderboard cache is a denormalized projection.
 - **Contest calendar:** Codeforces is the default provider; a local fixture provider can be explicitly selected for UI testing.
 

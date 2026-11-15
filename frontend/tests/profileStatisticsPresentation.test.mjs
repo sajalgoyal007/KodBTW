@@ -52,6 +52,16 @@ test('sync messaging distinguishes pending, in-progress, failed-retained and sta
   assert.match(getProfileSyncMessage(account({ sourceStatus: 'SOURCE_PENDING', syncStatus: 'NEVER_SYNCED' }), false), /no enabled live statistics source/i);
 });
 
+test('link-only accounts keep the saved link and expose no statistics metrics', () => {
+  const linkOnly = account({ sourceStatus: 'LINK_ONLY', syncStatus: 'NEVER_SYNCED', lastSuccessAt: null, fresh: false });
+  assert.match(getProfileSyncMessage(linkOnly, false), /statistics are not fetched or tracked/i);
+  assert.deepEqual(getSupportedProfileMetrics(stats({ source: 'LINK_ONLY' }), [], false), []);
+  assert.deepEqual(
+    getSupportedProfileMetrics(stats({ source: 'ALGOMASTER_LINK_ONLY', totalProblemsSolved: 99 }), ['totalProblemsSolved'], false),
+    [],
+  );
+});
+
 test('achievements use eligible source data, never combine solves across platforms, and do not unlock from missing data', () => {
   const base = getProfileAchievements([], 0);
   assert.equal(base[0].unlocked, false);

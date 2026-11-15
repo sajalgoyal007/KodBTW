@@ -58,10 +58,20 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
         return '#1f8acb';
       case 'CODECHEF':
         return '#8b4513';
+      case 'ATCODER':
+        return '#2f3640';
       case 'GEEKSFORGEEKS':
         return '#2f8d46';
+      case 'CODE360':
+        return '#5a67d8';
       case 'HACKERRANK':
         return '#2ec866';
+      case 'INTERVIEWBIT':
+        return '#3b82f6';
+      case 'HACKEREARTH':
+        return '#2c3e8f';
+      case 'ALGOMASTER':
+        return '#7c3aed';
       default:
         return 'var(--color-primary)';
     }
@@ -69,6 +79,9 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
 
   const brandColor = getPlatformBrandColor(platform.platform);
   const syncPresentation = getPlatformSyncPresentation(account);
+  const isLinkOnly = platform.source?.toUpperCase() === 'LINK_ONLY'
+    || platform.source?.toUpperCase() === 'ALGOMASTER_LINK_ONLY'
+    || account?.sourceStatus === 'LINK_ONLY';
 
   return (
     <div
@@ -217,9 +230,20 @@ export const PlatformCard: React.FC<PlatformCardProps> = ({ platform, account, r
           onClick={() => account && onRefresh(account.id)}
           className="btn btn-secondary dashboard-refresh-button"
           aria-label={`Refresh ${platform.platform} statistics`}
+          style={isLinkOnly ? { display: 'none' } : undefined}
         >
           <RefreshCw size={13} className={refreshing ? 'spin' : ''} /> {refreshing ? 'Refreshing…' : 'Refresh Stats'}
         </button>
+        {isLinkOnly && platform.profileUrl && (
+          <a
+            href={platform.profileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-secondary dashboard-refresh-button"
+          >
+            <ExternalLink size={13} /> Open profile
+          </a>
+        )}
       </div>
     </div>
   );

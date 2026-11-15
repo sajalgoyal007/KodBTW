@@ -17,6 +17,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,14 +40,14 @@ class DashboardHistoryServiceTest {
     }
 
     @Test
-    void queriesOnlyTheAuthenticatedUsersRealSnapshotsWithinRequestedRange() {
-        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                42L, TODAY.minusDays(29), TODAY, "_REAL")).thenReturn(List.of());
+    void queriesOnlyTheAuthenticatedUsersSnapshotsWithinRequestedRange() {
+        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                42L, TODAY.minusDays(29), TODAY)).thenReturn(List.of());
 
         DashboardHistoryResponse response = service.getHistory(42L, "30d");
 
-        verify(snapshots).findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                42L, TODAY.minusDays(29), TODAY, "_REAL");
+        verify(snapshots).findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                42L, TODAY.minusDays(29), TODAY);
         assertEquals("30d", response.range());
         assertEquals(TODAY.minusDays(29), response.rangeStart());
         assertEquals(TODAY, response.rangeEnd());
@@ -100,7 +102,7 @@ class DashboardHistoryServiceTest {
         assertEquals(2, overall.observedPlatforms());
         assertEquals(2, overall.platformsWithTotalSolved());
         assertEquals(170, overall.easySolved());
-        assertEquals(4, response.freshness().snapshotCount()); // persisted real rows, including the duplicate observation
+        assertEquals(4, response.freshness().snapshotCount()); // real rows, including the duplicate observation
     }
 
     @Test
@@ -130,39 +132,42 @@ class DashboardHistoryServiceTest {
     }
 
     @Test
-    void includesCodeChefThirdPartyAndExcludesMockSourcesWithoutAcceptingUnknownSources() {
-        PlatformStatSnapshot codeChef = snapshot(1L, "CODECHEF", TODAY, 42, null, null, null, 1200,
+    void includesEveryAllowlistedSourceAndExcludesMockAndUnknownSources() {
+        LocalDate date = TODAY;
+        PlatformStatSnapshot codeChef = snapshot(1L, "CODECHEF", date, 42, null, null, null, 1200,
                 "CODECHEF_THIRD_PARTY");
-        PlatformStatSnapshot mock = snapshot(2L, "LEETCODE", TODAY, 999, null, null, null, null,
-                "LEETCODE_MOCK_REAL");
-        PlatformStatSnapshot unknown = snapshot(3L, "GFG", TODAY, 500, null, null, null, null,
+        PlatformStatSnapshot gfg = snapshot(2L, "GEEKSFORGEEKS", date, 30, 10, 15, 5, null,
                 "GEEKSFORGEEKS_THIRD_PARTY");
-        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                9L, TODAY.minusDays(6), TODAY, "CODECHEF_THIRD_PARTY")).thenReturn(List.of(codeChef));
-        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                9L, TODAY.minusDays(6), TODAY, "_REAL")).thenReturn(List.of(mock, unknown));
+        PlatformStatSnapshot hackerRank = snapshot(3L, "HACKERRANK", date, 12, null, null, null, 1600,
+                "HACKERRANK_REAL");
+        PlatformStatSnapshot algoMaster = snapshot(4L, "ALGOMASTER", date, 999, null, null, null, null,
+                "ALGOMASTER_LINK_ONLY");
+        PlatformStatSnapshot mock = snapshot(5L, "LEETCODE", date, 999, null, null, null, null,
+                "LEETCODE_MOCK_REAL");
+        PlatformStatSnapshot unknown = snapshot(6L, "GFG", date, 500, null, null, null, null,
+                "UNKNOWN_THIRD_PARTY");
+        stubSnapshots(9L, List.of(codeChef, gfg, hackerRank, algoMaster, mock, unknown));
 
         DashboardHistoryResponse response = service.getHistory(9L, "7d");
 
-        assertEquals(List.of("CODECHEF"), response.platforms().stream().map(p -> p.platform()).toList());
+        assertEquals(List.of("CODECHEF", "GEEKSFORGEEKS", "HACKERRANK"),
+                response.platforms().stream().map(p -> p.platform()).toList());
         assertEquals(List.of(TODAY), response.snapshotDates());
-        assertEquals(1, response.freshness().snapshotCount());
+        assertEquals(3, response.freshness().snapshotCount());
+        assertEquals(84, response.overallSolved().get(0).totalSolved());
     }
 
     private void assertRangeBounds(String range, LocalDate expectedStart) {
         DashboardHistoryResponse response = service.getHistory(101L, range);
         assertEquals(expectedStart, response.rangeStart(), range);
         assertEquals(TODAY, response.rangeEnd(), range);
-        verify(snapshots).findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                101L, expectedStart, TODAY, "_REAL");
-        verify(snapshots).findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                101L, expectedStart, TODAY, "CODECHEF_THIRD_PARTY");
+        verify(snapshots).findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                101L, expectedStart, TODAY);
     }
 
     private void stubSnapshots(Long userId, List<PlatformStatSnapshot> rows) {
-        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualAndSourceEndingWithOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
-                org.mockito.ArgumentMatchers.eq(userId), org.mockito.ArgumentMatchers.any(LocalDate.class),
-                org.mockito.ArgumentMatchers.any(LocalDate.class), org.mockito.ArgumentMatchers.eq("_REAL"))).thenReturn(rows);
+        when(snapshots.findAllByUserIdAndSnapshotDateGreaterThanEqualAndSnapshotDateLessThanEqualOrderBySnapshotDateAscPlatformAscSnapshottedAtAsc(
+                eq(userId), any(LocalDate.class), any(LocalDate.class))).thenReturn(rows);
     }
 
     private PlatformStatSnapshot snapshot(Long id, String platform, LocalDate date, Integer total,

@@ -81,3 +81,15 @@ test('sync status distinguishes current, possibly stale, failed, running, never-
   assert.equal(pendingNeverSynced.label, 'Live statistics unavailable');
   assert.match(pendingNeverSynced.detail, /no successful sync is recorded/);
 });
+
+test('link-only accounts present a saved profile without sync or statistics messaging', () => {
+  const linkOnly = getPlatformSyncPresentation({
+    syncStatus: 'NEVER_SYNCED',
+    sourceStatus: 'LINK_ONLY',
+    fresh: false,
+    lastSuccessAt: null,
+  });
+  assert.equal(linkOnly.label, 'Profile link only');
+  assert.match(linkOnly.detail, /statistics are not fetched/i);
+  assert.equal(linkOnly.tone, 'neutral');
+});

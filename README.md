@@ -85,7 +85,7 @@ Competitive programmers often maintain separate profiles on multiple online judg
 
 The system is organized as a React and TypeScript single-page application communicating with a Java 21 / Spring Boot REST API. Spring Security protects account operations with stateless JWT authentication; BCrypt is used for password hashing. Spring Data JPA persists application records in MySQL 8, while Flyway applies versioned schema migrations. Platform-specific adapters and clients translate provider responses into a normalized statistics model. Successful observations are stored as dated snapshots with source labels, allowing the interface to distinguish provider data, unsupported fields, and missing observations.
 
-A central design concern is preserving the meaning and provenance of the data while combining it. The same problem may be counted on more than one platform, ratings are not directly comparable across providers, and an unavailable metric must not appear as zero. KodBTW therefore retains nullable fields, exposes source and synchronization status, and presents historical values only for dates with stored observations. The live integration set is bounded: LeetCode and Codeforces use public sources, CodeChef currently relies on an unofficial third-party provider, and GeeksforGeeks and HackerRank prototypes are not enabled for normal synchronization.
+A central design concern is preserving the meaning and provenance of the data while combining it. The same problem may be counted on more than one platform, ratings are not directly comparable across providers, and an unavailable metric must not appear as zero. KodBTW therefore retains nullable fields, exposes source and synchronization status, and presents historical values only for dates with stored observations. Ten platforms are modeled. Nine can synchronize public statistics: LeetCode, Codeforces, CodeChef, AtCoder, GeeksforGeeks, Code360 (CodeStudio), HackerRank, InterviewBit, and HackerEarth. Provenance differs by source: LeetCode and Codeforces use public endpoints, CodeChef and GeeksforGeeks use an unofficial third-party provider, and AtCoder, Code360, HackerRank, InterviewBit, and HackerEarth use direct public APIs or public profile pages. AlgoMaster is intentionally link-only: a public profile URL is stored, but no statistics are fetched or invented for it.
 
 The project demonstrates a modular frontend/backend design, authenticated and public API boundaries, schema evolution, provider adaptation, and data-aware dashboard views. It is an engineering artifact and a personal progress-review tool; the repository does not claim measured learning outcomes, results from a user study, production service guarantees, or third-party authorization beyond what is documented.
 
@@ -172,19 +172,30 @@ flowchart LR
   C --> S[Application services]
   S --> R[Spring Data JPA repositories]
   R --> DB[(MySQL 8)]
-  V[Flyway migrations V1–V12] --> DB[(MySQL 8)]
+  V[Flyway migrations V1–V13] --> DB[(MySQL 8)]
   S --> AR[PlatformAdapterRegistry]
   AR --> LC[LeetCode adapter/client]
   AR --> CF[Codeforces adapter/client]
   AR --> CC[CodeChef adapter/client]
+  AR --> AC[AtCoder adapter/client]
+  AR --> GF[GeeksforGeeks adapter/client]
+  AR --> C360[Code360 adapter/client]
+  AR --> HR[HackerRank adapter/client]
+  AR --> IB[InterviewBit adapter/client]
+  AR --> HE[HackerEarth adapter/client]
+  AR -. link-only .-> AM[AlgoMaster adapter]
   LC -->|Undocumented public GraphQL query| LEET[LeetCode]
   CF -->|Public user.info API| CODEFORCES[Codeforces]
   CC -->|Unofficial third-party provider| CCP[CodeChef stats provider]
+  AC -->|Public history + Kenkoooo API| ATC[AtCoder]
+  GF -->|Unofficial third-party provider| GFP[GFG stats provider]
+  C360 -->|Public profile page| C360P[Code360]
+  HR -->|Public REST endpoints| HRP[HackerRank]
+  IB -->|Public profile page| IBP[InterviewBit]
+  HE -->|Public profile page| HEP[HackerEarth]
   S --> CAL[Contest calendar service]
   CAL --> CFP[Codeforces contest provider]
   CAL -. local configuration only .-> FIX[Fixture contest provider]
-  AR -. excluded by source gate .-> GF[GeeksforGeeks prototype]
-  AR -. excluded by source gate .-> HR[HackerRank prototype]
   S --> DTO[Sanitized public profile DTO]
 ```
 
@@ -291,23 +302,46 @@ This shows repository packaging capability; it does not assert that the hosting 
 flowchart LR
   Account[PlatformAccount] --> Sync[PlatformSyncService]
   Sync --> Gate{Platform.hasLiveStatsSource?}
-  Gate -->|LeetCode, Codeforces, CodeChef| Registry[PlatformAdapterRegistry]
-  Gate -->|GFG, HackerRank| Pending[Return pending / unavailable]
+  Gate -->|nine live platforms| Registry[PlatformAdapterRegistry]
+  Gate -->|AlgoMaster| LinkOnly[Return saved profile URL; no stats fetch]
   Registry --> Interface[PlatformAdapter]
   Interface --> LC[LeetCodeAdapter]
   Interface --> CF[CodeforcesAdapter]
   Interface --> CC[CodeChefAdapter]
-  Interface -. disabled prototypes .-> GFG[GeeksForGeeksAdapter]
-  Interface -. disabled prototypes .-> HR[HackerRankAdapter]
+  Interface --> AC[AtCoderAdapter]
+  Interface --> GFG[GeeksForGeeksAdapter]
+  Interface --> C360[Code360Adapter]
+  Interface --> HR[HackerRankAdapter]
+  Interface --> IB[InterviewBitAdapter]
+  Interface --> HE[HackerEarthAdapter]
+  Interface -. registry entry only .-> AM[AlgoMasterAdapter]
   LC --> LCC[LeetCodeClient]
   CF --> CFC[CodeforcesClient]
   CC --> CCC[CodeChefClient]
+  AC --> ACC[AtCoderClient]
+  GFG --> GFGC[GeeksForGeeksClient]
+  C360 --> C360C[Code360Client]
+  HR --> HRC[HackerRankClient]
+  IB --> IBC[InterviewBitClient]
+  HE --> HEC[HackerEarthClient]
   LCC --> API1[LeetCode GraphQL]
   CFC --> API2[Codeforces user.info]
   CCC --> API3[Unofficial CodeChef stats provider]
+  ACC --> API4[AtCoder history + Kenkoooo API]
+  GFGC --> API5[Unofficial GFG stats provider]
+  C360C --> API6[Public Code360 profile page]
+  HRC --> API7[HackerRank public REST endpoints]
+  IBC --> API8[Public InterviewBit profile page]
+  HEC --> API9[Public HackerEarth profile page]
   LC --> Normalize[Normalize nullable PlatformStats]
   CF --> Normalize
   CC --> Normalize
+  AC --> Normalize
+  GFG --> Normalize
+  C360 --> Normalize
+  HR --> Normalize
+  IB --> Normalize
+  HE --> Normalize
   Normalize --> Persist[PlatformSyncPersistenceService]
   Persist --> Snapshot[(Snapshots and sync status)]
 ```
@@ -423,8 +457,13 @@ classDiagram
   class LeetCodeAdapter
   class CodeforcesAdapter
   class CodeChefAdapter
+  class AtCoderAdapter
   class GeeksForGeeksAdapter
+  class Code360Adapter
   class HackerRankAdapter
+  class InterviewBitAdapter
+  class HackerEarthAdapter
+  class AlgoMasterAdapter
   class User {
     Long id
     String email
@@ -465,8 +504,13 @@ classDiagram
   PlatformAdapter <|.. LeetCodeAdapter
   PlatformAdapter <|.. CodeforcesAdapter
   PlatformAdapter <|.. CodeChefAdapter
+  PlatformAdapter <|.. AtCoderAdapter
   PlatformAdapter <|.. GeeksForGeeksAdapter
+  PlatformAdapter <|.. Code360Adapter
   PlatformAdapter <|.. HackerRankAdapter
+  PlatformAdapter <|.. InterviewBitAdapter
+  PlatformAdapter <|.. HackerEarthAdapter
+  PlatformAdapter <|.. AlgoMasterAdapter
   PlatformAdapter ..> PlatformStats
   Profile --> User
   PlatformAccount --> User
@@ -474,7 +518,7 @@ classDiagram
   LeaderboardUserCache --> User
 ```
 
-GFG and HackerRank adapter classes in this overview are prototypes and are not enabled for normal statistics synchronization.
+All ten platform adapters appear in this overview and the adapter registry; nine are enabled for live statistics synchronization, and AlgoMaster is link-only with no statistics fetch.
 
 ### Additional UML authentication sequence
 
@@ -564,11 +608,16 @@ For expanded notes and source references, see [system design](documentation/diag
 |---|---|---|
 | LeetCode | Live profile-statistics adapter | Uses a reachable but undocumented GraphQL endpoint. Only fields present in the response are mapped; the external contract and terms require ongoing review. |
 | Codeforces | Live profile adapter using public `user.info`; Codeforces contest provider | The user endpoint does not provide all activity or solved-count fields. Missing values remain null. |
-| CodeChef | Adapter uses an unofficial third-party statistics provider | Not an official CodeChef API. Authorization, data rights, provider reliability, and upstream permissions are unresolved. |
-| GeeksforGeeks | Adapter/client prototype files exist | Excluded by the normal live-source gate; not enabled for normal statistics synchronization. |
-| HackerRank | Adapter/client prototype files exist | Excluded by the normal live-source gate; not enabled for normal statistics synchronization. |
+| CodeChef | Live adapter backed by an unofficial third-party statistics provider | Not an official CodeChef API. Authorization, data rights, provider reliability, and upstream permissions are unresolved. |
+| AtCoder | Live adapter using AtCoder public rating history plus Kenkoooo's public accepted-count and submission APIs | These are public but undocumented for third-party statistics use; missing values remain null. |
+| GeeksforGeeks | Live adapter backed by the same unofficial third-party statistics provider | Source authorization, data rights, and reliability are unresolved. |
+| Code360 (CodeStudio) | Live adapter that parses the public Naukri Code360 profile page | No documented stats API; markup changes can interrupt synchronization and preserve prior snapshots. |
+| HackerRank | Live adapter using public, undocumented profile, badge, and ELO-score REST endpoints | No official community-profile statistics API; response shapes may change. Difficulty breakdowns remain unavailable. |
+| InterviewBit | Live adapter that parses the public InterviewBit profile page | No documented stats API; only explicitly parsed numeric fields are mapped. |
+| HackerEarth | Live adapter that parses the public HackerEarth profile page | No documented stats API; only explicitly parsed numeric fields are mapped. |
+| AlgoMaster | Link-only connection | A public profile URL is stored and displayed. No statistics are fetched, and link-only rows never contribute to aggregates or history. |
 
-The platform catalog therefore should not be interpreted as five live integrations. Source labels such as `LEETCODE_REAL`, `CODEFORCES_REAL`, and `CODECHEF_THIRD_PARTY` identify the origin path used by the application. See the [data-acquisition notes](docs/platform-data-acquisition.md) and [integration design](documentation/diagrams/platform-integration/README.md).
+The platform catalog therefore models ten connected platforms with nine live statistics sources, not ten official integrations. Source labels such as `LEETCODE_REAL`, `CODEFORCES_REAL`, `CODECHEF_THIRD_PARTY`, and `ALGOMASTER_LINK_ONLY` identify the origin path used by the application. See the [data-acquisition notes](docs/platform-data-acquisition.md) and [integration design](documentation/diagrams/platform-integration/README.md).
 
 ## Database design
 
@@ -592,6 +641,7 @@ MySQL 8 stores account, profile, platform-account, snapshot, and leaderboard-cac
 | V8–V9 | Opt-in profile search indexing and external authentication identity |
 | V10–V11 | Google authentication challenges and operation/user binding |
 | V12 | Email verification support |
+| V13 | Contest event storage for the monthly contest calendar |
 
 See the [database design notes](documentation/diagrams/database/README.md) for constraints and the full ER diagram source.
 
@@ -631,7 +681,7 @@ The role allocation below is the team-provided focus for explaining the project.
 
 **Role focus:** adapting provider responses into KodBTW’s platform-statistics model.
 
-- Explain the adapter registry and the distinction between enabled integrations and prototype adapters.
+- Explain the adapter registry and the distinction between live statistics sources and the link-only AlgoMaster integration.
 - Walk through handle lookup, provider response mapping, source labels, sync statuses, and cooldown behavior.
 - Describe why unsupported or missing statistics stay unavailable instead of being filled with estimates.
 - Relevant areas: `backend/src/main/java/com/kodbtw/adapter/`, `PlatformAdapterRegistry`, `PlatformSyncService`, and platform-statistics DTOs.
@@ -722,7 +772,7 @@ KodBTW/
 ├── backend/
 │   └── src/
 │       ├── main/java/com/kodbtw/       # Controllers, services, adapters, entities, DTOs
-│       ├── main/resources/db/migration/ # Flyway schema history, V1–V12
+│       ├── main/resources/db/migration/ # Flyway schema history, V1–V13
 │       └── test/                       # Backend automated tests and fixtures
 ├── frontend/
 │   ├── public/                         # Static assets and SPA metadata
@@ -780,7 +830,7 @@ npm ci
 npm run dev
 ```
 
-The frontend uses Vite on port `5173` and proxies `/api` to the backend on port `8080`. Flyway applies migrations V1–V12; Hibernate validates the migrated schema. The default contest provider is Codeforces. The local fixture option is documented in [`docs/contest-calendar-fixture-mode.md`](docs/contest-calendar-fixture-mode.md).
+The frontend uses Vite on port `5173` and proxies `/api` to the backend on port `8080`. Flyway applies migrations V1–V13; Hibernate validates the migrated schema. The default contest provider is Codeforces. The local fixture option is documented in [`docs/contest-calendar-fixture-mode.md`](docs/contest-calendar-fixture-mode.md).
 
 ## API overview
 
@@ -826,8 +876,8 @@ See `backend/src/main/java/com/kodbtw/controller/` for request and response deta
 
 ## Limitations and future work
 
-- Platform endpoints and response schemas can change. LeetCode uses an undocumented query; CodeChef uses an unofficial provider with unresolved permission and reliability questions.
-- GeeksforGeeks and HackerRank prototype files are not enabled as normal live statistics sources.
+- Platform endpoints and response schemas can change. LeetCode uses an undocumented query; CodeChef and GeeksforGeeks use an unofficial provider with unresolved permission and reliability questions; Code360, InterviewBit, and HackerEarth parse public pages; HackerRank uses undocumented public REST endpoints.
+- AlgoMaster is link-only. A saved profile URL is displayed, but no statistics are fetched or counted.
 - Available metrics differ across platforms and should not be compared as if they shared one rating scale. Missing observations are not zero.
 - A successful build or automated test does not establish production availability, data accuracy, provider authorization, privacy compliance, or browser/device coverage.
 - Contest fixtures are local illustrative data. They should not be presented as live contest listings.

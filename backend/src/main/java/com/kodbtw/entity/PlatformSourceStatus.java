@@ -4,6 +4,7 @@ package com.kodbtw.entity;
 public enum PlatformSourceStatus {
     REAL_AVAILABLE,
     SOURCE_PENDING,
+    LINK_ONLY,
     SYNCING,
     SYNCED,
     SYNC_FAILED

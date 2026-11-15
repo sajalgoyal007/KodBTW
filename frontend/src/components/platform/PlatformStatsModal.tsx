@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PlatformStats } from '../../types/dashboard';
 import { getStats } from '../../services/api/platformAccountApi';
 import { X, Calendar, Flame, Trophy, ExternalLink } from 'lucide-react';
-import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceLabel, getUnsupportedStatsMessage, isVerifiedStatsSource } from '../../utils/platformStatsSource';
+import { getPlatformStatsSourceBadgeClass, getPlatformStatsSourceKind, getPlatformStatsSourceLabel, getUnsupportedStatsMessage, isVerifiedStatsSource } from '../../utils/platformStatsSource';
 
 interface PlatformStatsModalProps {
   isOpen: boolean;
@@ -39,6 +39,7 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
   if (!isOpen) return null;
 
   const unsupportedStatsMessage = getUnsupportedStatsMessage(stats?.platform);
+  const isLinkOnly = stats ? getPlatformStatsSourceKind(stats.source) === 'link-only' : false;
 
   const formatMetric = (val: number | string | null | undefined) =>
     val !== null && val !== undefined ? val.toLocaleString() : '—';
@@ -143,7 +144,18 @@ export const PlatformStatsModal: React.FC<PlatformStatsModalProps> = ({
           </div>
         )}
 
-        {!loading && !error && stats && (!isVerifiedStatsSource(stats.source) ? (
+        {!loading && !error && stats && (isLinkOnly ? (
+          <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
+            This platform is link-only. Open the saved profile to view your activity; KodBTW does not fetch statistics for AlgoMaster.
+            {stats.profileUrl && (
+              <div style={{ marginTop: '0.75rem' }}>
+                <a href={stats.profileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                  <ExternalLink size={13} /> Open profile
+                </a>
+              </div>
+            )}
+          </div>
+        ) : !isVerifiedStatsSource(stats.source) ? (
           <div style={{ padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-secondary)', textAlign: 'center' }}>
             {stats.source === 'SOURCE_PENDING' ? 'Connected — live statistics currently unavailable.' : 'No verified live statistics are available for this platform.'}
           </div>

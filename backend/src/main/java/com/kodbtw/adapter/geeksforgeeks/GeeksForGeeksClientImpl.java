@@ -3,6 +3,7 @@ package com.kodbtw.adapter.geeksforgeeks;
 import com.kodbtw.adapter.geeksforgeeks.dto.GeeksForGeeksStatsResponse;
 import com.kodbtw.exception.PlatformApiException;
 import com.kodbtw.exception.ResourceNotFoundException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -14,13 +15,17 @@ import java.time.Duration;
 import java.util.Locale;
 
 /**
- * Prototype client for the unofficial GFG stats provider. Normal platform sync remains disabled
- * until GFG is explicitly added to Platform.hasLiveStatsSource().
+ * Client for the unofficial GeeksforGeeks stats provider ({@code gfg-stats.tashif.codes}).
+ *
+ * <p>The provider is a public, unauthenticated third-party JSON service. Requests identify the
+ * application through a clean {@code User-Agent} and never send credentials or cookies.
  */
 @Component
 public class GeeksForGeeksClientImpl implements GeeksForGeeksClient {
 
     private static final String API_BASE_URL = "https://gfg-stats.tashif.codes/";
+    private static final String USER_AGENT =
+            "KodBTW/1.0 (coding-profile statistics; contact via project repository)";
 
     private final RestClient restClient;
 
@@ -28,7 +33,11 @@ public class GeeksForGeeksClientImpl implements GeeksForGeeksClient {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(Duration.ofSeconds(5));
         factory.setReadTimeout(Duration.ofSeconds(5));
-        this.restClient = RestClient.builder().requestFactory(factory).build();
+        this.restClient = RestClient.builder()
+                .requestFactory(factory)
+                .defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .build();
     }
 
     public GeeksForGeeksClientImpl(RestClient restClient) {

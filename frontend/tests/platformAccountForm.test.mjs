@@ -32,6 +32,23 @@ test('profile form validation trims usernames and accepts only valid HTTP(S) pro
   });
 });
 
+test('link-only AlgoMaster requires a public profile URL on create and update', () => {
+  assert.deepEqual(validatePlatformAccountForm({ username: 'handle', profileUrl: '' }, 'ALGOMASTER'), {
+    profileUrl: 'AlgoMaster is link-only; a public profile URL is required.',
+  });
+  assert.deepEqual(validatePlatformAccountForm({ username: 'handle', profileUrl: '   ' }, 'ALGOMASTER'), {
+    profileUrl: 'AlgoMaster is link-only; a public profile URL is required.',
+  });
+  assert.deepEqual(
+    validatePlatformAccountForm({ username: 'handle', profileUrl: 'https://algomaster.io/profile/handle' }, 'ALGOMASTER'),
+    {},
+  );
+  assert.deepEqual(validatePlatformAccountForm({ username: 'handle', profileUrl: 'ftp://algomaster.io/x' }, 'ALGOMASTER'), {
+    profileUrl: 'Enter a valid HTTP or HTTPS profile URL.',
+  });
+  assert.deepEqual(validatePlatformAccountForm({ username: 'handle', profileUrl: '' }, 'LEETCODE'), {});
+});
+
 test('concurrent account submissions are deduplicated and the guard releases after completion', async () => {
   const lock = { current: false };
   let resolveSubmission;

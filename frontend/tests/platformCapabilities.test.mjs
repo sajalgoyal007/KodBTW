@@ -12,8 +12,9 @@ assert.deepEqual(compiled.diagnostics.filter((item) => item.category === ts.Diag
 const moduleUrl = `data:text/javascript;base64,${Buffer.from(compiled.outputText).toString('base64')}`;
 const capabilities = await import(moduleUrl);
 
+const backend = await readFile(new URL('../../backend/src/main/java/com/kodbtw/entity/Platform.java', import.meta.url), 'utf8');
+
 test('account-connectable platforms match the backend enum without adding fake connections', async () => {
-  const backend = await readFile(new URL('../../backend/src/main/java/com/kodbtw/entity/Platform.java', import.meta.url), 'utf8');
   const enumBody = backend.match(/public enum Platform\s*\{([\s\S]*?)\n\}/)?.[1];
   assert.ok(enumBody);
   const enumValues = [...enumBody.split(';')[0].matchAll(/\b[A-Z][A-Z0-9_]*\b/g)].map((match) => match[0]);
@@ -29,43 +30,81 @@ test('account-connectable platforms match the backend enum without adding fake c
   assert.deepEqual([...modeledSyncPlatforms].sort(), [...backendSyncPlatforms].sort());
 });
 
-test('GFG and HackerRank permit saved handles but stay source-pending with no live metrics', () => {
-  for (const platform of ['GEEKSFORGEEKS', 'HACKERRANK']) {
-    const capability = capabilities.getPlatformCapability(platform);
-    assert.equal(capability.accountConnectionAvailable, true);
-    assert.equal(capability.synchronizationEnabled, false);
-    assert.equal(capability.liveStatisticsAvailable, false);
-    assert.deepEqual(capability.supportedMetrics, []);
-    assert.equal(capability.statisticsSourceTag, null);
-    assert.match(capability.availabilityMessage, /live statistics.*unavailable/i);
-  }
-  assert.equal(capabilities.getPlatformConnectionStatus('HACKERRANK', 'SOURCE_PENDING'), 'Handle saved · live statistics unavailable');
+test('all ten platforms are modelled and nine expose live statistics', () => {
+  assert.equal(capabilities.PLATFORM_CAPABILITIES.length, 10);
+  const live = capabilities.PLATFORM_CAPABILITIES.filter((item) => item.synchronizationEnabled);
+  assert.equal(live.length, 9);
+  assert.deepEqual(live.map((item) => item.id).sort(), [
+    'ATCODER',
+    'CODE360',
+    'CODECHEF',
+    'CODEFORCES',
+    'GEEKSFORGEEKS',
+    'HACKEREARTH',
+    'HACKERRANK',
+    'INTERVIEWBIT',
+    'LEETCODE',
+  ]);
 });
 
-test('AtCoder, InterviewBit and CodeStudio have no active account or sync controls', () => {
-  for (const platform of ['ATCODER', 'INTERVIEWBIT', 'CODESTUDIO']) {
-    const capability = capabilities.getPlatformCapability(platform);
-    assert.equal(capability.accountPlatform, null);
-    assert.equal(capability.accountConnectionAvailable, false);
-    assert.equal(capability.synchronizationEnabled, false);
-    assert.equal(capability.profileUrlFor, null);
-    assert.equal(capabilities.getPlatformConnectionStatus(platform), 'Unavailable');
-  }
+test('AlgoMaster is link-only and never advertises fetched metrics', () => {
+  const capability = capabilities.getPlatformCapability('ALGOMASTER');
+  assert.equal(capability.accountConnectionAvailable, true);
+  assert.equal(capability.synchronizationEnabled, false);
+  assert.equal(capability.liveStatisticsAvailable, false);
+  assert.deepEqual(capability.supportedMetrics, []);
+  assert.equal(capability.statisticsSourceTag, null);
+  assert.match(capability.availabilityMessage, /link-only/i);
+
+  assert.equal(capabilities.getPlatformConnectionStatus('ALGOMASTER', 'LINK_ONLY'), 'Profile link saved · statistics not tracked');
+  assert.equal(capabilities.getStatsSourceKind('ALGOMASTER_LINK_ONLY'), 'link-only');
+  assert.equal(capabilities.getStatsSourceKind('LINK_ONLY'), 'link-only');
 });
 
-test('supported metrics and provenance describe current adapters without granting authorization', () => {
+test('capabilities describe adapter metrics and provenance for every new source', () => {
   assert.deepEqual(capabilities.getPlatformCapability('CODEFORCES').supportedMetrics, ['rating', 'maxRating']);
   assert.equal(capabilities.getPlatformCapability('CODEFORCES').sourceApprovalStatus, 'documented-public-api');
   assert.equal(capabilities.getPlatformCapability('LEETCODE').sourceApprovalStatus, 'unverified');
+
   assert.equal(capabilities.getPlatformCapability('CODECHEF').statisticsSourceTag, 'CODECHEF_THIRD_PARTY');
-  assert.equal(capabilities.getPlatformCapability('CODECHEF').sourceApprovalStatus, 'unverified');
+  assert.equal(capabilities.getPlatformCapability('GEEKSFORGEEKS').statisticsSourceTag, 'GEEKSFORGEEKS_THIRD_PARTY');
+  assert.equal(capabilities.getPlatformCapability('CODE360').statisticsSourceTag, 'CODE360_THIRD_PARTY');
+  assert.equal(capabilities.getPlatformCapability('ATCODER').statisticsSourceTag, 'ATCODER_REAL');
+  assert.equal(capabilities.getPlatformCapability('HACKERRANK').statisticsSourceTag, 'HACKERRANK_REAL');
+  assert.equal(capabilities.getPlatformCapability('INTERVIEWBIT').statisticsSourceTag, 'INTERVIEWBIT_REAL');
+  assert.equal(capabilities.getPlatformCapability('HACKEREARTH').statisticsSourceTag, 'HACKEREARTH_REAL');
+
+  for (const platform of ['CODECHEF', 'GEEKSFORGEEKS', 'CODE360']) {
+    assert.equal(capabilities.getPlatformCapability(platform).sourceApprovalStatus, 'unverified');
+  }
+
   assert.equal(capabilities.getStatsSourceKind('CODECHEF_THIRD_PARTY'), 'third-party');
-  assert.equal(capabilities.getStatsSourceKind('GEEKSFORGEEKS_THIRD_PARTY'), 'unknown');
+  assert.equal(capabilities.getStatsSourceKind('GEEKSFORGEEKS_THIRD_PARTY'), 'third-party');
+  assert.equal(capabilities.getStatsSourceKind('CODE360_THIRD_PARTY'), 'third-party');
+  assert.equal(capabilities.getStatsSourceKind('ATCODER_REAL'), 'live');
+  assert.equal(capabilities.getStatsSourceKind('HACKERRANK_REAL'), 'live');
+  assert.equal(capabilities.getStatsSourceKind('INTERVIEWBIT_REAL'), 'live');
+  assert.equal(capabilities.getStatsSourceKind('HACKEREARTH_REAL'), 'live');
+  assert.equal(capabilities.getStatsSourceKind('UNKNOWN_REAL'), 'unknown');
 });
 
 test('profile links use canonical HTTPS hosts and safely encode saved handles', () => {
   const url = capabilities.getPlatformCapability('CODEFORCES').profileUrlFor('a b');
   assert.equal(url, 'https://codeforces.com/profile/a%20b');
   assert.equal(new URL(url).protocol, 'https:');
-  assert.equal(capabilities.getPlatformCapability('ATCODER').profileUrlFor, null);
+
+  const expected = {
+    LEETCODE: 'https://leetcode.com/u/coder/',
+    CODECHEF: 'https://www.codechef.com/users/coder',
+    ATCODER: 'https://atcoder.jp/users/coder',
+    GEEKSFORGEEKS: 'https://www.geeksforgeeks.org/profile/coder',
+    CODE360: 'https://www.naukri.com/code360/profile/coder',
+    HACKERRANK: 'https://www.hackerrank.com/profile/coder',
+    INTERVIEWBIT: 'https://www.interviewbit.com/profile/coder/',
+    HACKEREARTH: 'https://www.hackerearth.com/@coder',
+  };
+  for (const [platform, link] of Object.entries(expected)) {
+    assert.equal(capabilities.getPlatformCapability(platform).profileUrlFor('coder'), link, platform);
+  }
+  assert.equal(capabilities.getPlatformCapability('ALGOMASTER').profileUrlFor, null);
 });

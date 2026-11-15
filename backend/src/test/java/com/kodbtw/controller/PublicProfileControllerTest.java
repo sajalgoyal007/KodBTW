@@ -106,10 +106,11 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(profileReq)))
                 .andExpect(status().isOk());
 
-        // Connect a platform whose live statistics source is pending.
+        // Connect a link-only platform whose statistics are never fetched.
         PlatformAccountRequest paReq = new PlatformAccountRequest();
-        paReq.setPlatform(Platform.GEEKSFORGEEKS);
+        paReq.setPlatform(Platform.ALGOMASTER);
         paReq.setUsername("chef_coder");
+        paReq.setProfileUrl("https://algomaster.io/profile/chef_coder");
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -131,9 +132,10 @@ class PublicProfileControllerTest {
                 .andExpect(jsonPath("$.college", is("Tech Institute")))
                 .andExpect(jsonPath("$.socialLinks.githubUrl", is("https://github.com/testcoder")))
                 .andExpect(jsonPath("$.platforms", hasSize(1)))
-                .andExpect(jsonPath("$.platforms[0].platform", is("GEEKSFORGEEKS")))
-                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("SOURCE_PENDING")))
-                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].platform", is("ALGOMASTER")))
+                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("LINK_ONLY")))
+                .andExpect(jsonPath("$.platforms[0].source", is("LINK_ONLY")))
+                .andExpect(jsonPath("$.platforms[0].profileUrl", is("https://algomaster.io/profile/chef_coder")))
                 .andExpect(jsonPath("$.platforms[0].totalSolved").doesNotExist());
     }
 
@@ -175,10 +177,11 @@ class PublicProfileControllerTest {
                         .content(objectMapper.writeValueAsString(profileReq)))
                 .andExpect(status().isOk());
 
-        // Connect GFG; legacy MOCK snapshots must not be exposed as current stats.
+        // Connect a link-only platform; legacy MOCK snapshots must not be exposed as current stats.
         PlatformAccountRequest mockAccount = new PlatformAccountRequest();
-        mockAccount.setPlatform(Platform.GEEKSFORGEEKS);
+        mockAccount.setPlatform(Platform.ALGOMASTER);
         mockAccount.setUsername("chef_user");
+        mockAccount.setProfileUrl("https://algomaster.io/profile/chef_user");
         mockMvc.perform(post("/api/platform-accounts")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -193,15 +196,15 @@ class PublicProfileControllerTest {
 
         mockMvc.perform(get("/api/public/profiles/sourcetest"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("SOURCE_PENDING")))
-                .andExpect(jsonPath("$.platforms[0].source", is("SOURCE_PENDING")))
+                .andExpect(jsonPath("$.platforms[0].sourceStatus", is("LINK_ONLY")))
+                .andExpect(jsonPath("$.platforms[0].source", is("LINK_ONLY")))
                 .andExpect(jsonPath("$.platforms[0].totalSolved").doesNotExist());
     }
 
     private void saveMockSnapshot() {
         var snapshot = new com.kodbtw.entity.PlatformStatSnapshot();
         snapshot.setUser(testUser);
-        snapshot.setPlatform(Platform.GEEKSFORGEEKS.name());
+        snapshot.setPlatform(Platform.ALGOMASTER.name());
         snapshot.setSnapshotDate(java.time.LocalDate.now());
         snapshot.setSource("MOCK");
         snapshotRepository.save(snapshot);

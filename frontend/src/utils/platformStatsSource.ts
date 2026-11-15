@@ -2,7 +2,7 @@ import type { PlatformAccountResponse } from '../types/platform';
 import type { PlatformSyncResponse } from '../services/api/platformAccountApi';
 import { getPlatformCapability, getStatsSourceKind } from '../config/platformCapabilities';
 
-export type PlatformStatsSourceKind = 'live' | 'third-party' | 'mock' | 'pending' | 'unknown';
+export type PlatformStatsSourceKind = 'live' | 'third-party' | 'link-only' | 'mock' | 'pending' | 'unknown';
 
 export function getPlatformStatsSourceKind(source: string | null | undefined): PlatformStatsSourceKind {
   return getStatsSourceKind(source);
@@ -32,6 +32,7 @@ export function getPlatformStatsSourceLabel(
   switch (getPlatformStatsSourceKind(normalized)) {
     case 'live': return 'Live Public Data';
     case 'third-party': return 'Third-party Live Data';
+    case 'link-only': return 'Profile link only';
     case 'mock': return 'Mock Sandbox';
     case 'pending': return normalized === 'UNSYNCED' ? 'Not synced' : 'Live statistics unavailable';
     default: return 'Source unknown';
@@ -102,7 +103,7 @@ export function getPlatformSyncSourceStatus(
   currentStatus: PlatformAccountResponse['sourceStatus'],
   result: Parameters<typeof getDashboardRefreshFeedback>[0],
 ): PlatformAccountResponse['sourceStatus'] {
-  if (currentStatus === 'SOURCE_PENDING') return currentStatus;
+  if (currentStatus === 'SOURCE_PENDING' || currentStatus === 'LINK_ONLY') return currentStatus;
   if (result.syncStatus.status === 'RUNNING') return 'SYNCING';
   if (result.syncStatus.status === 'FAILED') return 'SYNC_FAILED';
   return getDashboardRefreshFeedback(result).success ? 'SYNCED' : currentStatus;
@@ -115,6 +116,7 @@ export function getPlatformAvailabilityLabel(
   const capability = getPlatformCapability(platform);
   if (account) {
     switch (account.sourceStatus) {
+      case 'LINK_ONLY': return 'Profile link saved · statistics not tracked';
       case 'SOURCE_PENDING': return capability?.synchronizationEnabled
         ? `No successful sync yet. ${capability.availabilityMessage}`
         : capability?.availabilityMessage ?? 'Live statistics unavailable.';
